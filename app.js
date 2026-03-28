@@ -149,7 +149,7 @@ let map;
 function initMap() {
   map = new maplibregl.Map({
     container:'map', style:buildStyle(),
-    center:[-99.1332,19.4326], zoom:13, pitch:45, bearing:-20, antialias:true,
+    center:[-99.1332,19.4326], zoom:13, pitch:65, bearing:-20, antialias:true, maxPitch:85,
   });
   map.addControl(new maplibregl.NavigationControl({showCompass:true}),'bottom-right');
   map.addControl(new maplibregl.ScaleControl({unit:'metric'}),'bottom-left');
@@ -1034,7 +1034,7 @@ function setTool(tool) {
 // ── 3D / SATELLITE TOGGLE ────────────────────────────────────
 document.getElementById('tool-3d').addEventListener('click',()=>{
   state.is3D=!state.is3D;
-  const pitch=state.is3D?45:0;
+  const pitch=state.is3D?65:0;
   map.setPitch(pitch);
   document.getElementById('cameraPitch').value=pitch;
   document.getElementById('cameraPitchVal').textContent=pitch+'°';
