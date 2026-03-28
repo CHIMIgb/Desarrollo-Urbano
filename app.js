@@ -766,8 +766,28 @@ function generateFurnitureParts(baseId, lng, lat, rot, fType) {
     addOffBox(0, 0.22, 0.2, 0.05, 0, 3.7, 4.0, '#22c55e');
     // Semáforo peatonal
     addOffBox(0.22, 0, 0.05, 0.2, 0, 2.5, 3.0, darkCol);
-    addOffBox(0.24, 0, 0.02, 0.15, 0, 2.75, 2.9, '#ef4444');
     addOffBox(0.24, 0, 0.02, 0.15, 0, 2.55, 2.7, '#22c55e');
+  } else if (fType === 'semaforo_brazo') {
+    parts[0].properties.height = 0.8;
+    addCircle(0.15, 0.8, 6.2, poleCol);
+    
+    // Brazo extendido hacia la izquierda (-X)
+    addOffBox(-2.25, 0, 4.5, 0.15, 0, 6.0, 6.2, poleCol);
+
+    // Semáforo colgante (Extremo del brazo)
+    addOffBox(-4.2, 0, 0.4, 0.4, 0, 4.6, 6.0, darkCol);
+    addOffBox(-4.2, 0.22, 0.2, 0.05, 0, 5.5, 5.8, '#ef4444');
+    addOffBox(-4.2, 0.22, 0.2, 0.05, 0, 5.1, 5.4, '#eab308');
+    addOffBox(-4.2, 0.22, 0.2, 0.05, 0, 4.7, 5.0, '#22c55e');
+
+    // Semáforo en el poste
+    addOffBox(-0.35, 0, 0.4, 0.4, 0, 3.5, 4.9, darkCol);
+    addOffBox(-0.35, 0.22, 0.2, 0.05, 0, 4.4, 4.7, '#ef4444');
+    addOffBox(-0.35, 0.22, 0.2, 0.05, 0, 4.0, 4.3, '#eab308');
+    addOffBox(-0.35, 0.22, 0.2, 0.05, 0, 3.6, 3.9, '#22c55e');
+    
+    // Control de tráfico (caja en el poste inferior)
+    addOffBox(0.25, 0, 0.25, 0.3, 0, 1.5, 2.2, darkCol);
   } else if (fType === 'farol') {
     parts[0].geometry.coordinates = [buildTreePolygon(lng, lat, 0.3)];
     parts[0].properties.height = 0.6;
