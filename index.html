@@ -94,6 +94,10 @@
       </div>
       <div class="tool-group">
         <div class="tool-label">Edición</div>
+        <button class="tool-btn" id="tool-move" data-tool="move" title="Mover (M)">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 9l-3 3 3 3M9 5l3-3 3 3M9 19l3 3 3-3M19 9l3 3-3 3M2 12h20M12 2v20"/></svg>
+          <span>Mover</span>
+        </button>
         <button class="tool-btn tool-btn-danger" id="tool-delete" data-tool="delete" title="Borrar (Del)">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
           <span>Borrar</span>
@@ -131,7 +135,7 @@
         <input type="number" id="roadWidthCustom" min="2" max="60" value="8" style="display:none;width:54px" />
         <div class="opt-divider"></div>
         <label class="opt-item opt-toggle">
-          <input type="checkbox" id="roadCurved" />
+          <input type="checkbox" id="roadCurved" checked />
           <span class="toggle-track"><span class="toggle-thumb"></span></span>
           <span>Curvas suaves</span>
         </label>

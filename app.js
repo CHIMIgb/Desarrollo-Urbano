@@ -49,11 +49,23 @@ function polygonBBox(coords) {
 // Rotated rectangle polygon from center + dims + bearing
 function buildingPolygon(cLng, cLat, widthM, lengthM, rotDeg) {
   const r = Math.PI/180;
-  const hw = (widthM/2) / (111320*Math.cos(cLat*r));
-  const hl = (lengthM/2) / 111320;
+  // Half-dimensions in local offset meters
+  const hw = widthM/2;
+  const hl = lengthM/2;
   const a  = rotDeg * r, cos=Math.cos(a), sin=Math.sin(a);
+  // Unrotated corners in meters (origin at 0,0)
   const raw = [[-hw,-hl],[hw,-hl],[hw,hl],[-hw,hl]];
-  const pts = raw.map(([x,y])=>[cLng+(x*cos-y*sin), cLat+(x*sin+y*cos)]);
+  // Factors to convert meters back to degrees at this latitude
+  const mLat = 111320;
+  const mLng = 111320 * Math.cos(cLat * r);
+  
+  const pts = raw.map(([x,y]) => {
+    // 1. Rotate in meters space
+    const rx = x*cos - y*sin;
+    const ry = x*sin + y*cos;
+    // 2. Convert to geographic degrees
+    return [cLng + (rx/mLng), cLat + (ry/mLat)];
+  });
   pts.push(pts[0]);
   return pts;
 }
@@ -103,12 +115,13 @@ const TYPE_CONFIG = {
 
 // ── STATE ─────────────────────────────────────────────────────
 const state = {
-  features: [], selectedId: null, tool: 'select',
+  features: [], selectedIds: [], tool: 'select',
   is3D: true, isSatellite: true,
   drawPoints: [],
   history: [], future: [],
   nextId: 1, popup: null,
-  roadCurved: false, roadWidthM: 8,
+  draggingFeatureId: null, lastDragPos: null, isDragging: false,
+  draggingVertexIdx: null,
 };
 
 // ── MAP INIT ──────────────────────────────────────────────────
@@ -127,9 +140,60 @@ function initMap() {
     const {lng,lat}=e.lngLat;
     document.getElementById('coordDisplay').textContent=`${lat.toFixed(6)}, ${lng.toFixed(6)}`;
     if(state.drawPoints.length>0) updateLiveMeasure(lng,lat);
+    
+    if (state.draggingVertexIdx !== null && state.draggingVertexIdx !== undefined) {
+      const f = state.features.find(x => x.properties.id === state.selectedIds[0]);
+      if (f && f.properties.raw_pts) {
+         f.properties.raw_pts[state.draggingVertexIdx] = [lng, lat];
+         if (f.properties.type === 'road') {
+            f.geometry.coordinates = f.properties.curved && f.properties.raw_pts.length > 2 ? catmullRom(f.properties.raw_pts) : [...f.properties.raw_pts];
+            f.properties.length_m = Math.round(lineLength(f.geometry.coordinates));
+         } else {
+            const closed = [...f.properties.raw_pts, f.properties.raw_pts[0]];
+            f.geometry.coordinates = [closed];
+            f.properties.area_m2 = Math.round(polygonArea(closed));
+            f.properties.perimeter_m = Math.round(polygonPerimeter(closed));
+         }
+         refreshMap(); updateEditHandles();
+         const mc = document.getElementById('liveMeasures');
+         if(mc) mc.innerHTML = buildMeasureHTML(f);
+      }
+      return;
+    }
+
+    if(state.draggingFeatureId && state.tool==='move') {
+      state.isDragging=true;
+      const dlng = lng - state.lastDragPos.lng;
+      const dlat = lat - state.lastDragPos.lat;
+      const toMove = state.selectedIds.includes(state.draggingFeatureId)?state.selectedIds:[state.draggingFeatureId];
+      toMove.forEach(id=>translateFeature(id, dlng, dlat));
+      state.lastDragPos = {lng, lat};
+      refreshMap(); updateEditHandles();
+    }
+  });
+  map.on('mouseup', () => {
+    if (state.draggingVertexIdx !== null && state.draggingVertexIdx !== undefined) {
+      state.draggingVertexIdx = null; map.getCanvas().style.cursor = ''; pushHistory();
+    }
+    if(state.draggingFeatureId) {
+      state.draggingFeatureId=null;
+      map.getCanvas().style.cursor=state.tool==='move'?'grab':'';
+      if(state.isDragging) pushHistory();
+    }
   });
   map.on('click', handleMapClick);
   map.on('dblclick', handleMapDblClick);
+  
+  // Box Zoom for selection
+  map.on('boxzoomend', e => {
+     const bbox = [[e.boxZoomBoundingBox[0].x, e.boxZoomBoundingBox[0].y], [e.boxZoomBoundingBox[1].x, e.boxZoomBoundingBox[1].y]];
+     const feats = map.queryRenderedFeatures(bbox, {layers:['layer-buildings','layer-roads','layer-zones-fill']});
+     const ids = [...new Set(feats.map(f=>f.properties.id))];
+     if(ids.length) {
+       state.selectedIds = e.originalEvent.shiftKey ? [...new Set([...state.selectedIds, ...ids])] : ids;
+       updateSelectionUI();
+     }
+  });
 }
 
 // ── STYLE BUILDER ─────────────────────────────────────────────
@@ -157,14 +221,40 @@ function addDataLayers() {
   map.addSource('urban-data',{type:'geojson',data:buildGeoJSON()});
 
   // Roads
+  const zoomInterpolation = ['interpolate',['exponential',2],['zoom'],12,['/',['coalesce',['get','widthM'],8],4],16,['/',['coalesce',['get','widthM'],8],1.2],20,['*',['coalesce',['get','widthM'],8],2]];
   map.addLayer({id:'layer-roads',type:'line',source:'urban-data',
     filter:['==',['get','type'],'road'],
     layout:{'line-cap':'round','line-join':'round'},
     paint:{
       'line-color':['get','color'],
       'line-opacity':0.9,
-      'line-width':['interpolate',['exponential',2],['zoom'],12,['/',['coalesce',['get','widthM'],8],4],16,['/',['coalesce',['get','widthM'],8],1.2],20,['*',['coalesce',['get','widthM'],8],2]],
+      'line-width': zoomInterpolation,
     }
+  });
+
+  const laneRatios = [
+    [2,0, 3,-0.166, 4,-0.25, 5,-0.3, 6,-0.333, 7,-0.357], 
+    [3,0.166, 4,0, 5,-0.1, 6,-0.166, 7,-0.214],
+    [4,0.25, 5,0.1, 6,0, 7,-0.071],
+    [5,0.3, 6,0.166, 7,0.071],
+    [6,0.333, 7,0.214],
+    [7,0.357]
+  ];
+  laneRatios.forEach((ratios, i) => {
+    const matchExpr = ['match', ['coalesce', ['get', 'lanes'], 2]];
+    for (let j=0; j<ratios.length; j+=2) { matchExpr.push(ratios[j], ratios[j+1]); }
+    matchExpr.push(0);
+    map.addLayer({
+      id: `layer-roads-div-${i+1}`, type: 'line', source: 'urban-data',
+      filter: ['all', ['==', ['get', 'type'], 'road'], ['>=', ['coalesce', ['get', 'lanes'], 2], ratios[0]]],
+      layout: { 'line-join': 'round', 'line-cap': 'round' },
+      paint: {
+        'line-color': '#ffffff', 'line-dasharray': [4, 4],
+        'line-width': ['interpolate',['linear'],['zoom'], 14, 0.5, 20, 2],
+        'line-opacity': ['interpolate',['linear'],['zoom'], 14, 0, 15, 0.9],
+        'line-offset': ['*', zoomInterpolation, matchExpr]
+      }
+    });
   });
 
   const zoneFilter=['match',['get','type'],['zone','park','terrain'],true,false];
@@ -197,16 +287,56 @@ function addDataLayers() {
   map.addLayer({id:'layer-draw-pts',type:'circle',source:'draw-preview',
     paint:{'circle-radius':5,'circle-color':'#6366f1','circle-stroke-width':2,'circle-stroke-color':'#fff'}});
 
+  // Highlight layer
+  map.addLayer({id:'highlight-polygons',type:'line',source:'urban-data',
+    filter:['in',['get','id'],['literal',['']]],
+    layout:{'line-join':'round'},
+    paint:{'line-color':'#fff','line-width':3,'line-dasharray':[2,2]}
+  });
+
+  // Edit Handles Layer
+  map.addSource('edit-handles',{type:'geojson',data:{type:'FeatureCollection',features:[]}});
+  map.addLayer({id:'layer-edit-handles',type:'circle',source:'edit-handles',
+    paint:{'circle-radius':6,'circle-color':'#fff','circle-stroke-width':2,'circle-stroke-color':'#ef4444'}
+  });
+
+  map.on('mousedown', 'layer-edit-handles', e => {
+    e.preventDefault(); e.originalEvent.stopPropagation();
+    state.draggingVertexIdx = e.features[0].properties.idx;
+    map.getCanvas().style.cursor = 'grabbing';
+  });
+  map.on('mouseenter', 'layer-edit-handles', () => { if(['select','move'].includes(state.tool)) map.getCanvas().style.cursor = 'grab'; });
+  map.on('mouseleave', 'layer-edit-handles', () => { map.getCanvas().style.cursor = ''; });
+
   // Click interactivity
   ['layer-buildings','layer-roads','layer-zones-fill'].forEach(lid=>{
-    map.on('click',lid,e=>{
-      if(!['select','delete'].includes(state.tool)) return;
-      e.originalEvent.stopPropagation();
+    map.on('mousedown',lid,e=>{
+      if(state.tool!=='move') return;
+      e.preventDefault();
       const id=e.features[0]?.properties?.id;
       if(!id) return;
-      if(state.tool==='delete') deleteFeature(id); else selectFeature(id,e.lngLat);
+      state.draggingFeatureId=id;
+      state.lastDragPos=e.lngLat;
+      state.isDragging=false;
+      map.getCanvas().style.cursor='grabbing';
+      if(state.popup){ state.popup.remove(); state.popup=null; }
     });
-    map.on('mouseenter',lid,()=>{ if(['select','delete'].includes(state.tool)) map.getCanvas().style.cursor=state.tool==='delete'?'not-allowed':'pointer'; });
+    map.on('click',lid,e=>{
+      const id=e.features[0]?.properties?.id;
+      if(!id) return;
+      if(['select','delete'].includes(state.tool)){
+        e.originalEvent.stopPropagation();
+        if(state.tool==='delete') { state.selectedIds=[id]; deleteSelection(); }
+        else selectFeature(id,e.lngLat,e.originalEvent.shiftKey);
+      } else if(state.tool==='move'){
+        e.originalEvent.stopPropagation();
+        if(!state.isDragging) selectFeature(id,e.lngLat,e.originalEvent.shiftKey);
+      }
+    });
+    map.on('mouseenter',lid,()=>{ 
+      if(['select','delete','move'].includes(state.tool)) 
+        map.getCanvas().style.cursor=state.tool==='delete'?'not-allowed':state.tool==='move'?'grab':'pointer';
+    });
     map.on('mouseleave',lid,()=>{ map.getCanvas().style.cursor=''; });
   });
 }
@@ -285,7 +415,8 @@ function finishRoad() {
   const feat   = {
     type:'Feature', id,
     properties:{ id, type:'road', name:`Vía ${id}`, color:TYPE_CONFIG.road.color, fillColor:TYPE_CONFIG.road.color,
-      widthM, lanes:Math.round(widthM/3.5)||1, roadType:'secundaria', curved:!!curved, length_m:Math.round(len) },
+      widthM, lanes:Math.max(1, Math.round(widthM/3)), roadType:'secundaria', curved:!!curved, length_m:Math.round(len),
+      raw_pts: [...state.drawPoints] },
     geometry:{ type:'LineString', coordinates:coords },
   };
   pushHistory();
@@ -304,7 +435,7 @@ function finishPolygon(type) {
   const feat = {
     type:'Feature', id,
     properties:{ id, type, name:`${cfg.label} ${id}`, color:cfg.color, fillColor:cfg.fillColor,
-      area_m2:Math.round(area), perimeter_m:Math.round(peri) },
+      area_m2:Math.round(area), perimeter_m:Math.round(peri), raw_pts: [...state.drawPoints] },
     geometry:{ type:'Polygon', coordinates:[pts] },
   };
   pushHistory();
@@ -355,17 +486,65 @@ function clearDrawing() {
 }
 
 // ── SELECT / DELETE ───────────────────────────────────────────
-function selectFeature(id, lngLat) {
-  state.selectedId=id;
-  const feat=state.features.find(f=>f.properties.id===id);
-  if(feat) showPropsPanel(feat,lngLat);
+function selectFeature(id, lngLat, isMulti=false) {
+  if(isMulti){
+    if(state.selectedIds.includes(id)) state.selectedIds=state.selectedIds.filter(x=>x!==id);
+    else state.selectedIds.push(id);
+  } else {
+    state.selectedIds=[id];
+  }
+  updateSelectionUI(lngLat);
 }
-function deleteFeature(id) {
+
+function updateSelectionUI(lngLat) {
+  map.setFilter('highlight-polygons', ['in', ['get', 'id'], ['literal', state.selectedIds.length?state.selectedIds:['']]]);
+  if(state.selectedIds.length===1){
+    const feat=state.features.find(f=>f.properties.id===state.selectedIds[0]);
+    if(feat) showPropsPanel(feat,lngLat);
+  } else if(state.selectedIds.length>1){
+    showMultiPropsPanel();
+  } else {
+    document.getElementById('propsSection').style.display='none';
+    state.popup?.remove(); state.popup=null;
+  }
+  updateEditHandles();
+}
+
+function updateEditHandles() {
+  const feats = [];
+  if (state.selectedIds.length === 1 && ['select','move'].includes(state.tool)) {
+    const f = state.features.find(x => x.properties.id === state.selectedIds[0]);
+    if (f && f.properties.raw_pts && !['house','building'].includes(f.properties.type)) {
+      f.properties.raw_pts.forEach((pt, idx) => {
+        feats.push({type:'Feature', properties:{fid: f.properties.id, idx}, geometry:{type:'Point', coordinates:pt}});
+      });
+    }
+  }
+  map.getSource('edit-handles')?.setData({type:'FeatureCollection',features:feats});
+}
+
+function deleteSelection() {
+  if(!state.selectedIds.length) return;
   pushHistory();
-  state.features=state.features.filter(f=>f.properties.id!==id);
-  if(state.selectedId===id){ state.selectedId=null; document.getElementById('propsSection').style.display='none'; }
-  state.popup?.remove(); state.popup=null;
-  refreshMap(); toast('Objeto eliminado','error');
+  state.features=state.features.filter(f=>!state.selectedIds.includes(f.properties.id));
+  state.selectedIds=[]; updateSelectionUI();
+  refreshMap(); toast('Objeto(s) eliminado(s)','error');
+}
+
+function translateFeature(id, dlng, dlat) {
+  const f = state.features.find(x => x.properties.id === id);
+  if (!f) return;
+  if (f.properties.center_lng != null) {
+    f.properties.center_lng += dlng;
+    f.properties.center_lat += dlat;
+  }
+  if (f.properties.raw_pts) {
+    f.properties.raw_pts = f.properties.raw_pts.map(c => [c[0]+dlng, c[1]+dlat]);
+  }
+  const movePts = pts => pts.map(c => [c[0]+dlng, c[1]+dlat]);
+  if (f.geometry.type === 'Point') f.geometry.coordinates = movePts([f.geometry.coordinates])[0];
+  else if (f.geometry.type === 'LineString') f.geometry.coordinates = movePts(f.geometry.coordinates);
+  else if (f.geometry.type === 'Polygon') f.geometry.coordinates = f.geometry.coordinates.map(movePts);
 }
 
 // ── PROPERTIES PANEL ─────────────────────────────────────────
@@ -408,7 +587,14 @@ function showPropsPanel(feat, lngLat) {
         <option value="autopista"    ${p.roadType==='autopista'?'selected':''}>Autopista</option>
       </select></div>
       <div class="form-field"><label>Ancho (m)</label><input type="number" id="prop-roadW" value="${p.widthM||8}" min="2" max="60"/></div>
-      <div class="form-field"><label>Carriles</label><input type="number" id="prop-lanes" value="${p.lanes||2}" min="1" max="16"/></div>`;
+      <div class="form-field"><label>Carriles</label><input type="number" id="prop-lanes" value="${p.lanes||2}" min="1" max="16"/></div>
+      <div class="form-field opt-toggle" style="margin-top:6px;">
+        <label style="display:flex;align-items:center;gap:8px;">
+          <input type="checkbox" id="prop-curved" ${p.curved ? 'checked' : ''} style="display:none;" />
+          <span class="toggle-track" style="margin:0"><span class="toggle-thumb"></span></span>
+          <span style="font-size:11px;color:var(--text-primary);font-weight:500;">Curvas suaves</span>
+        </label>
+      </div>`;
   }
   fields+=`
     <div class="form-field"><label>Color</label><input type="color" id="prop-color" value="${p.fillColor||'#6366f1'}"/></div>
@@ -429,7 +615,7 @@ function showPropsPanel(feat, lngLat) {
     const fIn=document.getElementById('prop-floors');
 
     const rebuildGeom=()=>{
-      const f=state.features.find(f=>f.properties.id===state.selectedId);
+      const f=state.features.find(f=>f.properties.id===state.selectedIds[0]);
       if(!f) return;
       f.properties.width_m  = parseFloat(wIn.value)||10;
       f.properties.length_m = parseFloat(lIn.value)||10;
@@ -448,10 +634,40 @@ function showPropsPanel(feat, lngLat) {
     fIn?.addEventListener('input',()=>{ if(hIn) hIn.value=Math.round(parseFloat(fIn.value)*3.5); rebuildGeom(); });
   }
 
+  // Live events for roads
+  if(p.type==='road') {
+    const wIn = document.getElementById('prop-roadW');
+    const lIn = document.getElementById('prop-lanes');
+    const curvedCb = document.getElementById('prop-curved');
+
+    const rebuildRoad=()=>{
+      const f=state.features.find(f=>f.properties.id===state.selectedIds[0]);
+      if(!f) return;
+      f.properties.widthM = parseFloat(wIn.value)||3;
+      f.properties.lanes  = parseInt(lIn.value)||1;
+      if(curvedCb) {
+        f.properties.curved = curvedCb.checked;
+        if(f.properties.raw_pts) {
+           f.geometry.coordinates = f.properties.curved && f.properties.raw_pts.length>2 ? catmullRom(f.properties.raw_pts) : [...f.properties.raw_pts];
+           f.properties.length_m = Math.round(lineLength(f.geometry.coordinates));
+        }
+      }
+      refreshMap();
+      const mc=document.getElementById('liveMeasures');
+      if(mc) mc.innerHTML=buildMeasureHTML(f);
+    };
+
+    if(wIn && lIn) {
+      lIn.addEventListener('input',()=>{ wIn.value=parseInt(lIn.value)*3||3; rebuildRoad(); });
+      wIn.addEventListener('input',()=>{ lIn.value=Math.max(1,Math.round(parseFloat(wIn.value)/3))||1; rebuildRoad(); });
+      curvedCb?.addEventListener('change', rebuildRoad);
+    }
+  }
+
   // Apply button
   document.getElementById('btnApplyProps').addEventListener('click',()=>{
     pushHistory();
-    const f=state.features.find(f=>f.properties.id===state.selectedId);
+    const f=state.features.find(f=>f.properties.id===state.selectedIds[0]);
     if(!f) return;
     f.properties.name=document.getElementById('prop-name').value;
     if(document.getElementById('prop-uso'))      f.properties.uso_suelo=document.getElementById('prop-uso').value;
@@ -459,13 +675,21 @@ function showPropsPanel(feat, lngLat) {
     if(document.getElementById('prop-roadW')){
       const w=parseFloat(document.getElementById('prop-roadW').value)||8;
       f.properties.widthM=w;
-      f.properties.lanes=document.getElementById('prop-lanes')?parseInt(document.getElementById('prop-lanes').value):Math.round(w/3.5);
+      f.properties.lanes=document.getElementById('prop-lanes')?parseInt(document.getElementById('prop-lanes').value):Math.max(1, Math.round(w/3));
+    }
+    if(document.getElementById('prop-curved')){
+      const curved = document.getElementById('prop-curved').checked;
+      f.properties.curved = curved;
+      if(f.properties.raw_pts) {
+         f.geometry.coordinates = curved && f.properties.raw_pts.length>2 ? catmullRom(f.properties.raw_pts) : [...f.properties.raw_pts];
+         f.properties.length_m = Math.round(lineLength(f.geometry.coordinates));
+      }
     }
     const col=document.getElementById('prop-color').value;
     f.properties.fillColor=col; f.properties.color=col;
     refreshMap(); toast('Propiedades actualizadas','success');
   });
-  document.getElementById('btnDeleteSelected').addEventListener('click',()=>deleteFeature(state.selectedId));
+  document.getElementById('btnDeleteSelected').addEventListener('click', deleteSelection);
 
   // Map popup
   state.popup?.remove();
@@ -483,6 +707,28 @@ function showPropsPanel(feat, lngLat) {
         </div>`)
       .addTo(map);
   }
+}
+
+function showMultiPropsPanel() {
+  document.getElementById('propsSection').style.display='block';
+  const form=document.getElementById('propsForm');
+  form.innerHTML=`
+    <div class="form-field"><label style="font-size:14px;color:var(--accent)">${state.selectedIds.length} objetos seleccionados</label></div>
+    <div class="form-field"><label>Color unificado</label><input type="color" id="prop-multi-color" value="#6366f1"/></div>
+    <div class="form-actions">
+      <button class="btn btn-primary" id="btnMultiApply">Aplicar</button>
+      <button class="btn btn-secondary" id="btnMultiDelete">Borrar</button>
+    </div>`;
+  document.getElementById('btnMultiDelete').addEventListener('click', deleteSelection);
+  document.getElementById('btnMultiApply').addEventListener('click', () => {
+    pushHistory();
+    const col=document.getElementById('prop-multi-color').value;
+    state.features.forEach(f => {
+      if(state.selectedIds.includes(f.properties.id)) { f.properties.color=col; f.properties.fillColor=col; }
+    });
+    refreshMap(); toast('Color aplicado a todos', 'success');
+  });
+  state.popup?.remove(); state.popup=null;
 }
 
 function buildMeasureHTML(feat) {
@@ -595,6 +841,9 @@ function setTool(tool) {
   else if(['house','building'].includes(tool)) document.body.classList.add('map-cursor-place');
   else if(tool==='delete') document.body.classList.add('map-cursor-delete');
 
+  map.getCanvas().style.cursor = tool==='move' ? 'grab' : tool==='delete' ? 'not-allowed' : '';
+  if(!['select','delete','move'].includes(tool)) { state.selectedIds=[]; updateSelectionUI(); }
+
   if(tool==='road') document.getElementById('drawHintText').textContent='Click para añadir puntos · Enter/Doble-click para terminar';
   else if(['zone','terrain','park'].includes(tool)) document.getElementById('drawHintText').textContent='Click para trazar · Doble-click para cerrar';
 }
@@ -695,12 +944,13 @@ async function doSearch(q) {
 // ── KEYBOARD SHORTCUTS ────────────────────────────────────────
 document.addEventListener('keydown',e=>{
   if(['INPUT','SELECT','TEXTAREA'].includes(e.target.tagName)) return;
+  if(e.ctrlKey&&e.key.toLowerCase()==='a'){ e.preventDefault(); state.selectedIds=state.features.map(f=>f.properties.id); updateSelectionUI(); return; }
   if(e.ctrlKey&&e.key==='z'){e.preventDefault();undo();return;}
   if(e.ctrlKey&&e.key==='y'){e.preventDefault();redo();return;}
-  const keys={s:'select',h:'house',b:'building',r:'road',p:'park',z:'zone',t:'terrain'};
+  const keys={s:'select',h:'house',b:'building',r:'road',p:'park',z:'zone',t:'terrain',m:'move'};
   if(!e.ctrlKey&&keys[e.key]) setTool(keys[e.key]);
-  if(e.key==='Delete'&&state.selectedId) deleteFeature(state.selectedId);
-  if(e.key==='Escape'){clearDrawing();setTool('select');state.popup?.remove();state.popup=null;document.getElementById('propsSection').style.display='none';}
+  if(e.key==='Delete'&&state.selectedIds.length) deleteSelection();
+  if(e.key==='Escape'){clearDrawing();setTool('select');state.selectedIds=[];updateSelectionUI();}
   if(e.key==='Enter'&&state.tool==='road'&&state.drawPoints.length>=2) finishRoad();
   if(e.key==='Enter'&&['zone','park','terrain'].includes(state.tool)&&state.drawPoints.length>=3) finishPolygon(state.tool);
 });
