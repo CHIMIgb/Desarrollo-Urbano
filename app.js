@@ -124,13 +124,17 @@ function fmtVol(m3) {
 
 // ── TYPE CONFIG ───────────────────────────────────────────────
 const TYPE_CONFIG = {
-  house:    { color:'#f59e0b', fillColor:'#fbbf24', label:'Casa',      defaultH:7,  defW:10, defL:10 },
-  building: { color:'#6366f1', fillColor:'#818cf8', label:'Edificio',  defaultH:30, defW:20, defL:20 },
-  custom_building:{ color:'#8b5cf6', fillColor:'#a78bfa', label:'Silueta 3D', defaultH:30 },
-  park:     { color:'#4ade80', fillColor:'#86efac', label:'Parque',    defaultH:0 },
-  road:     { color:'#94a3b8', fillColor:'#94a3b8', label:'Carretera', defaultH:0 },
-  zone:     { color:'#f472b6', fillColor:'#f9a8d4', label:'Zona',      defaultH:0 },
-  terrain:  { color:'#fb923c', fillColor:'#fdba74', label:'Terreno',   defaultH:0 },
+  house:  {label:'Casa', color:'#fbbf24', fillColor:'#f59e0b'},
+  building:{label:'Edificio', color:'#818cf8', fillColor:'#6366f1'},
+  custom_building:{label:'Silueta 3D', color:'#a78bfa', fillColor:'#8b5cf6'},
+  road:   {label:'Carretera', color:'#94a3b8', fillColor:'#cbd5e1'},
+  park:   {label:'Parque', color:'#4ade80', fillColor:'#22c55e'},
+  zone:   {label:'Zona', color:'#f472b6', fillColor:'#ec4899'},
+  terrain:{label:'Terreno', color:'#fdba74', fillColor:'#fb923c'},
+  water:  {label:'Cuerpo de Agua', color:'#38bdf8', fillColor:'#0284c7'},
+  tree:   {label:'Árbol 3D', color:'#4ade80', fillColor:'#16a34a'},
+  railway:{label:'Vía Férrea', color:'#64748b', fillColor:'#334155'},
+  radius: {label:'Isócrona', color:'#f0abfc', fillColor:'#c026d3'}
 };
 
 // ── STATE ─────────────────────────────────────────────────────
@@ -208,17 +212,17 @@ function initMap() {
   
   // Right click to close
   map.on('contextmenu', e => {
-    if(['road','park','zone','terrain','custom_building'].includes(state.tool)) {
+    if(['road','railway','park','zone','terrain','custom_building','water'].includes(state.tool)) {
       e.preventDefault();
-      if(state.tool==='road' && state.drawPoints.length>=2) finishRoad();
-      else if(['park','zone','terrain','custom_building'].includes(state.tool) && state.drawPoints.length>=3) finishPolygon(state.tool);
+      if(['road','railway'].includes(state.tool) && state.drawPoints.length>=2) finishLine();
+      else if(['park','zone','terrain','custom_building','water'].includes(state.tool) && state.drawPoints.length>=3) finishPolygon(state.tool);
     }
   });
 
   // Box Zoom for selection
   map.on('boxzoomend', e => {
      const bbox = [[e.boxZoomBoundingBox[0].x, e.boxZoomBoundingBox[0].y], [e.boxZoomBoundingBox[1].x, e.boxZoomBoundingBox[1].y]];
-     const feats = map.queryRenderedFeatures(bbox, {layers:['layer-buildings','layer-roads','layer-zones-fill']});
+     const feats = map.queryRenderedFeatures(bbox, {layers:['layer-buildings','layer-roads','layer-zones-fill','layer-trees-3d','layer-railways']});
      const ids = [...new Set(feats.map(f=>f.properties.id))];
      if(ids.length) {
        state.selectedIds = e.originalEvent.shiftKey ? [...new Set([...state.selectedIds, ...ids])] : ids;
@@ -265,7 +269,36 @@ function addTerrainSource() {
   try { map.setFog({'color':'rgb(15,18,30)','high-color':'rgb(40,50,80)','horizon-blend':0.08,'space-color':'rgb(5,8,20)','star-intensity':0.5}); } catch(e){}
 }
 
-// ── DATA LAYERS ───────────────────────────────────────────────
+// ── IMPORT/EXPORT ─────────────────────────────────────────────
+document.getElementById('btnExport')?.addEventListener('click', () => {
+  const data = JSON.stringify({features:state.features, nextId:state.nextId}, null, 2);
+  const blob = new Blob([data], {type: 'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url;
+  a.download = `proyecto_urbano_${new Date().getTime()}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+  toast('Proyecto exportado','success');
+});
+document.getElementById('fileImport')?.addEventListener('change', e => {
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const data = JSON.parse(e.target.result);
+      if(data.features && data.nextId) {
+        state.features = data.features; state.nextId = data.nextId;
+        pushHistory(); refreshMap(); updateStats();
+        toast('Proyecto importado con éxito','success');
+      } else toast('Archivo inválido','error');
+    } catch(err) { toast('Error al leer el archivo','error'); }
+  };
+  reader.readAsText(file);
+  e.target.value = '';
+});
+
+// ── CONFIGURATION & LABELS ───────────────────────────────────────────────
 function addDataLayers() {
   map.addSource('urban-data',{type:'geojson',data:buildGeoJSON()});
 
@@ -306,12 +339,34 @@ function addDataLayers() {
     });
   });
 
-  const zoneFilter=['match',['get','type'],['zone','park','terrain'],true,false];
+  const zoneFilter=['match',['get','type'],['zone','park','terrain','water','radius'],true,false];
   map.addLayer({id:'layer-zones-fill',type:'fill',source:'urban-data',filter:zoneFilter,
-    paint:{'fill-color':['get','fillColor'],'fill-opacity':0.25}});
+    paint:{
+      'fill-color':['get','fillColor'],
+      'fill-opacity':['match',['get','type'],'radius',0.15,'water',0.65,0.25]
+    }});
   map.addLayer({id:'layer-zones-line',type:'line',source:'urban-data',filter:zoneFilter,
     layout:{'line-join':'round'},
     paint:{'line-color':['get','color'],'line-width':2,'line-dasharray':[4,2]}});
+    
+  map.addLayer({
+    id:'layer-trees-3d', type:'fill-extrusion', source:'urban-data', filter:['==',['get','type'],'tree'],
+    paint:{
+      'fill-extrusion-color': ['get', 'fillColor'],
+      'fill-extrusion-height': ['get', 'height'],
+      'fill-extrusion-base': ['coalesce', ['get', 'base_height'], 0],
+      'fill-extrusion-opacity': 0.95
+    }
+  });
+
+  map.addLayer({
+    id:'layer-railways', type:'line', source:'urban-data', filter:['==',['get','type'],'railway'],
+    paint:{ 'line-color': ['get', 'color'], 'line-width': ['interpolate',['linear'],['zoom'], 10,2, 18,6] }
+  });
+  map.addLayer({
+    id:'layer-railways-dash', type:'line', source:'urban-data', filter:['==',['get','type'],'railway'],
+    paint:{ 'line-color': '#f97316', 'line-width': ['interpolate',['linear'],['zoom'], 10,1, 18,3], 'line-dasharray': [2, 2] }
+  });
 
   const bldFilter=['match',['get','type'],['house','building','custom_building'],true,false];
   map.addLayer({id:'layer-buildings',type:'fill-extrusion',source:'urban-data',filter:bldFilter,
@@ -358,12 +413,13 @@ function addDataLayers() {
   map.on('mouseleave', 'layer-edit-handles', () => { map.getCanvas().style.cursor = ''; });
 
   // Click interactivity
-  ['layer-buildings','layer-roads','layer-zones-fill'].forEach(lid=>{
+  ['layer-buildings','layer-roads','layer-zones-fill','layer-trees-3d','layer-railways'].forEach(lid=>{
     map.on('mousedown',lid,e=>{
       if(state.tool!=='move') return;
       e.preventDefault();
-      const id=e.features[0]?.properties?.id;
+      let id=e.features[0]?.properties?.id;
       if(!id) return;
+      if(e.features[0].properties.parent_id) id = e.features[0].properties.parent_id;
       state.draggingFeatureId=id;
       state.lastDragPos=e.lngLat;
       state.isDragging=false;
@@ -371,8 +427,9 @@ function addDataLayers() {
       if(state.popup){ state.popup.remove(); state.popup=null; }
     });
     map.on('click',lid,e=>{
-      const id=e.features[0]?.properties?.id;
+      let id=e.features[0]?.properties?.id;
       if(!id) return;
+      if(e.features[0].properties.parent_id) id = e.features[0].properties.parent_id;
       if(['select','delete'].includes(state.tool)){
         e.originalEvent.stopPropagation();
         if(state.tool==='delete') { state.selectedIds=[id]; deleteSelection(); }
@@ -399,21 +456,27 @@ function refreshMap() {
   updateStats();
 }
 
-// ── MAP CLICK ─────────────────────────────────────────────────
+// ── INTERACTION HANDLERS ──────────────────────────────────────
 function handleMapClick(e) {
-  const {lng,lat}=e.lngLat;
-  if(['select','delete'].includes(state.tool)) return;
-  if(['house','building'].includes(state.tool)) { placeBuilding(state.tool,lng,lat); return; }
-  if(['road','park','zone','terrain','custom_building'].includes(state.tool)) {
+  if(state.tool==='move' || state.tool==='delete' || state.tool==='select') return;
+  const {lng, lat} = e.lngLat;
+
+  if(['house','building'].includes(state.tool)) {
+    placeBuilding(state.tool, lng, lat); return;
+  } else if(state.tool==='tree') {
+    finishTree(lng, lat); return;
+  } else if(state.tool==='radius') {
+    finishRadius(lng, lat); return;
+  } else {
     // Check click-to-close
     if (state.drawPoints.length > 0) {
       const p = e.point;
-      if (['park','zone','terrain','custom_building'].includes(state.tool) && state.drawPoints.length >= 3) {
+      if (['park','zone','terrain','custom_building','water'].includes(state.tool) && state.drawPoints.length >= 3) {
         const firstP = map.project(state.drawPoints[0]);
         if (Math.hypot(p.x - firstP.x, p.y - firstP.y) < 20) { finishPolygon(state.tool); return; }
-      } else if (state.tool === 'road' && state.drawPoints.length >= 2) {
+      } else if (['road','railway'].includes(state.tool) && state.drawPoints.length >= 2) {
         const lastP = map.project(state.drawPoints[state.drawPoints.length-1]);
-        if (Math.hypot(p.x - lastP.x, p.y - lastP.y) < 20) { finishRoad(); return; }
+        if (Math.hypot(p.x - lastP.x, p.y - lastP.y) < 20) { finishLine(); return; }
       }
     }
 
@@ -422,7 +485,7 @@ function handleMapClick(e) {
     if(state.drawPoints.length===1) {
       document.getElementById('drawHint').style.display='block';
       document.getElementById('drawHintText').textContent =
-        state.tool==='road'
+        ['road','railway'].includes(state.tool)
           ? 'Traza con clic Izquierdo · Clic DERECHO para terminar'
           : 'Traza con clic Izquierdo · Clic DERECHO para cerrar';
     }
@@ -461,27 +524,26 @@ function placeBuilding(type, lng, lat) {
   selectFeature(id,{lng,lat});
 }
 
-// ── ROAD ─────────────────────────────────────────────────────
-function finishRoad() {
+// ── LINE (ROAD/RAILWAY) ───────────────────────────────────────
+function finishLine() {
   if(state.drawPoints.length<2) return;
-  const curved = document.getElementById('roadCurved')?.checked;
-  const wSel   = document.getElementById('roadWidthSelect');
-  const wCust  = document.getElementById('roadWidthCustom');
-  const widthM = wSel?.value==='custom' ? parseFloat(wCust?.value||8) : parseFloat(wSel?.value||8);
-  const coords = curved && state.drawPoints.length>2 ? catmullRom(state.drawPoints) : [...state.drawPoints];
-  const len    = lineLength(coords);
-  const id     = state.nextId++;
-  const feat   = {
+  const isCurved = document.getElementById('roadCurved')?.checked;
+  const pts = isCurved && state.drawPoints.length > 2 ? catmullRom(state.drawPoints) : [...state.drawPoints];
+  const type = state.tool === 'railway' ? 'railway' : 'road';
+  const cfg = TYPE_CONFIG[type];
+  const len = lineLength(pts);
+  const lanes = parseInt(document.getElementById('roadLanes')?.value || 2);
+  const id=state.nextId++;
+  const feat = {
     type:'Feature', id,
-    properties:{ id, type:'road', name:`Vía ${id}`, color:TYPE_CONFIG.road.color, fillColor:TYPE_CONFIG.road.color,
-      widthM, lanes:Math.max(1, Math.round(widthM/3)), roadType:'secundaria', curved:!!curved, length_m:Math.round(len),
-      raw_pts: [...state.drawPoints] },
-    geometry:{ type:'LineString', coordinates:coords },
+    properties:{ id, type: type, name:`${cfg.label} ${id}`, color:cfg.color, fillColor:cfg.fillColor, 
+                 length_m:Math.round(len), raw_pts:[...state.drawPoints], curved: !!isCurved, lanes: lanes, widthM: lanes * 3 },
+    geometry:{ type:'LineString', coordinates:pts }
   };
   pushHistory();
   state.features.push(feat);
-  clearDrawing(); refreshMap();
-  toast(`Carretera trazada — ${fmtLen(len)}`,'success');
+  clearDrawing(); refreshMap(); updateStats();
+  toast(`${cfg.label} trazada — ${fmtLen(len)}`,'success');
 }
 
 // ── POLYGON ───────────────────────────────────────────────────
@@ -507,6 +569,119 @@ function finishPolygon(type) {
   state.features.push(feat);
   clearDrawing(); refreshMap();
   toast(`${cfg.label} — ${fmtArea(area)}`,'success');
+}
+
+// ── ADDITIONAL POINT/CIRCULAR TOOLS ─────────────────────────
+function buildTreePolygon(lng, lat, radiusM) {
+  const pts = [];
+  // 6 sides (Hexagon) for a beautiful low-poly tree look
+  for(let i=0; i<6; i++) {
+     const ang = (i/6)* Math.PI * 2;
+     const dlat = (radiusM * Math.cos(ang)) / 111320;
+     const dlng = (radiusM * Math.sin(ang)) / (40075000 * Math.cos(lat*Math.PI/180) / 360);
+     pts.push([lng + dlng, lat + dlat]);
+  }
+  return [...pts, pts[0]];
+}
+
+function finishTree(lng, lat) {
+  const treeType = document.getElementById('treeType')?.value || 'pino';
+  let totalH = parseFloat(document.getElementById('treeHeight')?.value || 8);
+  
+  // Randomize actual height slightly for organic scale 
+  totalH = totalH * (0.85 + Math.random()*0.3);
+
+  const trunkId = state.nextId++;
+  const cfg = TYPE_CONFIG['tree'];
+  const parts = [];
+  
+  const tc = '#451a03'; const tf = '#78350f'; // Trunk colors
+  const cc = cfg.color; const cf = cfg.fillColor; // Canopy colors
+  
+  const addPart = (rM, base, h, colC, colF) => {
+    const id = state.nextId++;
+    parts.push({
+      type:'Feature', id,
+      properties:{ id, parent_id:trunkId, type:'tree', color:colC, fillColor:colF, base_height: base, height: Math.round(h*10)/10 },
+      geometry:{ type:'Polygon', coordinates:[buildTreePolygon(lng, lat, rM)] }
+    });
+  };
+  const addOffPart = (dlngM, dlatM, rM, base, h, colC, colF) => {
+    const dlat = dlatM / 111320;
+    const dlng = dlngM / (40075000 * Math.cos(lat*Math.PI/180) / 360);
+    const id = state.nextId++;
+    parts.push({
+      type:'Feature', id,
+      properties:{ id, parent_id:trunkId, type:'tree', color:colC, fillColor:colF, base_height: base, height: Math.round(h*10)/10 },
+      geometry:{ type:'Polygon', coordinates:[buildTreePolygon(lng + dlng, lat + dlat, rM)] }
+    });
+  };
+
+  // Base Trunk feature
+  parts.push({
+    type:'Feature', id: trunkId,
+    properties:{ id:trunkId, type:'tree', name: `Árbol ${treeType} ${trunkId}`, color:tc, fillColor:tf, 
+                 base_height: 0, height: Math.round(totalH*0.2*10)/10, center_lng:lng, center_lat:lat, tree_type: treeType },
+    geometry:{ type:'Polygon', coordinates:[buildTreePolygon(lng, lat, totalH*0.05)] }
+  });
+
+  if (treeType === 'pino') { 
+     const rMax = totalH * 0.35;
+     parts[0].properties.height = totalH * 0.2; 
+     addPart(rMax,       totalH*0.2,  totalH*0.5,  cc, cf);
+     addPart(rMax*0.7,   totalH*0.5,  totalH*0.75, cc, cf);
+     addPart(rMax*0.4,   totalH*0.75, totalH,      cc, cf);
+  } else if (treeType === 'abeto') {
+     const rMax = totalH * 0.25;
+     parts[0].properties.height = totalH * 0.1;
+     const steps = 6;
+     const stepH = (totalH * 0.9) / steps;
+     for(let i=0; i<steps; i++) {
+        const base = totalH*0.1 + (i*stepH);
+        const r = rMax * (1 - (i/steps)*0.75);
+        addPart(r, base, base + stepH*1.4, cc, cf); // overlap stepH * 1.4 creates dense effect
+     }
+  } else if (treeType === 'roble') {
+     parts[0].properties.height = totalH * 0.4;
+     const rM = totalH * 0.3;
+     addPart(rM, totalH*0.3, totalH, cc, cf); 
+     addOffPart(rM*0.7, 0, rM*0.7, totalH*0.4, totalH*0.8, cc, cf);
+     addOffPart(-rM*0.7, 0, rM*0.7, totalH*0.4, totalH*0.8, cc, cf);
+     addOffPart(0, rM*0.7, rM*0.7, totalH*0.4, totalH*0.8, cc, cf);
+     addOffPart(0, -rM*0.7, rM*0.7, totalH*0.4, totalH*0.8, cc, cf);
+  } else if (treeType === 'ovalado') {
+     parts[0].properties.height = totalH * 0.25;
+     addPart(totalH*0.2,  totalH*0.25, totalH*0.4, cc, cf);
+     addPart(totalH*0.25, totalH*0.4,  totalH*0.7, cc, cf);
+     addPart(totalH*0.15, totalH*0.7,  totalH,     cc, cf);
+  } else if (treeType === 'seco') {
+     parts[0].properties.height = totalH; 
+     parts[0].geometry.coordinates = [buildTreePolygon(lng,lat, totalH*0.04)]; 
+     addOffPart(totalH*0.08, 0,           totalH*0.02, totalH*0.4, totalH*0.6, tc, tf);
+     addOffPart(-totalH*0.06, totalH*0.05, totalH*0.02, totalH*0.6, totalH*0.8, tc, tf);
+  }
+
+  state.features.push(...parts);
+  pushHistory(); refreshMap(); updateStats();
+}
+
+function finishRadius(lng, lat) {
+  const id=state.nextId++;
+  const cfg=TYPE_CONFIG['radius'];
+  const r_m = parseFloat(document.getElementById('radiusMeters')?.value || 400);
+  const pts = [];
+  for(let i=0; i<=32; i++) {
+     const ang = (i/32)* Math.PI * 2;
+     const dlat = (r_m * Math.cos(ang)) / 111320;
+     const dlng = (r_m * Math.sin(ang)) / (40075000 * Math.cos(lat*Math.PI/180) / 360);
+     pts.push([lng + dlng, lat + dlat]);
+  }
+  state.features.push({
+    type:'Feature', id,
+    properties:{ id, type:'radius', name:`Radio ${id}`, color:cfg.color, fillColor:cfg.fillColor, raw_pts:[...pts], radius_m: r_m, area_m2: Math.round(Math.PI*r_m*r_m) },
+    geometry:{ type:'Polygon', coordinates:[pts] }
+  });
+  pushHistory(); refreshMap(); updateStats();
 }
 
 // ── DRAW PREVIEW ──────────────────────────────────────────────
@@ -594,25 +769,31 @@ function updateEditHandles() {
 function deleteSelection() {
   if(!state.selectedIds.length) return;
   pushHistory();
-  state.features=state.features.filter(f=>!state.selectedIds.includes(f.properties.id));
+  const toDelete = new Set([...state.selectedIds]);
+  // cascade delete to children
+  state.features.forEach(f => {
+    if (f.properties.parent_id && toDelete.has(f.properties.parent_id)) toDelete.add(f.properties.id);
+  });
+  state.features = state.features.filter(f => !toDelete.has(f.properties.id));
   state.selectedIds=[]; updateSelectionUI();
   refreshMap(); toast('Objeto(s) eliminado(s)','error');
 }
 
 function translateFeature(id, dlng, dlat) {
-  const f = state.features.find(x => x.properties.id === id);
-  if (!f) return;
-  if (f.properties.center_lng != null) {
-    f.properties.center_lng += dlng;
-    f.properties.center_lat += dlat;
-  }
-  if (f.properties.raw_pts) {
-    f.properties.raw_pts = f.properties.raw_pts.map(c => [c[0]+dlng, c[1]+dlat]);
-  }
-  const movePts = pts => pts.map(c => [c[0]+dlng, c[1]+dlat]);
-  if (f.geometry.type === 'Point') f.geometry.coordinates = movePts([f.geometry.coordinates])[0];
-  else if (f.geometry.type === 'LineString') f.geometry.coordinates = movePts(f.geometry.coordinates);
-  else if (f.geometry.type === 'Polygon') f.geometry.coordinates = f.geometry.coordinates.map(movePts);
+  const feats = state.features.filter(x => x.properties.id === id || x.properties.parent_id === id);
+  feats.forEach(f => {
+    if (f.properties.center_lng != null) {
+      f.properties.center_lng += dlng;
+      f.properties.center_lat += dlat;
+    }
+    if (f.properties.raw_pts) {
+      f.properties.raw_pts = f.properties.raw_pts.map(c => [c[0]+dlng, c[1]+dlat]);
+    }
+    const movePts = pts => pts.map(c => [c[0]+dlng, c[1]+dlat]);
+    if (f.geometry.type === 'Point') f.geometry.coordinates = movePts([f.geometry.coordinates])[0];
+    else if (f.geometry.type === 'LineString') f.geometry.coordinates = movePts(f.geometry.coordinates);
+    else if (f.geometry.type === 'Polygon') f.geometry.coordinates = f.geometry.coordinates.map(movePts);
+  });
 }
 
 // ── PROPERTIES PANEL ─────────────────────────────────────────
@@ -655,6 +836,12 @@ function showPropsPanel(feat, lngLat) {
         <option value="mixto"        ${p.uso_suelo==='mixto'?'selected':''}>Mixto</option>
         <option value="industrial"   ${p.uso_suelo==='industrial'?'selected':''}>Industrial</option>
       </select></div>`;
+  } else if (p.type === 'radius') {
+    fields+=`
+      <div class="form-field">
+        <label>Alcance (Radio): <span id="propRadLabel">${p.radius_m||400}</span>m</label>
+        <input type="range" id="prop-radius" min="50" max="5000" step="50" value="${p.radius_m||400}" style="width:100%"/>
+      </div>`;
   }
   if(['park','zone','terrain','custom_building'].includes(p.type)) {
      fields+=`
@@ -786,6 +973,34 @@ function showPropsPanel(feat, lngLat) {
       curvedCb?.addEventListener('change', rebuildRoad);
     }
   }
+  
+  // Live events for radius isochrone
+  if (p.type === 'radius') {
+    const radRange=document.getElementById('prop-radius');
+    const radLabel=document.getElementById('propRadLabel');
+    const rebuildRadius=()=>{
+      const f=state.features.find(f=>f.properties.id===state.selectedIds[0]);
+      if(!f) return;
+      f.properties.radius_m = parseFloat(radRange.value)||400;
+      const center = getFeatureCenter(f);
+      if(!center) return;
+      const pts = [];
+      const r_m = f.properties.radius_m;
+      for(let i=0; i<=32; i++) {
+         const ang = (i/32)* Math.PI * 2;
+         const dlat = (r_m * Math.cos(ang)) / 111320;
+         const dlng = (r_m * Math.sin(ang)) / (40075000 * Math.cos(center.lat*Math.PI/180) / 360);
+         pts.push([center.lng + dlng, center.lat + dlat]);
+      }
+      f.geometry.coordinates = [pts];
+      f.properties.raw_pts = [...pts];
+      f.properties.area_m2 = Math.round(Math.PI*r_m*r_m);
+      refreshMap();
+      const mc=document.getElementById('liveMeasures');
+      if(mc) mc.innerHTML=buildMeasureHTML(f);
+    };
+    radRange?.addEventListener('input',()=>{ radLabel.textContent=radRange.value; rebuildRadius(); });
+  }
 
   // Apply button
   document.getElementById('btnApplyProps').addEventListener('click',()=>{
@@ -812,6 +1027,12 @@ function showPropsPanel(feat, lngLat) {
          f.geometry.coordinates = curved && f.properties.raw_pts.length>2 ? catmullRom(f.properties.raw_pts) : [...f.properties.raw_pts];
          f.properties.length_m = Math.round(lineLength(f.geometry.coordinates));
       }
+    }
+    if(document.getElementById('prop-poly-curved')){
+      f.properties.curved=document.getElementById('prop-poly-curved').checked;
+    }
+    if(document.getElementById('prop-radius')){
+      f.properties.radius_m=parseFloat(document.getElementById('prop-radius').value)||400;
     }
     const col=document.getElementById('prop-color').value;
     f.properties.fillColor=col; f.properties.color=col;
@@ -916,7 +1137,8 @@ document.getElementById('layersList').addEventListener('change', () => {
   };
   const t = {
     house: getVis('house'), building: getVis('building'), custom_building: getVis('custom_building'),
-    road: getVis('road'), park: getVis('park'), zone: getVis('zone'), terrain: getVis('terrain')
+    road: getVis('road'), park: getVis('park'), zone: getVis('zone'), terrain: getVis('terrain'),
+    water: getVis('water'), tree: getVis('tree'), railway: getVis('railway'), radius: getVis('radius')
   };
 
   // Buildings Layer Filter
@@ -941,6 +1163,8 @@ document.getElementById('layersList').addEventListener('change', () => {
   if (t.park) znTypes.push('park');
   if (t.zone) znTypes.push('zone');
   if (t.terrain) znTypes.push('terrain');
+  if (t.water) znTypes.push('water');
+  if (t.radius) znTypes.push('radius');
   
   const zonesLays = ['layer-zones-fill', 'layer-zones-line'];
   if (znTypes.length === 0) {
@@ -954,12 +1178,20 @@ document.getElementById('layersList').addEventListener('change', () => {
     });
   }
 
+  // Trees visibility
+  if (map.getLayer('layer-trees-3d')) map.setLayoutProperty('layer-trees-3d', 'visibility', t.tree ? 'visible' : 'none');
+
   // Roads and lane dividers visibility
   const rVis = t.road ? 'visible' : 'none';
   if (map.getLayer('layer-roads')) map.setLayoutProperty('layer-roads', 'visibility', rVis);
   for (let i = 1; i <= 6; i++) {
      if (map.getLayer(`layer-roads-div-${i}`)) map.setLayoutProperty(`layer-roads-div-${i}`, 'visibility', rVis);
   }
+  
+  // Railways visibility
+  const railVis = t.railway ? 'visible' : 'none';
+  if(map.getLayer('layer-railways')) map.setLayoutProperty('layer-railways', 'visibility', railVis);
+  if(map.getLayer('layer-railways-dash')) map.setLayoutProperty('layer-railways-dash', 'visibility', railVis);
 });
 
 // ── TERRAIN CONTROLS ──────────────────────────────────────────
@@ -994,8 +1226,9 @@ document.getElementById('roadWidthSelect')?.addEventListener('change',function()
 
 // ── TOOL BUTTONS ──────────────────────────────────────────────
 const optionsBars={
-  road:'roadOptionsBar', building:'buildingOptionsBar', house:'houseOptionsBar',
-  park:'polygonOptionsBar', zone:'polygonOptionsBar', terrain:'polygonOptionsBar', custom_building:'polygonOptionsBar'
+  road:'roadOptionsBar', railway:'roadOptionsBar', building:'buildingOptionsBar', house:'houseOptionsBar',
+  park:'polygonOptionsBar', zone:'polygonOptionsBar', terrain:'polygonOptionsBar', custom_building:'polygonOptionsBar',
+  water:'polygonOptionsBar', radius:'radiusOptionsBar', tree:'treeOptionsBar'
 };
 document.querySelectorAll('.tool-btn[data-tool]').forEach(btn=>{
   btn.addEventListener('click',()=>setTool(btn.dataset.tool));
@@ -1007,7 +1240,7 @@ function setTool(tool) {
   document.querySelector(`[data-tool="${tool}"]`)?.classList.add('active');
 
   // Hide all option bars, show relevant one
-  ['roadOptionsBar','buildingOptionsBar','houseOptionsBar','polygonOptionsBar'].forEach(id=>{
+  ['roadOptionsBar','buildingOptionsBar','houseOptionsBar','polygonOptionsBar','radiusOptionsBar','treeOptionsBar'].forEach(id=>{
     const el=document.getElementById(id);
     if(el) el.style.display='none';
   });
@@ -1020,8 +1253,8 @@ function setTool(tool) {
 
   // Cursor
   document.body.classList.remove('map-cursor-road','map-cursor-place','map-cursor-delete');
-  if(['road','zone','park','terrain','custom_building'].includes(tool)) document.body.classList.add('map-cursor-road');
-  else if(['house','building'].includes(tool)) document.body.classList.add('map-cursor-place');
+  if(['road','railway','zone','park','terrain','custom_building','water'].includes(tool)) document.body.classList.add('map-cursor-road');
+  else if(['house','building','tree','radius'].includes(tool)) document.body.classList.add('map-cursor-place');
   else if(tool==='delete') document.body.classList.add('map-cursor-delete');
 
   map.getCanvas().style.cursor = tool==='move' ? 'grab' : tool==='delete' ? 'not-allowed' : '';
