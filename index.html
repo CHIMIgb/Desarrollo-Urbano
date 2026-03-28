@@ -194,17 +194,6 @@
         </div>
       </div>
 
-      <div class="options-bar" id="buildingOptionsBar" style="display:none">
-        <span class="opt-label">Edificio</span>
-        <div class="opt-divider"></div>
-        <label class="opt-item"><span>Ancho (m)</span><input type="number" id="bldWidth" value="20" min="2" max="500" /></label>
-        <label class="opt-item"><span>Largo (m)</span><input type="number" id="bldLength" value="20" min="2" max="500" /></label>
-        <label class="opt-item"><span>Altura (m)</span><input type="number" id="bldHeight" value="30" min="3" max="600" /></label>
-        <label class="opt-item"><span>Rotaci&oacute;n</span>
-          <input type="range" id="bldRotation" min="0" max="359" value="0" style="width:80px" />
-          <span id="bldRotVal">0&deg;</span>
-        </label>
-      </div>
 
       <div class="options-bar" id="radiusOptionsBar" style="display:none">
         <span class="opt-label">Alcance</span>
@@ -232,15 +221,11 @@
         <div class="opt-divider"></div>
         <div class="form-field">
           <select id="furnitureType">
-            <option value="semaforo">Semáforo</option>
-            <option value="farol">Farol Clásico</option>
-            <option value="luminaria">Luz Moderna</option>
-            <option value="disco">Luz de Disco</option>
+            <option value="semaforo">Semáforo (Vehicular + Peatonal)</option>
+            <option value="farol">Farol Clásico (Parque)</option>
+            <option value="luminaria">Luz Moderna (Poste Alto)</option>
+            <option value="disco">Luz de Disco (Plaza)</option>
           </select>
-        </div>
-        <div class="form-field" style="margin-left: 10px;">
-          <label style="font-size:12px">Rotación</label>
-          <input type="range" id="furnitureRot" min="0" max="359" step="5" value="0" style="width:70px"/>
         </div>
       </div>
 
