@@ -225,6 +225,24 @@ function initMap() {
        updateSelectionUI();
      }
   });
+
+  // Sync sliders when map is moved by mouse (Right-Click Drag)
+  map.on('rotate', () => {
+    const b = Math.round(map.getBearing());
+    const cb = document.getElementById('cameraBearing');
+    if (cb && cb.value != b) {
+       cb.value = b;
+       document.getElementById('cameraBearingVal').textContent = b + '°';
+    }
+  });
+  map.on('pitch', () => {
+    const p = Math.round(map.getPitch());
+    const cp = document.getElementById('cameraPitch');
+    if (cp && cp.value != p) {
+       cp.value = p;
+       document.getElementById('cameraPitchVal').textContent = p + '°';
+    }
+  });
 }
 
 // ── STYLE BUILDER ─────────────────────────────────────────────
@@ -953,6 +971,11 @@ document.getElementById('cameraPitch').addEventListener('input',function(){
   const v=parseInt(this.value);
   document.getElementById('cameraPitchVal').textContent=v+'°';
   map.setPitch(v);
+});
+document.getElementById('cameraBearing')?.addEventListener('input',function(){
+  const v=parseInt(this.value);
+  document.getElementById('cameraBearingVal').textContent=v+'°';
+  map.setBearing(v);
 });
 
 // ── OPTIONS BAR WIRING ────────────────────────────────────────
