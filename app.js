@@ -134,7 +134,8 @@ const TYPE_CONFIG = {
   water:  {label:'Cuerpo de Agua', color:'#38bdf8', fillColor:'#0284c7'},
   tree:   {label:'Árbol 3D', color:'#4ade80', fillColor:'#16a34a'},
   railway:{label:'Vía Férrea', color:'#64748b', fillColor:'#334155'},
-  radius: {label:'Isócrona', color:'#f0abfc', fillColor:'#c026d3'}
+  radius: {label:'Isócrona', color:'#f0abfc', fillColor:'#c026d3'},
+  furniture: {label:'Mobiliario', color:'#9ca3af', fillColor:'#d1d5db'}
 };
 
 // ── STATE ─────────────────────────────────────────────────────
@@ -360,6 +361,16 @@ function addDataLayers() {
   });
 
   map.addLayer({
+    id:'layer-furniture', type:'fill-extrusion', source:'urban-data', filter:['==',['get','type'],'furniture'],
+    paint:{
+      'fill-extrusion-color': ['get', 'fillColor'],
+      'fill-extrusion-height': ['get', 'height'],
+      'fill-extrusion-base': ['coalesce', ['get', 'base_height'], 0],
+      'fill-extrusion-opacity': 1.0
+    }
+  });
+
+  map.addLayer({
     id:'layer-railways', type:'line', source:'urban-data', filter:['==',['get','type'],'railway'],
     paint:{ 'line-color': ['get', 'color'], 'line-width': ['interpolate',['linear'],['zoom'], 10,2, 18,6] }
   });
@@ -413,7 +424,7 @@ function addDataLayers() {
   map.on('mouseleave', 'layer-edit-handles', () => { map.getCanvas().style.cursor = ''; });
 
   // Click interactivity
-  ['layer-buildings','layer-roads','layer-zones-fill','layer-trees-3d','layer-railways'].forEach(lid=>{
+  ['layer-buildings','layer-roads','layer-zones-fill','layer-trees-3d','layer-railways','layer-furniture'].forEach(lid=>{
     map.on('mousedown',lid,e=>{
       if(state.tool!=='move') return;
       e.preventDefault();
@@ -465,6 +476,8 @@ function handleMapClick(e) {
     placeBuilding(state.tool, lng, lat); return;
   } else if(state.tool==='tree') {
     finishTree(lng, lat); return;
+  } else if(state.tool==='furniture') {
+    finishFurniture(lng, lat); return;
   } else if(state.tool==='radius') {
     finishRadius(lng, lat); return;
   } else {
@@ -564,6 +577,10 @@ function finishPolygon(type) {
     feat.properties.height = cfg.defaultH;
     feat.properties.floors = Math.round(cfg.defaultH/3.5);
     feat.properties.uso_suelo = 'mixto';
+  } else if (type === 'water') {
+    const depth = parseFloat(document.getElementById('waterDepth')?.value || 2);
+    feat.properties.depth_m = depth;
+    feat.properties.volume_m3 = Math.round(area * depth);
   }
   pushHistory();
   state.features.push(feat);
@@ -664,6 +681,100 @@ function finishTree(lng, lat) {
   state.features.push(...parts);
   pushHistory(); refreshMap(); updateStats();
 }
+function generateFurnitureParts(baseId, lng, lat, rot, fType) {
+  const cfg = TYPE_CONFIG['furniture'];
+  const parts = [];
+
+  const addCircle = (rM, base, h, col) => {
+    const id = state.nextId++;
+    parts.push({
+      type:'Feature', id,
+      properties:{ id, parent_id:baseId, type:'furniture', color:col, fillColor:col, base_height: base, height: h },
+      geometry:{ type:'Polygon', coordinates:[buildTreePolygon(lng, lat, rM)] }
+    });
+  };
+  
+  const addOffBox = (dlngM, dlatM, w, l, rotOff, base, h, col) => {
+    const rad = rot * Math.PI / 180;
+    const dx = dlngM * Math.cos(rad) - dlatM * Math.sin(rad);
+    const dy = dlngM * Math.sin(rad) + dlatM * Math.cos(rad);
+    const dlat = dy / 111320;
+    const dlng = dx / (40075000 * Math.cos(lat*Math.PI/180) / 360);
+    const id = state.nextId++;
+    parts.push({
+      type:'Feature', id,
+      properties:{ id, parent_id:baseId, type:'furniture', color:col, fillColor:col, base_height: base, height: h },
+      geometry:{ type:'Polygon', coordinates:[buildingPolygon(lng + dlng, lat + dlat, w, l, rot + rotOff)] }
+    });
+  };
+
+  const addOffCircle = (dlngM, dlatM, rM, base, h, col) => {
+    const rad = rot * Math.PI / 180;
+    const dx = dlngM * Math.cos(rad) - dlatM * Math.sin(rad);
+    const dy = dlngM * Math.sin(rad) + dlatM * Math.cos(rad);
+    const dlat = dy / 111320;
+    const dlng = dx / (40075000 * Math.cos(lat*Math.PI/180) / 360);
+    const id = state.nextId++;
+    parts.push({
+      type:'Feature', id,
+      properties:{ id, parent_id:baseId, type:'furniture', color:col, fillColor:col, base_height: base, height: Math.round(h*10)/10 },
+      geometry:{ type:'Polygon', coordinates:[buildTreePolygon(lng + dlng, lat + dlat, rM)] }
+    });
+  };
+
+  parts.push({
+    type:'Feature', id: baseId,
+    properties:{ id:baseId, type:'furniture', name: `Mobiliario ${baseId}`, color:'#374151', fillColor:'#4b5563', 
+                 base_height: 0, height: 0.5, center_lng:lng, center_lat:lat, rotation: rot, furniture_type: fType },
+    geometry:{ type:'Polygon', coordinates:[buildTreePolygon(lng, lat, 0.4)] }
+  });
+
+  const poleCol = '#6b7280'; 
+  const darkCol = '#1f2937'; 
+
+  if (fType === 'semaforo') {
+     parts[0].properties.height = 0.8; 
+     addCircle(0.12, 0.8, 5.0, poleCol); 
+     addOffBox(0, 0, 0.4, 0.4, 0, 3.5, 5.0, darkCol);
+     // Luces
+     addOffBox(0, 0.22, 0.2, 0.05, 0, 4.5, 4.8, '#ef4444'); 
+     addOffBox(0, 0.22, 0.2, 0.05, 0, 4.1, 4.4, '#eab308'); 
+     addOffBox(0, 0.22, 0.2, 0.05, 0, 3.7, 4.0, '#22c55e'); 
+     // Semáforo peatonal
+     addOffBox(0.22, 0, 0.05, 0.2, 0, 2.5, 3.0, darkCol);
+     addOffBox(0.24, 0, 0.02, 0.15, 0, 2.75, 2.9, '#ef4444'); 
+     addOffBox(0.24, 0, 0.02, 0.15, 0, 2.55, 2.7, '#22c55e'); 
+  } else if (fType === 'farol') { 
+     parts[0].geometry.coordinates = [buildTreePolygon(lng, lat, 0.3)];
+     parts[0].properties.height = 0.6;
+     addCircle(0.08, 0.6, 4.0, darkCol); 
+     addCircle(0.12, 3.9, 4.1, darkCol); 
+     addCircle(0.25, 4.1, 4.3, darkCol); 
+     addCircle(0.3,  4.3, 4.8, '#fef08a'); 
+     addCircle(0.35, 4.8, 5.0, darkCol); 
+  } else if (fType === 'luminaria') { 
+     parts[0].geometry.coordinates = [buildTreePolygon(lng, lat, 0.2)];
+     addCircle(0.1, 0.5, 6.0, poleCol); 
+     addOffBox(0, 1.0, 0.15, 2.0, 0, 5.8, 6.0, poleCol); 
+     addOffBox(0, 1.6, 0.2, 0.5, 0, 5.7, 5.8, '#fef08a'); 
+  } else if (fType === 'disco') { 
+     parts[0].geometry.coordinates = [buildTreePolygon(lng, lat, 0.2)];
+     addCircle(0.08, 0.5, 5.5, poleCol); 
+     addCircle(0.6, 5.5, 5.6, poleCol); 
+     addCircle(0.5, 5.4, 5.5, '#fef08a');
+  }
+
+  return parts;
+}
+
+function finishFurniture(lng, lat) {
+  const fType = document.getElementById('furnitureType')?.value || 'semaforo';
+  const rot = parseFloat(document.getElementById('furnitureRot')?.value || 0);
+  const baseId = state.nextId++;
+  const parts = generateFurnitureParts(baseId, lng, lat, rot, fType);
+  state.features.push(...parts);
+  pushHistory(); refreshMap(); updateStats();
+}
 
 function finishRadius(lng, lat) {
   const id=state.nextId++;
@@ -690,7 +801,7 @@ function updateDrawPreview() {
   if(!pts.length) return;
   const features=[];
   if(pts.length>=2) {
-    const isPoly = ['park','zone','terrain','custom_building'].includes(state.tool);
+    const isPoly = ['park','zone','terrain','custom_building','water'].includes(state.tool);
     const curved = (state.tool === 'road' && document.getElementById('roadCurved')?.checked) || 
                    (isPoly && document.getElementById('polyCurved')?.checked);
     if(isPoly && pts.length>=3) {
@@ -710,7 +821,7 @@ function updateLiveMeasure(lng,lat) {
   const el=document.getElementById('drawMeasure');
   if(!el) return;
   if(pts.length<2) { el.style.display='none'; return; }
-  const isPolygon=['park','zone','terrain','custom_building'].includes(state.tool);
+  const isPolygon=['park','zone','terrain','custom_building','water'].includes(state.tool);
   let text='';
   if(isPolygon && pts.length>=3) {
     const closed=[...pts,pts[0]];
@@ -843,7 +954,10 @@ function showPropsPanel(feat, lngLat) {
         <input type="range" id="prop-radius" min="50" max="5000" step="50" value="${p.radius_m||400}" style="width:100%"/>
       </div>`;
   }
-  if(['park','zone','terrain','custom_building'].includes(p.type)) {
+  if(['park','zone','terrain','custom_building','water'].includes(p.type)) {
+     if(p.type === 'water') {
+        fields+=`<div class="form-field"><label>Profundidad (m)</label><input type="number" id="prop-water-depth" value="${p.depth_m||2}" min="0.5" max="500" step="0.5"/></div>`;
+     }
      fields+=`
       <div class="form-field opt-toggle" style="margin-top:6px;">
         <label style="display:flex;align-items:center;gap:8px;">
@@ -851,6 +965,13 @@ function showPropsPanel(feat, lngLat) {
           <span class="toggle-track" style="margin:0"><span class="toggle-thumb"></span></span>
           <span style="font-size:11px;color:var(--text-primary);font-weight:500;">Curvas suaves</span>
         </label>
+      </div>`;
+  }
+  if(['furniture'].includes(p.type)) {
+     fields+=`
+      <div class="form-field">
+        <label>Rotación: <span id="propRotLabel">${Math.round(p.rotation||0)}°</span></label>
+        <input type="range" id="prop-rotation" min="0" max="359" step="5" value="${Math.round(p.rotation||0)}" style="width:100%"/>
       </div>`;
   }
   if(p.type==='road') {
@@ -908,6 +1029,30 @@ function showPropsPanel(feat, lngLat) {
     fIn?.addEventListener('input',()=>{ if(hIn) hIn.value=Math.round(parseFloat(fIn.value)*3.5); rebuildGeom(); });
   }
 
+  // Live events for furniture
+  if(p.type==='furniture') {
+    const rotRange=document.getElementById('prop-rotation');
+    const rotLabel=document.getElementById('propRotLabel');
+    const rebuildFurn = () => {
+      const f = state.features.find(f=>f.properties.id===state.selectedIds[0]);
+      if(!f) return;
+      const rot = parseFloat(rotRange.value)||0;
+      f.properties.rotation = rot;
+      
+      const oldId = f.properties.id;
+      // Filter out this object and its children from state array
+      const oldLength = state.features.length;
+      state.features = state.features.filter(x => !(x.properties.id === oldId || x.properties.parent_id === oldId));
+      
+      // Re-generate using the same base ID
+      const newParts = generateFurnitureParts(oldId, f.properties.center_lng, f.properties.center_lat, rot, f.properties.furniture_type);
+      state.features.push(...newParts);
+      
+      refreshMap();
+    };
+    rotRange?.addEventListener('input', () => { if(rotLabel) rotLabel.textContent=rotRange.value+'°'; rebuildFurn(); });
+  }
+
   // Live events for custom building
   if(p.type==='custom_building') {
     const hIn=document.getElementById('prop-height');
@@ -922,9 +1067,10 @@ function showPropsPanel(feat, lngLat) {
     fIn?.addEventListener('input',()=>{ if(hIn) hIn.value=Math.round(parseFloat(fIn.value)*3.5); rebuildCB(); });
   }
 
-  // Live events for curved polygons/parks
-  if(['park','zone','terrain','custom_building'].includes(p.type)) {
+  // Live events for curved polygons/parks/water
+  if(['park','zone','terrain','custom_building','water'].includes(p.type)) {
     const curvedCb = document.getElementById('prop-poly-curved');
+    const depthIn = document.getElementById('prop-water-depth');
     const rebuildPoly=()=>{
       const f=state.features.find(f=>f.properties.id===state.selectedIds[0]);
       if(!f) return;
@@ -937,11 +1083,16 @@ function showPropsPanel(feat, lngLat) {
            f.properties.perimeter_m = Math.round(polygonPerimeter(coords));
         }
       }
+      if(p.type==='water' && depthIn) {
+        f.properties.depth_m = parseFloat(depthIn.value) || 2;
+        f.properties.volume_m3 = Math.round(f.properties.area_m2 * f.properties.depth_m);
+      }
       refreshMap();
       const mc=document.getElementById('liveMeasures');
       if(mc) mc.innerHTML=buildMeasureHTML(f);
     };
     curvedCb?.addEventListener('change', rebuildPoly);
+    depthIn?.addEventListener('input', rebuildPoly);
   }
 
   // Live events for roads
@@ -1031,6 +1182,10 @@ function showPropsPanel(feat, lngLat) {
     if(document.getElementById('prop-poly-curved')){
       f.properties.curved=document.getElementById('prop-poly-curved').checked;
     }
+    if(document.getElementById('prop-water-depth')) {
+      f.properties.depth_m = parseFloat(document.getElementById('prop-water-depth').value) || 2;
+      f.properties.volume_m3 = Math.round(f.properties.area_m2 * f.properties.depth_m);
+    }
     if(document.getElementById('prop-radius')){
       f.properties.radius_m=parseFloat(document.getElementById('prop-radius').value)||400;
     }
@@ -1084,7 +1239,7 @@ function buildMeasureHTML(feat) {
   const p=feat.properties;
   const isBuilding=['house','building','custom_building'].includes(p.type);
   const isRoad=p.type==='road';
-  const isPoly=['park','zone','terrain','custom_building'].includes(p.type);
+  const isPoly=['park','zone','terrain','custom_building','water'].includes(p.type);
 
   const items=[];
   if(p.width_m  != null && !isRoad) items.push({val:fmtLen(p.width_m),  lbl:'Ancho'});
@@ -1098,6 +1253,10 @@ function buildMeasureHTML(feat) {
   if(isPoly && p.area_m2) {
     items.push({val:fmtArea(p.area_m2),     lbl:'Área'});
     if (isBuilding && p.height) items.push({val:fmtVol(p.area_m2 * p.height), lbl:'Volumen'});
+  }
+  if(p.type === 'water') {
+    if(p.depth_m) items.push({val:p.depth_m+'m', lbl:'Profundidad'});
+    if(p.volume_m3) items.push({val:fmtVol(p.volume_m3), lbl:'Volumen'});
   }
   if(isPoly && p.perimeter_m) items.push({val:fmtLen(p.perimeter_m),  lbl:'Perímetro'});
   if(isRoad  && p.length_m)   items.push({val:fmtLen(p.length_m),    lbl:'Longitud'},{val:(p.widthM||8)+'m',lbl:'Ancho'});
@@ -1178,6 +1337,9 @@ document.getElementById('layersList').addEventListener('change', () => {
     });
   }
 
+  // Furniture visibility linked to its layer
+  if (map.getLayer('layer-furniture')) map.setLayoutProperty('layer-furniture', 'visibility', t.furniture ? 'visible' : 'none');
+
   // Trees visibility
   if (map.getLayer('layer-trees-3d')) map.setLayoutProperty('layer-trees-3d', 'visibility', t.tree ? 'visible' : 'none');
 
@@ -1225,10 +1387,10 @@ document.getElementById('roadWidthSelect')?.addEventListener('change',function()
 });
 
 // ── TOOL BUTTONS ──────────────────────────────────────────────
-const optionsBars={
+  const optionsBars={
   road:'roadOptionsBar', railway:'roadOptionsBar', building:'buildingOptionsBar', house:'houseOptionsBar',
   park:'polygonOptionsBar', zone:'polygonOptionsBar', terrain:'polygonOptionsBar', custom_building:'polygonOptionsBar',
-  water:'polygonOptionsBar', radius:'radiusOptionsBar', tree:'treeOptionsBar'
+  water:'polygonOptionsBar', radius:'radiusOptionsBar', tree:'treeOptionsBar', furniture:'furnitureOptionsBar'
 };
 document.querySelectorAll('.tool-btn[data-tool]').forEach(btn=>{
   btn.addEventListener('click',()=>setTool(btn.dataset.tool));
@@ -1240,7 +1402,7 @@ function setTool(tool) {
   document.querySelector(`[data-tool="${tool}"]`)?.classList.add('active');
 
   // Hide all option bars, show relevant one
-  ['roadOptionsBar','buildingOptionsBar','houseOptionsBar','polygonOptionsBar','radiusOptionsBar','treeOptionsBar'].forEach(id=>{
+  ['roadOptionsBar','buildingOptionsBar','houseOptionsBar','polygonOptionsBar','radiusOptionsBar','treeOptionsBar','furnitureOptionsBar'].forEach(id=>{
     const el=document.getElementById(id);
     if(el) el.style.display='none';
   });
@@ -1254,7 +1416,7 @@ function setTool(tool) {
   // Cursor
   document.body.classList.remove('map-cursor-road','map-cursor-place','map-cursor-delete');
   if(['road','railway','zone','park','terrain','custom_building','water'].includes(tool)) document.body.classList.add('map-cursor-road');
-  else if(['house','building','tree','radius'].includes(tool)) document.body.classList.add('map-cursor-place');
+  else if(['house','building','tree','radius','furniture'].includes(tool)) document.body.classList.add('map-cursor-place');
   else if(tool==='delete') document.body.classList.add('map-cursor-delete');
 
   map.getCanvas().style.cursor = tool==='move' ? 'grab' : tool==='delete' ? 'not-allowed' : '';
