@@ -89,6 +89,25 @@ function catmullRom(pts, steps=10) {
   return result;
 }
 
+// Catmull-Rom closed spline smoothing
+function catmullRomClosed(pts, steps=10) {
+  if (pts.length < 3) return [...pts, pts[0]];
+  const ext = [pts[pts.length-1], ...pts, pts[0], pts[1]];
+  const result = [];
+  for (let i=1; i<ext.length-2; i++) {
+    const [p0,p1,p2,p3] = [ext[i-1],ext[i],ext[i+1],ext[i+2]];
+    for (let t=0; t<steps; t++) {
+      const tt=t/steps, t2=tt*tt, t3=t2*tt;
+      result.push([
+        0.5*((2*p1[0])+(-p0[0]+p2[0])*tt+(2*p0[0]-5*p1[0]+4*p2[0]-p3[0])*t2+(-p0[0]+3*p1[0]-3*p2[0]+p3[0])*t3),
+        0.5*((2*p1[1])+(-p0[1]+p2[1])*tt+(2*p0[1]-5*p1[1]+4*p2[1]-p3[1])*t2+(-p0[1]+3*p1[1]-3*p2[1]+p3[1])*t3)
+      ]);
+    }
+  }
+  result.push(result[0]); // Explicitly close it
+  return result;
+}
+
 // Format helpers
 function fmtLen(m) {
   if (m == null || isNaN(m)) return '—';
@@ -107,6 +126,7 @@ function fmtVol(m3) {
 const TYPE_CONFIG = {
   house:    { color:'#f59e0b', fillColor:'#fbbf24', label:'Casa',      defaultH:7,  defW:10, defL:10 },
   building: { color:'#6366f1', fillColor:'#818cf8', label:'Edificio',  defaultH:30, defW:20, defL:20 },
+  custom_building:{ color:'#8b5cf6', fillColor:'#a78bfa', label:'Silueta 3D', defaultH:30 },
   park:     { color:'#4ade80', fillColor:'#86efac', label:'Parque',    defaultH:0 },
   road:     { color:'#94a3b8', fillColor:'#94a3b8', label:'Carretera', defaultH:0 },
   zone:     { color:'#f472b6', fillColor:'#f9a8d4', label:'Zona',      defaultH:0 },
@@ -134,6 +154,7 @@ function initMap() {
   map.addControl(new maplibregl.NavigationControl({showCompass:true}),'bottom-right');
   map.addControl(new maplibregl.ScaleControl({unit:'metric'}),'bottom-left');
   map.addControl(new maplibregl.FullscreenControl(),'bottom-right');
+  map.doubleClickZoom.disable();
 
   map.on('load',()=>{ addTerrainSource(); addDataLayers(); toast('Terreno 3D listo','success'); });
   map.on('mousemove',e=>{
@@ -149,7 +170,8 @@ function initMap() {
             f.geometry.coordinates = f.properties.curved && f.properties.raw_pts.length > 2 ? catmullRom(f.properties.raw_pts) : [...f.properties.raw_pts];
             f.properties.length_m = Math.round(lineLength(f.geometry.coordinates));
          } else {
-            const closed = [...f.properties.raw_pts, f.properties.raw_pts[0]];
+            const curved = f.properties.curved;
+            const closed = curved && f.properties.raw_pts.length > 2 ? catmullRomClosed(f.properties.raw_pts) : [...f.properties.raw_pts, f.properties.raw_pts[0]];
             f.geometry.coordinates = [closed];
             f.properties.area_m2 = Math.round(polygonArea(closed));
             f.properties.perimeter_m = Math.round(polygonPerimeter(closed));
@@ -184,6 +206,15 @@ function initMap() {
   map.on('click', handleMapClick);
   map.on('dblclick', handleMapDblClick);
   
+  // Right click to close
+  map.on('contextmenu', e => {
+    if(['road','park','zone','terrain','custom_building'].includes(state.tool)) {
+      e.preventDefault();
+      if(state.tool==='road' && state.drawPoints.length>=2) finishRoad();
+      else if(['park','zone','terrain','custom_building'].includes(state.tool) && state.drawPoints.length>=3) finishPolygon(state.tool);
+    }
+  });
+
   // Box Zoom for selection
   map.on('boxzoomend', e => {
      const bbox = [[e.boxZoomBoundingBox[0].x, e.boxZoomBoundingBox[0].y], [e.boxZoomBoundingBox[1].x, e.boxZoomBoundingBox[1].y]];
@@ -264,7 +295,7 @@ function addDataLayers() {
     layout:{'line-join':'round'},
     paint:{'line-color':['get','color'],'line-width':2,'line-dasharray':[4,2]}});
 
-  const bldFilter=['match',['get','type'],['house','building'],true,false];
+  const bldFilter=['match',['get','type'],['house','building','custom_building'],true,false];
   map.addLayer({id:'layer-buildings',type:'fill-extrusion',source:'urban-data',filter:bldFilter,
     paint:{
       'fill-extrusion-color':['get','fillColor'],
@@ -355,22 +386,32 @@ function handleMapClick(e) {
   const {lng,lat}=e.lngLat;
   if(['select','delete'].includes(state.tool)) return;
   if(['house','building'].includes(state.tool)) { placeBuilding(state.tool,lng,lat); return; }
-  if(['road','park','zone','terrain'].includes(state.tool)) {
+  if(['road','park','zone','terrain','custom_building'].includes(state.tool)) {
+    // Check click-to-close
+    if (state.drawPoints.length > 0) {
+      const p = e.point;
+      if (['park','zone','terrain','custom_building'].includes(state.tool) && state.drawPoints.length >= 3) {
+        const firstP = map.project(state.drawPoints[0]);
+        if (Math.hypot(p.x - firstP.x, p.y - firstP.y) < 20) { finishPolygon(state.tool); return; }
+      } else if (state.tool === 'road' && state.drawPoints.length >= 2) {
+        const lastP = map.project(state.drawPoints[state.drawPoints.length-1]);
+        if (Math.hypot(p.x - lastP.x, p.y - lastP.y) < 20) { finishRoad(); return; }
+      }
+    }
+
     state.drawPoints.push([lng,lat]);
     updateDrawPreview();
     if(state.drawPoints.length===1) {
       document.getElementById('drawHint').style.display='block';
       document.getElementById('drawHintText').textContent =
         state.tool==='road'
-          ? 'Click para añadir puntos · Enter/Doble-click para terminar'
-          : 'Click para trazar · Doble-click para cerrar';
+          ? 'Traza con clic Izquierdo · Clic DERECHO para terminar'
+          : 'Traza con clic Izquierdo · Clic DERECHO para cerrar';
     }
   }
 }
 function handleMapDblClick(e) {
   e.preventDefault();
-  if(state.tool==='road' && state.drawPoints.length>=2) finishRoad();
-  else if(['park','zone','terrain'].includes(state.tool) && state.drawPoints.length>=3) finishPolygon(state.tool);
 }
 
 // ── PLACE BUILDING ────────────────────────────────────────────
@@ -427,7 +468,8 @@ function finishRoad() {
 
 // ── POLYGON ───────────────────────────────────────────────────
 function finishPolygon(type) {
-  const pts = [...state.drawPoints, state.drawPoints[0]];
+  const isCurved = document.getElementById('polyCurved')?.checked;
+  const pts = isCurved && state.drawPoints.length > 2 ? catmullRomClosed(state.drawPoints) : [...state.drawPoints, state.drawPoints[0]];
   const cfg  = TYPE_CONFIG[type];
   const area = polygonArea(pts);
   const peri = polygonPerimeter(pts);
@@ -435,9 +477,14 @@ function finishPolygon(type) {
   const feat = {
     type:'Feature', id,
     properties:{ id, type, name:`${cfg.label} ${id}`, color:cfg.color, fillColor:cfg.fillColor,
-      area_m2:Math.round(area), perimeter_m:Math.round(peri), raw_pts: [...state.drawPoints] },
+      area_m2:Math.round(area), perimeter_m:Math.round(peri), raw_pts: [...state.drawPoints], curved: !!isCurved },
     geometry:{ type:'Polygon', coordinates:[pts] },
   };
+  if (type === 'custom_building') {
+    feat.properties.height = cfg.defaultH;
+    feat.properties.floors = Math.round(cfg.defaultH/3.5);
+    feat.properties.uso_suelo = 'mixto';
+  }
   pushHistory();
   state.features.push(feat);
   clearDrawing(); refreshMap();
@@ -449,14 +496,17 @@ function updateDrawPreview() {
   const pts = state.drawPoints;
   if(!pts.length) return;
   const features=[];
-  const isPolygon=['park','zone','terrain'].includes(state.tool);
   if(pts.length>=2) {
-    const curved=document.getElementById('roadCurved')?.checked && state.tool==='road';
-    const coords = curved && pts.length>2 ? catmullRom(pts) : [...pts];
-    if(isPolygon && pts.length>=3)
-      features.push({type:'Feature',geometry:{type:'Polygon',coordinates:[[...coords,coords[0]]]},properties:{}});
-    else
-      features.push({type:'Feature',geometry:{type:'LineString',coordinates:coords},properties:{}});
+    const isPoly = ['park','zone','terrain','custom_building'].includes(state.tool);
+    const curved = (state.tool === 'road' && document.getElementById('roadCurved')?.checked) || 
+                   (isPoly && document.getElementById('polyCurved')?.checked);
+    if(isPoly && pts.length>=3) {
+      const polyCoords = curved ? catmullRomClosed(pts) : [...pts, pts[0]];
+      features.push({type:'Feature',geometry:{type:'Polygon',coordinates:[polyCoords]},properties:{}});
+    } else {
+      const lineCoords = curved && pts.length>2 ? catmullRom(pts) : [...pts];
+      features.push({type:'Feature',geometry:{type:'LineString',coordinates:lineCoords},properties:{}});
+    }
   }
   pts.forEach(p=>features.push({type:'Feature',geometry:{type:'Point',coordinates:p},properties:{}}));
   map.getSource('draw-preview')?.setData({type:'FeatureCollection',features});
@@ -467,7 +517,7 @@ function updateLiveMeasure(lng,lat) {
   const el=document.getElementById('drawMeasure');
   if(!el) return;
   if(pts.length<2) { el.style.display='none'; return; }
-  const isPolygon=['park','zone','terrain'].includes(state.tool);
+  const isPolygon=['park','zone','terrain','custom_building'].includes(state.tool);
   let text='';
   if(isPolygon && pts.length>=3) {
     const closed=[...pts,pts[0]];
@@ -577,6 +627,26 @@ function showPropsPanel(feat, lngLat) {
         <option value="mixto"        ${p.uso_suelo==='mixto'?'selected':''}>Mixto</option>
         <option value="industrial"   ${p.uso_suelo==='industrial'?'selected':''}>Industrial</option>
       </select></div>`;
+  } else if (p.type === 'custom_building') {
+    fields+=`
+      <div class="form-field"><label>Altura (m)</label><input type="number" id="prop-height" value="${p.height||30}" min="1" max="600" step="0.5"/></div>
+      <div class="form-field"><label>Pisos</label><input type="number" id="prop-floors" value="${p.floors||10}" min="1" max="200"/></div>
+      <div class="form-field"><label>Uso de suelo</label><select id="prop-uso">
+        <option value="habitacional" ${p.uso_suelo==='habitacional'?'selected':''}>Habitacional</option>
+        <option value="comercial"    ${p.uso_suelo==='comercial'?'selected':''}>Comercial</option>
+        <option value="mixto"        ${p.uso_suelo==='mixto'?'selected':''}>Mixto</option>
+        <option value="industrial"   ${p.uso_suelo==='industrial'?'selected':''}>Industrial</option>
+      </select></div>`;
+  }
+  if(['park','zone','terrain','custom_building'].includes(p.type)) {
+     fields+=`
+      <div class="form-field opt-toggle" style="margin-top:6px;">
+        <label style="display:flex;align-items:center;gap:8px;">
+          <input type="checkbox" id="prop-poly-curved" ${p.curved ? 'checked' : ''} style="display:none;" />
+          <span class="toggle-track" style="margin:0"><span class="toggle-thumb"></span></span>
+          <span style="font-size:11px;color:var(--text-primary);font-weight:500;">Curvas suaves</span>
+        </label>
+      </div>`;
   }
   if(p.type==='road') {
     fields+=`
@@ -624,7 +694,6 @@ function showPropsPanel(feat, lngLat) {
       f.properties.area_m2  = f.properties.width_m * f.properties.length_m;
       f.geometry.coordinates= [buildingPolygon(f.properties.center_lng,f.properties.center_lat,f.properties.width_m,f.properties.length_m,f.properties.rotation)];
       refreshMap();
-      // update measure card live
       const mc=document.getElementById('liveMeasures');
       if(mc) mc.innerHTML=buildMeasureHTML(f);
     };
@@ -632,6 +701,42 @@ function showPropsPanel(feat, lngLat) {
     rotRange.addEventListener('input',()=>{ rotLabel.textContent=rotRange.value+'°'; rebuildGeom(); });
     [wIn,lIn,hIn].forEach(el=>el?.addEventListener('input',rebuildGeom));
     fIn?.addEventListener('input',()=>{ if(hIn) hIn.value=Math.round(parseFloat(fIn.value)*3.5); rebuildGeom(); });
+  }
+
+  // Live events for custom building
+  if(p.type==='custom_building') {
+    const hIn=document.getElementById('prop-height');
+    const fIn=document.getElementById('prop-floors');
+    const rebuildCB=()=>{
+      const f=state.features.find(f=>f.properties.id===state.selectedIds[0]);
+      if(!f) return;
+      f.properties.height = parseFloat(hIn.value)||30;
+      refreshMap();
+    };
+    hIn?.addEventListener('input',rebuildCB);
+    fIn?.addEventListener('input',()=>{ if(hIn) hIn.value=Math.round(parseFloat(fIn.value)*3.5); rebuildCB(); });
+  }
+
+  // Live events for curved polygons/parks
+  if(['park','zone','terrain','custom_building'].includes(p.type)) {
+    const curvedCb = document.getElementById('prop-poly-curved');
+    const rebuildPoly=()=>{
+      const f=state.features.find(f=>f.properties.id===state.selectedIds[0]);
+      if(!f) return;
+      if(curvedCb) {
+        f.properties.curved = curvedCb.checked;
+        if(f.properties.raw_pts) {
+           const coords = f.properties.curved && f.properties.raw_pts.length > 2 ? catmullRomClosed(f.properties.raw_pts) : [...f.properties.raw_pts, f.properties.raw_pts[0]];
+           f.geometry.coordinates = [coords];
+           f.properties.area_m2 = Math.round(polygonArea(coords));
+           f.properties.perimeter_m = Math.round(polygonPerimeter(coords));
+        }
+      }
+      refreshMap();
+      const mc=document.getElementById('liveMeasures');
+      if(mc) mc.innerHTML=buildMeasureHTML(f);
+    };
+    curvedCb?.addEventListener('change', rebuildPoly);
   }
 
   // Live events for roads
@@ -672,6 +777,11 @@ function showPropsPanel(feat, lngLat) {
     f.properties.name=document.getElementById('prop-name').value;
     if(document.getElementById('prop-uso'))      f.properties.uso_suelo=document.getElementById('prop-uso').value;
     if(document.getElementById('prop-roadType')) f.properties.roadType=document.getElementById('prop-roadType').value;
+    if(document.getElementById('prop-height')){
+      const h=parseFloat(document.getElementById('prop-height').value)||f.properties.height;
+      f.properties.height=h;
+      if(document.getElementById('prop-floors')) f.properties.floors=parseInt(document.getElementById('prop-floors').value);
+    }
     if(document.getElementById('prop-roadW')){
       const w=parseFloat(document.getElementById('prop-roadW').value)||8;
       f.properties.widthM=w;
@@ -733,17 +843,23 @@ function showMultiPropsPanel() {
 
 function buildMeasureHTML(feat) {
   const p=feat.properties;
-  const isBuilding=['house','building'].includes(p.type);
+  const isBuilding=['house','building','custom_building'].includes(p.type);
   const isRoad=p.type==='road';
-  const isPoly=['park','zone','terrain'].includes(p.type);
+  const isPoly=['park','zone','terrain','custom_building'].includes(p.type);
 
   const items=[];
   if(p.width_m  != null && !isRoad) items.push({val:fmtLen(p.width_m),  lbl:'Ancho'});
   if(p.length_m != null && !isRoad) items.push({val:fmtLen(p.length_m), lbl:'Largo'});
   if(p.height   != null && isBuilding) items.push({val:p.height+'m',   lbl:'Altura'});
-  if(isBuilding && p.width_m && p.length_m && p.height)
+  // Auto-calculated area box for simple buildings
+  if(['house','building'].includes(p.type) && p.width_m && p.length_m && p.height) {
     items.push({val:fmtArea(p.width_m*p.length_m),lbl:'Área piso'},{val:fmtVol(p.width_m*p.length_m*p.height),lbl:'Volumen'});
-  if(isPoly && p.area_m2)     items.push({val:fmtArea(p.area_m2),     lbl:'Área'});
+  }
+  // Free polygon area/volume
+  if(isPoly && p.area_m2) {
+    items.push({val:fmtArea(p.area_m2),     lbl:'Área'});
+    if (isBuilding && p.height) items.push({val:fmtVol(p.area_m2 * p.height), lbl:'Volumen'});
+  }
   if(isPoly && p.perimeter_m) items.push({val:fmtLen(p.perimeter_m),  lbl:'Perímetro'});
   if(isRoad  && p.length_m)   items.push({val:fmtLen(p.length_m),    lbl:'Longitud'},{val:(p.widthM||8)+'m',lbl:'Ancho'});
 
@@ -775,18 +891,57 @@ function updateStats() {
 }
 
 // ── LAYERS TOGGLE ─────────────────────────────────────────────
-document.getElementById('layersList').addEventListener('change',e=>{
-  const layer=e.target.dataset.layer;
-  const vis=e.target.checked?'visible':'none';
-  const map_={
-    house:  ['layer-buildings','layer-buildings-outline'],
-    building:['layer-buildings','layer-buildings-outline'],
-    road:   ['layer-roads'],
-    park:   ['layer-zones-fill','layer-zones-line'],
-    zone:   ['layer-zones-fill','layer-zones-line'],
-    terrain:['layer-zones-fill','layer-zones-line'],
+document.getElementById('layersList').addEventListener('change', () => {
+  const getVis = (id) => {
+    const el = document.querySelector(`input[data-layer="${id}"]`);
+    return el ? el.checked : true;
   };
-  map_[layer]?.forEach(id=>{ if(map.getLayer(id)) map.setLayoutProperty(id,'visibility',vis); });
+  const t = {
+    house: getVis('house'), building: getVis('building'), custom_building: getVis('custom_building'),
+    road: getVis('road'), park: getVis('park'), zone: getVis('zone'), terrain: getVis('terrain')
+  };
+
+  // Buildings Layer Filter
+  const bldTypes = [];
+  if (t.house) bldTypes.push('house');
+  if (t.building) bldTypes.push('building');
+  if (t.custom_building) bldTypes.push('custom_building');
+  
+  if (bldTypes.length === 0) {
+    ['layer-buildings', 'layer-buildings-outline'].forEach(id => { if (map.getLayer(id)) map.setLayoutProperty(id, 'visibility', 'none'); });
+  } else {
+    ['layer-buildings', 'layer-buildings-outline'].forEach(id => {
+      if (map.getLayer(id)) {
+        map.setLayoutProperty(id, 'visibility', 'visible');
+        map.setFilter(id, ['match', ['get', 'type'], bldTypes, true, false]);
+      }
+    });
+  }
+
+  // Zones Layer Filter
+  const znTypes = [];
+  if (t.park) znTypes.push('park');
+  if (t.zone) znTypes.push('zone');
+  if (t.terrain) znTypes.push('terrain');
+  
+  const zonesLays = ['layer-zones-fill', 'layer-zones-line'];
+  if (znTypes.length === 0) {
+    zonesLays.forEach(id => { if (map.getLayer(id)) map.setLayoutProperty(id, 'visibility', 'none'); });
+  } else {
+    zonesLays.forEach(id => { 
+      if (map.getLayer(id)) {
+        map.setLayoutProperty(id, 'visibility', 'visible');
+        map.setFilter(id, ['match', ['get', 'type'], znTypes, true, false]);
+      }
+    });
+  }
+
+  // Roads and lane dividers visibility
+  const rVis = t.road ? 'visible' : 'none';
+  if (map.getLayer('layer-roads')) map.setLayoutProperty('layer-roads', 'visibility', rVis);
+  for (let i = 1; i <= 6; i++) {
+     if (map.getLayer(`layer-roads-div-${i}`)) map.setLayoutProperty(`layer-roads-div-${i}`, 'visibility', rVis);
+  }
 });
 
 // ── TERRAIN CONTROLS ──────────────────────────────────────────
@@ -817,6 +972,7 @@ document.getElementById('roadWidthSelect')?.addEventListener('change',function()
 // ── TOOL BUTTONS ──────────────────────────────────────────────
 const optionsBars={
   road:'roadOptionsBar', building:'buildingOptionsBar', house:'houseOptionsBar',
+  park:'polygonOptionsBar', zone:'polygonOptionsBar', terrain:'polygonOptionsBar', custom_building:'polygonOptionsBar'
 };
 document.querySelectorAll('.tool-btn[data-tool]').forEach(btn=>{
   btn.addEventListener('click',()=>setTool(btn.dataset.tool));
@@ -828,24 +984,28 @@ function setTool(tool) {
   document.querySelector(`[data-tool="${tool}"]`)?.classList.add('active');
 
   // Hide all option bars, show relevant one
-  ['roadOptionsBar','buildingOptionsBar','houseOptionsBar'].forEach(id=>{
+  ['roadOptionsBar','buildingOptionsBar','houseOptionsBar','polygonOptionsBar'].forEach(id=>{
     const el=document.getElementById(id);
     if(el) el.style.display='none';
   });
   const barId=optionsBars[tool];
-  if(barId){ const b=document.getElementById(barId); if(b) b.style.display='flex'; }
+  if(barId){ 
+     const b=document.getElementById(barId); 
+     if(b) b.style.display='flex'; 
+     if(barId==='polygonOptionsBar') { const lbl=document.getElementById('polyLabel'); if(lbl) lbl.textContent=TYPE_CONFIG[tool].label; }
+  }
 
   // Cursor
   document.body.classList.remove('map-cursor-road','map-cursor-place','map-cursor-delete');
-  if(['road','zone','park','terrain'].includes(tool)) document.body.classList.add('map-cursor-road');
+  if(['road','zone','park','terrain','custom_building'].includes(tool)) document.body.classList.add('map-cursor-road');
   else if(['house','building'].includes(tool)) document.body.classList.add('map-cursor-place');
   else if(tool==='delete') document.body.classList.add('map-cursor-delete');
 
   map.getCanvas().style.cursor = tool==='move' ? 'grab' : tool==='delete' ? 'not-allowed' : '';
   if(!['select','delete','move'].includes(tool)) { state.selectedIds=[]; updateSelectionUI(); }
 
-  if(tool==='road') document.getElementById('drawHintText').textContent='Click para añadir puntos · Enter/Doble-click para terminar';
-  else if(['zone','terrain','park'].includes(tool)) document.getElementById('drawHintText').textContent='Click para trazar · Doble-click para cerrar';
+  if(tool==='road') document.getElementById('drawHintText').textContent='Traza con clic Izquierdo · Clic DERECHO para terminar';
+  else if(['zone','terrain','park','custom_building'].includes(tool)) document.getElementById('drawHintText').textContent='Traza con clic Izquierdo · Clic DERECHO para cerrar';
 }
 
 // ── 3D / SATELLITE TOGGLE ────────────────────────────────────
@@ -947,12 +1107,12 @@ document.addEventListener('keydown',e=>{
   if(e.ctrlKey&&e.key.toLowerCase()==='a'){ e.preventDefault(); state.selectedIds=state.features.map(f=>f.properties.id); updateSelectionUI(); return; }
   if(e.ctrlKey&&e.key==='z'){e.preventDefault();undo();return;}
   if(e.ctrlKey&&e.key==='y'){e.preventDefault();redo();return;}
-  const keys={s:'select',h:'house',b:'building',r:'road',p:'park',z:'zone',t:'terrain',m:'move'};
+  const keys={s:'select',h:'house',b:'building',c:'custom_building',r:'road',p:'park',z:'zone',t:'terrain',m:'move'};
   if(!e.ctrlKey&&keys[e.key]) setTool(keys[e.key]);
   if(e.key==='Delete'&&state.selectedIds.length) deleteSelection();
   if(e.key==='Escape'){clearDrawing();setTool('select');state.selectedIds=[];updateSelectionUI();}
   if(e.key==='Enter'&&state.tool==='road'&&state.drawPoints.length>=2) finishRoad();
-  if(e.key==='Enter'&&['zone','park','terrain'].includes(state.tool)&&state.drawPoints.length>=3) finishPolygon(state.tool);
+  if(e.key==='Enter'&&['zone','park','terrain','custom_building'].includes(state.tool)&&state.drawPoints.length>=3) finishPolygon(state.tool);
 });
 
 // ── TOAST ─────────────────────────────────────────────────────
