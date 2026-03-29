@@ -4,12 +4,28 @@ import { pushHistory } from './interaction.js';
 import { refreshMap } from '../map/core.js';
 import { toast } from '../ui/toolbar.js';
 
+export function getGroupIds(ids) {
+  const gids = new Set();
+  ids.forEach(id => {
+    const f = state.features.find(x => x.properties.id === id);
+    if (f?.properties.groupId) gids.add(f.properties.groupId);
+  });
+  if (gids.size === 0) return ids;
+  const allIds = new Set(ids);
+  state.features.forEach(f => {
+    if (f.properties.groupId && gids.has(f.properties.groupId)) allIds.add(f.properties.id);
+  });
+  return [...allIds];
+}
+
 export function selectFeature(id, lngLat, isMulti = false) {
+  const idsToTarget = getGroupIds([id]);
   if (isMulti) {
-    if (state.selectedIds.includes(id)) state.selectedIds = state.selectedIds.filter(x => x !== id);
-    else state.selectedIds.push(id);
+    const alreadySelected = idsToTarget.every(tid => state.selectedIds.includes(tid));
+    if (alreadySelected) state.selectedIds = state.selectedIds.filter(x => !idsToTarget.includes(x));
+    else state.selectedIds = [...new Set([...state.selectedIds, ...idsToTarget])];
   } else {
-    state.selectedIds = [id];
+    state.selectedIds = idsToTarget;
   }
   updateSelectionUI(lngLat);
 }
@@ -55,4 +71,37 @@ export function deleteSelection() {
   state.features = state.features.filter(f => !toDelete.has(f.properties.id));
   state.selectedIds = []; updateSelectionUI();
   refreshMap(); toast('Objeto(s) eliminado(s)', 'error');
+}
+
+export function groupSelectedFeatures() {
+  if (state.selectedIds.length < 2) return;
+  pushHistory();
+  const gid = `group_${Date.now()}`;
+  state.features.forEach(f => {
+    if (state.selectedIds.includes(f.properties.id)) {
+      f.properties.groupId = gid;
+    }
+  });
+  toast('Objetos agrupados', 'success');
+  updateSelectionUI();
+}
+
+export function ungroupSelectedFeatures() {
+  if (!state.selectedIds.length) return;
+  pushHistory();
+  const groupsToUngroup = new Set();
+  state.features.forEach(f => {
+    if (state.selectedIds.includes(f.properties.id) && f.properties.groupId) {
+      groupsToUngroup.add(f.properties.groupId);
+    }
+  });
+
+  state.features.forEach(f => {
+    if (groupsToUngroup.has(f.properties.groupId)) {
+      delete f.properties.groupId;
+    }
+  });
+
+  toast('Objetos desagrupados', 'info');
+  updateSelectionUI();
 }

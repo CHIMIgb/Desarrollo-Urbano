@@ -3,7 +3,7 @@ import { fmtLen, fmtArea, fmtVol, polygonArea, polygonPerimeter, catmullRom, cat
 import { pushHistory, getFeatureCenter } from '../tools/interaction.js';
 import { refreshMap } from '../map/core.js';
 import { toast } from './toolbar.js';
-import { deleteSelection } from '../tools/selection.js';
+import { deleteSelection, groupSelectedFeatures, ungroupSelectedFeatures } from '../tools/selection.js';
 import { generateBuildingParts } from '../models/buildings.js';
 import { generateFurnitureParts } from '../models/furniture.js';
 
@@ -73,16 +73,21 @@ export function showPropsPanel(feat, lngLat) {
         <input type="range" id="prop-rotation" min="0" max="359" step="5" value="${Math.round(p.rotation || 0)}" style="width:100%"/>
       </div>`;
   }
-  if (p.type === 'road') {
+  if (['road', 'path', 'sidewalk', 'railway'].includes(p.type)) {
+    if (p.type === 'road') {
+      fields += `
+        <div class="form-field"><label>Tipo de vía</label><select id="prop-roadType">
+          <option value="local"        ${p.roadType === 'local' ? 'selected' : ''}>Local</option>
+          <option value="secundaria"   ${p.roadType === 'secundaria' ? 'selected' : ''}>Secundaria</option>
+          <option value="primaria"     ${p.roadType === 'primaria' ? 'selected' : ''}>Primaria</option>
+          <option value="autopista"    ${p.roadType === 'autopista' ? 'selected' : ''}>Autopista</option>
+        </select></div>
+        <div class="form-field"><label>Ancho (m)</label><input type="number" id="prop-roadW" value="${p.widthM || 8}" min="2" max="60"/></div>
+        <div class="form-field"><label>Carriles</label><input type="number" id="prop-lanes" value="${p.lanes || 2}" min="1" max="16"/></div>`;
+    } else {
+        fields += `<div class="form-field"><label>Ancho (m)</label><input type="number" id="prop-widthM" value="${p.widthM || 4}" min="0.5" max="20"/></div>`;
+    }
     fields += `
-      <div class="form-field"><label>Tipo de vía</label><select id="prop-roadType">
-        <option value="local"        ${p.roadType === 'local' ? 'selected' : ''}>Local</option>
-        <option value="secundaria"   ${p.roadType === 'secundaria' ? 'selected' : ''}>Secundaria</option>
-        <option value="primaria"     ${p.roadType === 'primaria' ? 'selected' : ''}>Primaria</option>
-        <option value="autopista"    ${p.roadType === 'autopista' ? 'selected' : ''}>Autopista</option>
-      </select></div>
-      <div class="form-field"><label>Ancho (m)</label><input type="number" id="prop-roadW" value="${p.widthM || 8}" min="2" max="60"/></div>
-      <div class="form-field"><label>Carriles</label><input type="number" id="prop-lanes" value="${p.lanes || 2}" min="1" max="16"/></div>
       <div class="form-field opt-toggle" style="margin-top:6px;">
         <label style="display:flex;align-items:center;gap:8px;">
           <input type="checkbox" id="prop-curved" ${p.curved ? 'checked' : ''} style="display:none;" />
@@ -95,6 +100,7 @@ export function showPropsPanel(feat, lngLat) {
     <div class="form-field"><label>Color</label><input type="color" id="prop-color" value="${p.fillColor || '#6366f1'}"/></div>
     <div class="form-actions">
       <button class="btn btn-primary" id="btnApplyProps">Aplicar</button>
+      ${p.groupId ? `<button class="btn btn-secondary" id="btnUngroup">Desagrupar</button>` : ''}
       <button class="btn btn-secondary" id="btnDeleteSelected">Borrar</button>
     </div>`;
 
@@ -191,16 +197,16 @@ export function showPropsPanel(feat, lngLat) {
     depthIn?.addEventListener('input', rebuildPoly);
   }
 
-  if (p.type === 'road') {
-    const wIn = document.getElementById('prop-roadW');
+  if (['road', 'path', 'sidewalk', 'railway'].includes(p.type)) {
+    const wIn = document.getElementById('prop-roadW') || document.getElementById('prop-widthM');
     const lIn = document.getElementById('prop-lanes');
     const curvedCb = document.getElementById('prop-curved');
 
-    const rebuildRoad = () => {
+    const rebuildLine = () => {
       const f = state.features.find(f => f.properties.id === state.selectedIds[0]);
       if (!f) return;
-      f.properties.widthM = parseFloat(wIn.value) || 3;
-      f.properties.lanes = parseInt(lIn.value) || 1;
+      if (wIn) f.properties.widthM = parseFloat(wIn.value) || f.properties.widthM;
+      if (lIn) f.properties.lanes = parseInt(lIn.value) || f.properties.lanes;
       if (curvedCb) {
         f.properties.curved = curvedCb.checked;
         if (f.properties.raw_pts) {
@@ -213,10 +219,14 @@ export function showPropsPanel(feat, lngLat) {
       if (mc) mc.innerHTML = buildMeasureHTML(f);
     };
 
-    if (wIn && lIn) {
-      lIn.addEventListener('input', () => { wIn.value = (parseFloat(lIn.value) * 3.5).toFixed(1) || 3.5; rebuildRoad(); });
-      wIn.addEventListener('input', () => { lIn.value = Math.max(1, Math.round(parseFloat(wIn.value) / 3.5)) || 1; rebuildRoad(); });
-      curvedCb?.addEventListener('change', rebuildRoad);
+    if (wIn) {
+      if (lIn) {
+        lIn.addEventListener('input', () => { wIn.value = (parseFloat(lIn.value) * 3.5).toFixed(1) || 3.5; rebuildLine(); });
+        wIn.addEventListener('input', () => { lIn.value = Math.max(1, Math.round(parseFloat(wIn.value) / 3.5)) || 1; rebuildLine(); });
+      } else {
+        wIn.addEventListener('input', rebuildLine);
+      }
+      curvedCb?.addEventListener('change', rebuildLine);
     }
   }
 
@@ -248,6 +258,8 @@ export function showPropsPanel(feat, lngLat) {
   }
 
   document.getElementById('btnApplyProps')?.addEventListener('click', () => {
+    // ... same code as before (shortened for chunk match if needed)
+    // Actually I'll keep it exactly to match correctly.
     pushHistory();
     const f = state.features.find(f => f.properties.id === state.selectedIds[0]);
     if (!f) return;
@@ -280,6 +292,7 @@ export function showPropsPanel(feat, lngLat) {
     refreshMap(); toast('Propiedades actualizadas', 'success');
   });
   document.getElementById('btnDeleteSelected')?.addEventListener('click', deleteSelection);
+  document.getElementById('btnUngroup')?.addEventListener('click', ungroupSelectedFeatures);
 
   state.popup?.remove();
   if (lngLat && state.map) {
@@ -306,10 +319,12 @@ export function showMultiPropsPanel() {
     <div class="form-field"><label style="font-size:14px;color:var(--accent)">${state.selectedIds.length} objetos seleccionados</label></div>
     <div class="form-field"><label>Color unificado</label><input type="color" id="prop-multi-color" value="#6366f1"/></div>
     <div class="form-actions">
-      <button class="btn btn-primary" id="btnMultiApply">Aplicar</button>
-      <button class="btn btn-secondary" id="btnMultiDelete">Borrar</button>
+      <button class="btn btn-primary" id="btnMultiApply">Aplicar Color</button>
+      <button class="btn btn-secondary" id="btnMultiGroup">Agrupar Objetos</button>
+      <button class="btn btn-secondary" id="btnMultiDelete">Borrar Todos</button>
     </div>`;
   document.getElementById('btnMultiDelete')?.addEventListener('click', deleteSelection);
+  document.getElementById('btnMultiGroup')?.addEventListener('click', groupSelectedFeatures);
   document.getElementById('btnMultiApply')?.addEventListener('click', () => {
     pushHistory();
     const col = document.getElementById('prop-multi-color').value;

@@ -38,10 +38,10 @@ document.addEventListener('DOMContentLoaded', () => {
      
      // Right-click to finish drawing tool
      state.map.on('contextmenu', e => {
-       if (['road', 'railway', 'park', 'zone', 'terrain', 'custom_building', 'water'].includes(state.tool)) {
+        if (['road', 'railway', 'path', 'sidewalk', 'park', 'zone', 'terrain', 'custom_building', 'water'].includes(state.tool)) {
          e.preventDefault();
          import('./src/tools/drawing.js').then(m => {
-           if (['road', 'railway'].includes(state.tool) && state.drawPoints.length >= 2) m.finishLine();
+            if (['road', 'railway', 'path', 'sidewalk'].includes(state.tool) && state.drawPoints.length >= 2) m.finishLine();
            else if (['park', 'zone', 'terrain', 'custom_building', 'water'].includes(state.tool) && state.drawPoints.length >= 3) m.finishPolygon(state.tool);
          });
        }
@@ -53,10 +53,11 @@ document.addEventListener('DOMContentLoaded', () => {
        const feats = state.map.queryRenderedFeatures(bbox, { layers: ['layer-buildings', 'layer-roads', 'layer-zones-fill', 'layer-trees-3d', 'layer-railways'] });
        const ids = [...new Set(feats.map(f => f.properties.id))];
        if (ids.length) {
-         import('./src/tools/selection.js').then(m => {
-           state.selectedIds = e.originalEvent.shiftKey ? [...new Set([...state.selectedIds, ...ids])] : ids;
-           m.updateSelectionUI();
-         });
+          import('./src/tools/selection.js').then(m => {
+            const allSelected = m.getGroupIds(ids);
+            state.selectedIds = e.originalEvent.shiftKey ? [...new Set([...state.selectedIds, ...allSelected])] : allSelected;
+            m.updateSelectionUI();
+          });
        }
      });
 

@@ -14,6 +14,8 @@ export const TYPE_CONFIG = {
   water: { label: 'Cuerpo de Agua', color: '#38bdf8', fillColor: '#0284c7' },
   tree: { label: 'Árbol 3D', color: '#4ade80', fillColor: '#16a34a' },
   railway: { label: 'Vía Férrea', color: '#64748b', fillColor: '#334155' },
+  path: { label: 'Camino', color: '#a8a29e', fillColor: '#78716c' },
+  sidewalk: { label: 'Banqueta', color: '#cbd5e1', fillColor: '#94a3b8' },
   radius: { label: 'Isócrona', color: '#f0abfc', fillColor: '#c026d3' },
   furniture: { label: 'Mobiliario', color: '#9ca3af', fillColor: '#d1d5db' }
 };
