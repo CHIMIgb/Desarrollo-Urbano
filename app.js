@@ -362,7 +362,11 @@ function addDataLayers() {
   map.addSource('urban-data', { type: 'geojson', data: buildGeoJSON() });
 
   // Roads
-  const zoomInterpolation = ['interpolate', ['exponential', 2], ['zoom'], 12, ['/', ['coalesce', ['get', 'widthM'], 8], 4], 16, ['/', ['coalesce', ['get', 'widthM'], 8], 1.2], 20, ['*', ['coalesce', ['get', 'widthM'], 8], 2]];
+  const zoomInterpolation = ['interpolate', ['exponential', 2], ['zoom'], 
+    12, ['/', ['coalesce', ['get', 'widthM'], 7], 1.0], 
+    16, ['*', ['coalesce', ['get', 'widthM'], 7], 2.4], 
+    20, ['*', ['coalesce', ['get', 'widthM'], 7], 8.0]
+  ];
   map.addLayer({
     id: 'layer-roads', type: 'line', source: 'urban-data',
     filter: ['==', ['get', 'type'], 'road'],
@@ -391,9 +395,9 @@ function addDataLayers() {
       filter: ['all', ['==', ['get', 'type'], 'road'], ['>=', ['coalesce', ['get', 'lanes'], 2], ratios[0]]],
       layout: { 'line-join': 'round', 'line-cap': 'round' },
       paint: {
-        'line-color': '#ffffff', 'line-dasharray': [4, 4],
-        'line-width': ['interpolate', ['linear'], ['zoom'], 14, 0.5, 20, 2],
-        'line-opacity': ['interpolate', ['linear'], ['zoom'], 14, 0, 15, 0.9],
+        'line-color': '#ffffff', 'line-dasharray': [6, 4],
+        'line-width': ['interpolate', ['linear'], ['zoom'], 14, 2, 20, 6],
+        'line-opacity': ['interpolate', ['linear'], ['zoom'], 13, 0, 14, 0.9],
         'line-offset': ['*', zoomInterpolation, matchExpr]
       }
     });
@@ -442,7 +446,7 @@ function addDataLayers() {
     paint: { 'line-color': '#f97316', 'line-width': ['interpolate', ['linear'], ['zoom'], 10, 1, 18, 3], 'line-dasharray': [2, 2] }
   });
 
-  const bldFilter = ['match', ['get', 'type'], ['house', 'building', 'custom_building', 'building_part'], true, false];
+  const bldFilter = ['match', ['get', 'type'], ['house', 'building', 'custom_building'], true, false];
   map.addLayer({
     id: 'layer-buildings', type: 'fill-extrusion', source: 'urban-data', filter: bldFilter,
     paint: {
@@ -613,7 +617,7 @@ function generateBuildingParts(baseId, lng, lat, w, l, h, rot, type) {
     const id = state.nextId++;
     parts.push({
       type: 'Feature', id,
-      properties: { id, parent_id: baseId, type: 'building_part', color: pCol, fillColor: pCol, base_height: pBase, height: pHeight },
+      properties: { id, parent_id: baseId, type: type, color: pCol, fillColor: pCol, base_height: pBase, height: pHeight },
       geometry: { type: 'Polygon', coordinates: [buildingPolygon(lng + dlng, lat + dlat, pw, pl, rot)] }
     });
   };
@@ -691,7 +695,7 @@ function finishLine() {
     type: 'Feature', id,
     properties: {
       id, type: type, name: `${cfg.label} ${id}`, color: cfg.color, fillColor: cfg.fillColor,
-      length_m: len, raw_pts: [...state.drawPoints], curved: !!isCurved, lanes: lanes, widthM: lanes * 3
+      length_m: len, raw_pts: [...state.drawPoints], curved: !!isCurved, lanes: lanes, widthM: lanes * 3.5
     },
     geometry: { type: 'LineString', coordinates: pts }
   };
@@ -1301,8 +1305,8 @@ function showPropsPanel(feat, lngLat) {
     };
 
     if (wIn && lIn) {
-      lIn.addEventListener('input', () => { wIn.value = parseInt(lIn.value) * 3 || 3; rebuildRoad(); });
-      wIn.addEventListener('input', () => { lIn.value = Math.max(1, Math.round(parseFloat(wIn.value) / 3)) || 1; rebuildRoad(); });
+      lIn.addEventListener('input', () => { wIn.value = (parseFloat(lIn.value) * 3.5).toFixed(1) || 3.5; rebuildRoad(); });
+      wIn.addEventListener('input', () => { lIn.value = Math.max(1, Math.round(parseFloat(wIn.value) / 3.5)) || 1; rebuildRoad(); });
       curvedCb?.addEventListener('change', rebuildRoad);
     }
   }
