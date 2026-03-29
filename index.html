@@ -149,57 +149,8 @@
 
     <!-- MAP CONTAINER -->
     <main class="map-wrapper">
-      <!-- CONTEXTUAL OPTIONS BAR -->
-      <div class="options-bar" id="roadOptionsBar" style="display:none">
-        <span class="opt-label">Carretera</span>
-        <div class="opt-divider"></div>
-        <label class="opt-item">
-          <span>Ancho</span>
-          <select id="roadWidthSelect">
-            <option value="4">Local &mdash; 4m</option>
-            <option value="8" selected>Secundaria &mdash; 8m</option>
-            <option value="12">Primaria &mdash; 12m</option>
-            <option value="24">Autopista &mdash; 24m</option>
-            <option value="custom">Personalizado</option>
-          </select>
-        </label>
-        <input type="number" id="roadWidthCustom" min="2" max="60" value="8" style="display:none;width:54px" />
-        <div class="opt-divider"></div>
-        <label class="opt-item opt-toggle">
-          <input type="checkbox" id="roadCurved" />
-          <span class="toggle-track"><span class="toggle-thumb"></span></span>
-          <span>Curvas suaves</span>
-        </label>
-      </div>
+      <!-- contextual options bars (trees and furniture still active) -->
 
-      <div class="options-bar" id="polygonOptionsBar" style="display:none">
-        <span class="opt-label" id="polyLabel">Polígono</span>
-        <div class="opt-divider"></div>
-        <label class="opt-item" style="flex-direction:row" title="Curvas Suaves (Catmull-Rom)">
-          <input type="checkbox" id="polyCurved" />
-          <span>Curvas Suaves</span>
-        </label>
-      </div>
-
-      <div class="options-bar" id="waterOptionsBar" style="display:none">
-        <span class="opt-label" id="waterLabel">Cuerpo de Agua</span>
-        <div class="opt-divider"></div>
-        <label class="opt-item" style="flex-direction:row" title="Curvas Suaves (Catmull-Rom)">
-          <input type="checkbox" id="waterCurved" checked />
-          <span>Curvas Suaves</span>
-        </label>
-        <div class="form-field" style="margin-left: 10px;">
-          <label style="font-size:12px">Profundidad (m)</label>
-          <input type="number" id="waterDepth" min="0.5" max="500" step="0.5" value="2" style="width:60px"/>
-        </div>
-      </div>
-
-
-      <div class="options-bar" id="radiusOptionsBar" style="display:none">
-        <span class="opt-label">Alcance</span>
-        <div class="opt-divider"></div>
-        <div class="form-field"><input type="number" id="radiusMeters" min="50" max="5000" step="50" value="400" style="width:70px"/> m</div>
-      </div>
 
       <div class="options-bar" id="treeOptionsBar" style="display:none">
         <span class="opt-label">Árbol 3D</span>
@@ -230,17 +181,7 @@
         </div>
       </div>
 
-      <div class="options-bar" id="houseOptionsBar" style="display:none">
-        <span class="opt-label">Casa</span>
-        <div class="opt-divider"></div>
-        <label class="opt-item"><span>Ancho (m)</span><input type="number" id="hsWidth" value="10" min="2" max="100" /></label>
-        <label class="opt-item"><span>Largo (m)</span><input type="number" id="hsLength" value="10" min="2" max="100" /></label>
-        <label class="opt-item"><span>Altura (m)</span><input type="number" id="hsHeight" value="7" min="3" max="60" /></label>
-        <label class="opt-item"><span>Rotaci&oacute;n</span>
-          <input type="range" id="hsRotation" min="0" max="359" value="0" style="width:80px" />
-          <span id="hsRotVal">0&deg;</span>
-        </label>
-      </div>
+
 
       <div id="map"></div>
       <!-- Road drawing hint -->
@@ -328,6 +269,6 @@
 
   <!-- SCRIPTS -->
   <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
-  <script src="app.js"></script>
+  <script type="module" src="app.js"></script>
 </body>
 </html>
