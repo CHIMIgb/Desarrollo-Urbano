@@ -37,6 +37,8 @@ export function initAuth() {
         localStorage.setItem('urbanplan_token', data.token);
         localStorage.setItem('urbanplan_user', JSON.stringify(data.user));
         showApp(data.user);
+        // Cargar proyecto desde el servidor tras login
+        import('./io.js').then(m => m.loadSavedState());
       } else {
         loginError.textContent = data.error || 'Error al iniciar sesión';
         loginError.style.display = 'block';
@@ -63,6 +65,8 @@ export function initAuth() {
       if (response.ok) {
         const data = await response.json();
         showApp(data.user);
+        // Cargar proyecto desde el servidor tras verificar sesión
+        import('./io.js').then(m => m.loadSavedState());
       } else {
         localStorage.removeItem('urbanplan_token');
         loginOverlay.style.display = 'flex';

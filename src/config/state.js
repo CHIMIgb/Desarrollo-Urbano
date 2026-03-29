@@ -33,5 +33,6 @@ export const state = {
   lastDragPos: null, 
   isDragging: false,
   draggingVertexIdx: null,
+  currentProjectId: null, // ID del proyecto activo en la base de datos
   map: null // Will be initialized here
 };

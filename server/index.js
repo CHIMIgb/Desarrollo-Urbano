@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const path = require('path');
 const authRouter = require('./auth');
+const projectsRouter = require('./projects');
 require('dotenv').config();
 
 const app = express();
@@ -16,6 +17,7 @@ app.use(express.static(path.join(__dirname, '../')));
 
 // Rutas de API
 app.use('/api/auth', authRouter);
+app.use('/api/projects', projectsRouter);
 
 // Ruta para servir el index.html en cualquier otra ruta (SPA style)
 app.get('/*splat', (req, res) => {
