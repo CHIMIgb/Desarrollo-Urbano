@@ -51,10 +51,30 @@ export function setTool(tool) {
 }
 
 export function initToolbarEvents() {
+  document.getElementById('terrainEnabled')?.addEventListener('change', function () {
+    const enabled = this.checked;
+    const exagEl = document.getElementById('terrainExaggeration');
+    const container = document.getElementById('exaggerationContainer');
+    if (container) container.style.opacity = enabled ? '1' : '0.5';
+    if (container) container.style.pointerEvents = enabled ? 'auto' : 'none';
+    
+    if (state.map) {
+      if (enabled) {
+        const v = parseFloat(exagEl.value);
+        state.map.setTerrain({ source: 'terrain', exaggeration: v });
+      } else {
+        state.map.setTerrain(null);
+      }
+    }
+  });
+
   document.getElementById('terrainExaggeration')?.addEventListener('input', function () {
     const v = parseFloat(this.value);
     document.getElementById('terrainExVal').textContent = v.toFixed(1) + 'x';
-    if (state.map) state.map.setTerrain({ source: 'terrain', exaggeration: v });
+    const enabled = document.getElementById('terrainEnabled')?.checked;
+    if (state.map && enabled) {
+      state.map.setTerrain({ source: 'terrain', exaggeration: v });
+    }
   });
 
   document.getElementById('cameraPitch')?.addEventListener('input', function () {
