@@ -11,6 +11,34 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
+  <!-- LOGIN MODAL / OVERLAY -->
+  <div id="loginOverlay" class="login-overlay">
+    <div class="login-card">
+      <div class="login-header">
+        <svg width="40" height="40" viewBox="0 0 28 28" fill="none">
+          <rect x="2" y="14" width="8" height="12" rx="1" fill="#6366f1"/>
+          <rect x="12" y="8" width="8" height="18" rx="1" fill="#8b5cf6"/>
+          <rect x="22" y="11" width="4" height="15" rx="1" fill="#a78bfa"/>
+        </svg>
+        <h2>UrbanPlan 3D</h2>
+        <p>Inicia sesión para acceder al editor</p>
+      </div>
+      <form id="loginForm" class="login-form">
+        <div class="form-group">
+          <label for="loginUser">Usuario</label>
+          <input type="text" id="loginUser" required placeholder="admin" autocomplete="username">
+        </div>
+        <div class="form-group">
+          <label for="loginPass">Contraseña</label>
+          <input type="password" id="loginPass" required placeholder="••••••••" autocomplete="current-password">
+        </div>
+        <div id="loginError" class="login-error" style="display:none"></div>
+        <button type="submit" class="btn btn-primary btn-full">Entrar</button>
+      </form>
+    </div>
+  </div>
+
+  <div id="appContainer" style="display:none">
   <!-- HEADER -->
   <header class="app-header">
     <div class="header-left">
@@ -55,6 +83,14 @@
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
         Guardar
       </button>
+      <div class="divider-v"></div>
+      <div class="user-profile" id="userProfile">
+        <div class="user-avatar" id="userInitial">U</div>
+        <div class="user-info">
+          <span class="user-name" id="userNameLabel">Cargando...</span>
+          <button class="btn-logout" id="btnLogout">Cerrar sesión</button>
+        </div>
+      </div>
     </div>
   </header>
 
@@ -262,6 +298,8 @@
         </div>
       </div>
     </aside>
+  </div>
+
   </div>
 
   <!-- TOAST -->

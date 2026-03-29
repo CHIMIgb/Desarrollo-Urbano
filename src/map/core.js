@@ -62,10 +62,9 @@ export function initMap() {
   state.map.on('pitchend', saveMapView);
   state.map.on('rotateend', saveMapView);
 
-  state.map.on('load', () => { 
+  state.map.on('style.load', () => { 
     addTerrainSource(); 
     addDataLayers(); 
-    toast('Terreno 3D listo', 'success'); 
   });
 }
 

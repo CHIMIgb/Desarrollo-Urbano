@@ -136,6 +136,10 @@ export function addDataLayers() {
     id: 'layer-edit-handles', type: 'circle', source: 'edit-handles',
     paint: { 'circle-radius': 6, 'circle-color': '#fff', 'circle-stroke-width': 2, 'circle-stroke-color': '#ef4444' }
   });
+}
+
+export function setupLayerInteractivity() {
+  if (!state.map) return;
 
   // Interactivity
   state.map.on('mousedown', 'layer-edit-handles', e => {
