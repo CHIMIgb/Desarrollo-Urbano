@@ -586,22 +586,27 @@ function handleMapDblClick(e) {
   e.preventDefault();
 }
 
-function generateBuildingParts(baseId, lng, lat, w, l, h, rot, type) {
+function generateBuildingParts(baseId, lng, lat, w, l, h, rot, type, customCoords = null) {
   const cfg = TYPE_CONFIG[type];
   const parts = [];
   const floors = Math.round(h / 3.5) || 1;
 
-  // 1. Cuerpo Principal
+  // 1. Main Body
+  const mainGeom = customCoords 
+    ? { type: 'Polygon', coordinates: [customCoords] }
+    : { type: 'Polygon', coordinates: [buildingPolygon(lng, lat, w, l, rot)] };
+
   parts.push({
     type: 'Feature', id: baseId,
     properties: {
       id: baseId, type, name: `${cfg.label} ${baseId}`, height: h, floors,
       color: cfg.color, fillColor: cfg.fillColor, 
-      uso_suelo: type === 'building' ? 'comercial' : 'habitacional',
+      uso_suelo: type === 'building' ? 'comercial' : type === 'house' ? 'habitacional' : 'mixto',
       center_lng: lng, center_lat: lat, width_m: w, length_m: l, rotation: rot,
-      area_m2: w * l
+      area_m2: customCoords ? polygonArea(customCoords) : w * l,
+      raw_pts: customCoords ? customCoords.slice(0, -1) : null
     },
-    geometry: { type: 'Polygon', coordinates: [buildingPolygon(lng, lat, w, l, rot)] }
+    geometry: mainGeom
   });
 
   const addPartBox = (dlngM, dlatM, pw, pl, pBase, pHeight, pCol) => {
@@ -618,40 +623,41 @@ function generateBuildingParts(baseId, lng, lat, w, l, h, rot, type) {
     });
   };
 
-  const addWindows = () => {
-    const winCol = '#93c5fd'; // Azul claro
+  const addWindowsRect = () => {
+    const winCol = '#93c5fd';
     const numW = Math.max(1, Math.floor(w / 5));
     const numL = Math.max(1, Math.floor(l / 5));
     for (let f = 0; f < floors; f++) {
-      const bH = f * 3.5 + 1.2;
-      const tH = bH + 1.2;
+      const bH = f * 3.5 + 1.2, tH = bH + 1.2;
       for (let i = 0; i < numW; i++) {
           const offX = (numW > 1) ? (-w/2 + (w / (numW + 1)) * (i + 1)) : 0;
-          addPartBox(offX, l/2, 2, 0.1, bH, tH, winCol); // Norte
-          addPartBox(offX, -l/2, 2, 0.1, bH, tH, winCol); // Sur
+          addPartBox(offX, l/2, 2, 0.1, bH, tH, winCol);
+          addPartBox(offX, -l/2, 2, 0.1, bH, tH, winCol);
       }
       for (let i = 0; i < numL; i++) {
           const offY = (numL > 1) ? (-l/2 + (l / (numL + 1)) * (i + 1)) : 0;
-          addPartBox(w/2, offY, 0.1, 2, bH, tH, winCol); // Este
-          addPartBox(-w/2, offY, 0.1, 2, bH, tH, winCol); // Oeste
+          addPartBox(w/2, offY, 0.1, 2, bH, tH, winCol);
+          addPartBox(-w/2, offY, 0.1, 2, bH, tH, winCol);
       }
     }
   };
 
-  if (type === 'house') {
+  if (type === 'custom_building') {
+    // No windows for custom buildings
+  } else if (type === 'house') {
     const roofCol = '#451a03';
     const steps = 8;
     for (let i = 0; i < steps; i++) {
         const ratio = 1 - (i / steps);
-        const bH = h + (i * (1.8 / steps));
-        const tH = bH + (1.8 / steps);
+        const bH = h + (i * (1.8 / steps)), tH = bH + (1.8 / steps);
         addPartBox(0, 0, (w + 0.6) * ratio, l + 0.6, bH, tH, roofCol);
     }
   } else if (type === 'building') {
-    addPartBox(0, 0, w * 0.3, l * 0.3, h, h + 3, '#94a3b8'); // Cuarto máquinas
-    addWindows();
+    addPartBox(0, 0, w * 0.3, l * 0.3, h, h + 3, '#94a3b8');
+    addWindowsRect();
   } else if (type === 'custom_building') {
-    addWindows();
+    if (customCoords) addWindowsPolyArr(customCoords);
+    else addWindowsRect();
   }
 
   return parts;
@@ -701,34 +707,44 @@ function finishLine() {
 
 // ── POLYGON ───────────────────────────────────────────────────
 function finishPolygon(type) {
-  const isCurved = false; // Default: straight, can be curved in properties panel
+  const isCurved = false;
   const pts = [...state.drawPoints, state.drawPoints[0]];
   const cfg = TYPE_CONFIG[type];
   const area = polygonArea(pts);
-  const peri = polygonPerimeter(pts);
   const id = state.nextId++;
-  const feat = {
-    type: 'Feature', id,
-    properties: {
-      id, type: type, name: `${cfg.label} ${id}`, color: cfg.color, fillColor: cfg.fillColor,
-      area_m2: area, perimeter_m: peri, raw_pts: [...state.drawPoints], curved: !!isCurved
-    },
-    geometry: { type: 'Polygon', coordinates: [pts] },
-  };
+
   if (type === 'custom_building') {
-    feat.properties.height = cfg.defaultH;
-    feat.properties.floors = Math.round(cfg.defaultH / 3.5);
-    feat.properties.uso_suelo = 'mixto';
-  } else if (type === 'water') {
-    const depth = 2; // Default 2m, can be edited in side panel
-    feat.properties.depth_m = depth;
-    feat.properties.volume_m3 = Math.round(area * depth);
+    const h = cfg.defaultH || 30;
+    const feat = {
+        type: 'Feature', id,
+        properties: {
+          id, type: type, name: `${cfg.label} ${id}`, color: cfg.color, fillColor: cfg.fillColor,
+          height: h, floors: Math.round(h / 3.5), area_m2: area, raw_pts: [...state.drawPoints], curved: !!isCurved
+        },
+        geometry: { type: 'Polygon', coordinates: [pts] },
+    };
+    state.features.push(feat);
+    selectFeature(id);
+  } else {
+    const feat = {
+      type: 'Feature', id,
+      properties: {
+        id, type: type, name: `${cfg.label} ${id}`, color: cfg.color, fillColor: cfg.fillColor,
+        area_m2: area, raw_pts: [...state.drawPoints], curved: !!isCurved
+      },
+      geometry: { type: 'Polygon', coordinates: [pts] },
+    };
+    if (type === 'water') {
+      feat.properties.depth_m = 2;
+      feat.properties.volume_m3 = Math.round(area * 2);
+    }
+    state.features.push(feat);
+    selectFeature(id);
   }
+
   pushHistory();
-  state.features.push(feat);
   clearDrawing(); refreshMap();
   toast(`${cfg.label} — ${fmtArea(area)}`, 'success');
-  selectFeature(id);
 }
 
 // ── ADDITIONAL POINT/CIRCULAR TOOLS ─────────────────────────
@@ -1238,6 +1254,7 @@ function showPropsPanel(feat, lngLat) {
       const f = state.features.find(f => f.properties.id === state.selectedIds[0]);
       if (!f) return;
       f.properties.height = parseFloat(hIn.value) || 30;
+      f.properties.floors = Math.round(f.properties.height / 3.5);
       refreshMap();
       const mc = document.getElementById('liveMeasures');
       if (mc) mc.innerHTML = buildMeasureHTML(f);
