@@ -8,18 +8,22 @@ import { selectFeature } from './selection.js';
 export function finishLine() {
   if (state.drawPoints.length < 2) return;
   const pts = [...state.drawPoints];
-  const type = state.tool === 'railway' ? 'railway' : 'road';
+  const type = ['railway', 'path', 'sidewalk'].includes(state.tool) ? state.tool : 'road';
   const cfg = TYPE_CONFIG[type];
   const len = lineLength(pts);
   const lanes = 2; 
+  let widthM = lanes * 3.5;
+  if (type === 'path') widthM = 2.5;
+  if (type === 'sidewalk') widthM = 2.0;
+  if (type === 'railway') widthM = 4.0;
   const id = state.nextId++;
   const feat = {
     type: 'Feature', id,
     properties: {
       id, type: type, name: `${cfg.label} ${id}`, color: cfg.color, fillColor: cfg.fillColor,
-      length_m: len, raw_pts: [...state.drawPoints], curved: false, lanes: lanes, widthM: lanes * 3.5
+      length_m: len, raw_pts: [...state.drawPoints], curved: document.getElementById('lineCurved')?.checked || false, lanes: lanes, widthM: widthM
     },
-    geometry: { type: 'LineString', coordinates: pts }
+    geometry: { type: 'LineString', coordinates: (document.getElementById('lineCurved')?.checked && pts.length > 2) ? catmullRom(pts) : pts }
   };
   pushHistory();
   state.features.push(feat);
@@ -93,7 +97,7 @@ export function updateDrawPreview() {
   const features = [];
   if (pts.length >= 2) {
     const isPoly = ['park', 'zone', 'terrain', 'custom_building', 'water'].includes(state.tool);
-    const curved = (state.tool === 'road' && document.getElementById('roadCurved')?.checked) ||
+    const curved = (['road', 'path', 'sidewalk', 'railway'].includes(state.tool) && document.getElementById('lineCurved')?.checked) ||
       (isPoly && document.getElementById('polyCurved')?.checked);
     if (isPoly && pts.length >= 3) {
       const polyCoords = curved ? catmullRomClosed(pts) : [...pts, pts[0]];
@@ -130,4 +134,8 @@ export function clearDrawing() {
   }
   document.getElementById('drawHint').style.display = 'none';
   document.getElementById('drawMeasure').style.display = 'none';
+  const lineContainer = document.getElementById('lineCurvedContainer');
+  const polyContainer = document.getElementById('polyCurvedContainer');
+  if (lineContainer) lineContainer.style.display = 'none';
+  if (polyContainer) polyContainer.style.display = 'none';
 }

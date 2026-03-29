@@ -13,7 +13,7 @@ export function toast(msg, type = 'info') {
 }
 
 export function updateStats() {
-  const cnt = { house: 0, building: 0, road: 0, park: 0, zone: 0, terrain: 0 };
+  const cnt = { house: 0, building: 0, road: 0, park: 0, zone: 0, terrain: 0, path: 0, sidewalk: 0 };
   state.features.forEach(f => { cnt[f.properties.type] = (cnt[f.properties.type] || 0) + 1; });
   const sh = document.getElementById('stat-houses');
   const sb = document.getElementById('stat-buildings');
@@ -22,7 +22,7 @@ export function updateStats() {
   if (sh) sh.textContent = cnt.house;
   if (sb) sb.textContent = cnt.building;
   if (sr) sr.textContent = cnt.road;
-  if (sp) sp.textContent = cnt.park + cnt.zone + cnt.terrain;
+  if (sp) sp.textContent = cnt.park + cnt.zone + cnt.terrain + cnt.path + cnt.sidewalk;
 }
 
 export function setTool(tool) {
@@ -124,7 +124,7 @@ function updateLayersVisibility() {
     house: getVis('house'), building: getVis('building'), custom_building: getVis('custom_building'),
     road: getVis('road'), park: getVis('park'), zone: getVis('zone'), terrain: getVis('terrain'),
     water: getVis('water'), tree: getVis('tree'), railway: getVis('railway'), radius: getVis('radius'),
-    furniture: getVis('furniture')
+    furniture: getVis('furniture'), path: getVis('path'), sidewalk: getVis('sidewalk')
   };
 
   const bldTypes = [];
@@ -162,6 +162,12 @@ function updateLayersVisibility() {
   if (state.map.getLayer('layer-roads')) state.map.setLayoutProperty('layer-roads', 'visibility', rVis);
   for (let i = 1; i <= 9; i++) {
     if (state.map.getLayer(`layer-roads-div-${i}`)) state.map.setLayoutProperty(`layer-roads-div-${i}`, 'visibility', rVis);
+  }
+  
+  const pVis = t.path ? 'visible' : (t.sidewalk ? 'visible' : 'none');
+  if (state.map.getLayer('layer-paths')) {
+     state.map.setLayoutProperty('layer-paths', 'visibility', (t.path || t.sidewalk) ? 'visible' : 'none');
+     state.map.setFilter('layer-paths', ['match', ['get', 'type'], [t.path ? 'path' : '', t.sidewalk ? 'sidewalk' : ''].filter(x => x), true, false]);
   }
 
   const railVis = t.railway ? 'visible' : 'none';

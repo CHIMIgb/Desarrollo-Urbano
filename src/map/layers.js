@@ -26,6 +26,22 @@ export function addDataLayers() {
     }
   });
 
+  // Paths & Sidewalks
+  state.map.addLayer({
+    id: 'layer-paths', type: 'line', source: 'urban-data',
+    filter: ['match', ['get', 'type'], ['path', 'sidewalk'], true, false],
+    layout: { 'line-cap': 'round', 'line-join': 'round' },
+    paint: {
+      'line-color': ['get', 'color'],
+      'line-opacity': 0.9,
+      'line-width': ['interpolate', ['exponential', 2], ['zoom'], 
+        12, ['/', ['coalesce', ['get', 'widthM'], 2], 1.0], 
+        16, ['*', ['coalesce', ['get', 'widthM'], 2], 2.4], 
+        20, ['*', ['coalesce', ['get', 'widthM'], 2], 8.0]
+      ]
+    }
+  });
+
   // Lane Dividers
   for (let k = 1; k <= 9; k++) {
     state.map.addLayer({
@@ -83,11 +99,11 @@ export function addDataLayers() {
 
   state.map.addLayer({
     id: 'layer-railways', type: 'line', source: 'urban-data', filter: ['==', ['get', 'type'], 'railway'],
-    paint: { 'line-color': ['get', 'color'], 'line-width': ['interpolate', ['linear'], ['zoom'], 10, 2, 18, 6] }
+    paint: { 'line-color': ['get', 'color'], 'line-width': ['interpolate', ['linear'], ['zoom'], 10, 4, 18, 12] }
   });
   state.map.addLayer({
     id: 'layer-railways-dash', type: 'line', source: 'urban-data', filter: ['==', ['get', 'type'], 'railway'],
-    paint: { 'line-color': '#f97316', 'line-width': ['interpolate', ['linear'], ['zoom'], 10, 1, 18, 3], 'line-dasharray': [2, 2] }
+    paint: { 'line-color': '#f97316', 'line-width': ['interpolate', ['linear'], ['zoom'], 10, 2, 18, 6], 'line-dasharray': [2, 2] }
   });
 
   const bldFilter = ['match', ['get', 'type'], ['house', 'building', 'custom_building'], true, false];
@@ -152,7 +168,7 @@ export function setupLayerInteractivity() {
   });
   state.map.on('mouseleave', 'layer-edit-handles', () => { state.map.getCanvas().style.cursor = ''; });
 
-  ['layer-buildings', 'layer-roads', 'layer-zones-fill', 'layer-trees-3d', 'layer-railways', 'layer-furniture'].forEach(lid => {
+  ['layer-buildings', 'layer-roads', 'layer-paths', 'layer-zones-fill', 'layer-trees-3d', 'layer-railways', 'layer-furniture'].forEach(lid => {
     state.map.on('mousedown', lid, e => {
       if (state.tool !== 'move') return;
       e.preventDefault();

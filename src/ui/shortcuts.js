@@ -32,7 +32,7 @@ export function initKeyboardShortcuts() {
     }
     
     if (e.key === 'Enter') {
-       if (state.tool === 'road' && state.drawPoints.length >= 2) finishLine();
+        if (['road', 'railway', 'path', 'sidewalk'].includes(state.tool) && state.drawPoints.length >= 2) finishLine();
        else if (['zone', 'park', 'terrain', 'custom_building'].includes(state.tool) && state.drawPoints.length >= 3) finishPolygon(state.tool);
     }
   });

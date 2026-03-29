@@ -25,7 +25,7 @@ export function handleMouseMove(e) {
     const f = state.features.find(x => x.properties.id === state.selectedIds[0]);
     if (f && f.properties.raw_pts) {
       f.properties.raw_pts[state.draggingVertexIdx] = [lng, lat];
-      if (f.properties.type === 'road') {
+      if (['road', 'path', 'sidewalk', 'railway'].includes(f.properties.type)) {
         f.geometry.coordinates = f.properties.curved && f.properties.raw_pts.length > 2 ? catmullRom(f.properties.raw_pts) : [...f.properties.raw_pts];
         f.properties.length_m = Math.round(lineLength(f.geometry.coordinates));
       } else {
@@ -83,7 +83,7 @@ export function handleMapClick(e) {
       if (['park', 'zone', 'terrain', 'custom_building', 'water'].includes(state.tool) && state.drawPoints.length >= 3) {
         const firstP = state.map.project(state.drawPoints[0]);
         if (Math.hypot(p.x - firstP.x, p.y - firstP.y) < 20) { finishPolygon(state.tool); return; }
-      } else if (['road', 'railway'].includes(state.tool) && state.drawPoints.length >= 2) {
+      } else if (['road', 'railway', 'path', 'sidewalk'].includes(state.tool) && state.drawPoints.length >= 2) {
         const lastP = state.map.project(state.drawPoints[state.drawPoints.length - 1]);
         if (Math.hypot(p.x - lastP.x, p.y - lastP.y) < 20) { finishLine(); return; }
       }
@@ -95,10 +95,17 @@ export function handleMapClick(e) {
       const hint = document.getElementById('drawHint');
       if (hint) hint.style.display = 'block';
       const hintText = document.getElementById('drawHintText');
-      if (hintText) hintText.textContent =
-        ['road', 'railway'].includes(state.tool)
+        ['road', 'railway', 'path', 'sidewalk'].includes(state.tool)
           ? 'Traza con clic Izquierdo · Clic DERECHO para terminar'
           : 'Traza con clic Izquierdo · Clic DERECHO para cerrar';
+      
+      const lineContainer = document.getElementById('lineCurvedContainer');
+      const polyContainer = document.getElementById('polyCurvedContainer');
+      if (['road', 'railway', 'path', 'sidewalk'].includes(state.tool)) {
+        if (lineContainer) lineContainer.style.display = 'block';
+      } else if (['park', 'zone', 'terrain', 'custom_building', 'water'].includes(state.tool)) {
+        if (polyContainer) polyContainer.style.display = 'block';
+      }
     }
   }
 }
