@@ -4,7 +4,7 @@ import { addDataLayers } from './layers.js'; // Will create this later
 
 export function initMap() {
   let initialView = {
-    center: [-99.1332, 19.4326], 
+    center: [-99.1332, 19.4326],
     zoom: 13,
     pitch: 65,
     bearing: -20
@@ -28,6 +28,7 @@ export function initMap() {
     bearing: initialView.bearing,
     antialias: true,
     maxPitch: 85,
+    maxTileCacheSize: 500, // Aumentar memoria caché en RAM
   });
 
   if (!hasSavedView && navigator.geolocation) {
@@ -62,9 +63,12 @@ export function initMap() {
   state.map.on('pitchend', saveMapView);
   state.map.on('rotateend', saveMapView);
 
-  state.map.on('style.load', () => { 
-    addTerrainSource(); 
-    addDataLayers(); 
+  // Precarga proactiva al mover el mapa
+  state.map.on('moveend', () => { saveMapView(); preloadNearbyTiles(); });
+
+  state.map.on('style.load', () => {
+    addTerrainSource();
+    addDataLayers();
   });
 }
 
@@ -74,10 +78,53 @@ export function buildStyle() {
   const attr = state.isSatellite ? '© Esri, Maxar' : '© OpenStreetMap contributors';
   return {
     version: 8,
-    sources: { [srcId]: { type: 'raster', tiles: [tiles], tileSize: 256, attribution: attr, maxzoom: 19 } },
+    sources: { [srcId]: { type: 'raster', tiles: [tiles], tileSize: 512, attribution: attr, maxzoom: 19 } },
     layers: [{ id: 'base', type: 'raster', source: srcId }],
     glyphs: GLYPHS_URL
   };
+}
+
+export function preloadNearbyTiles() {
+  if (!state.map) return;
+  const zoom = Math.floor(state.map.getZoom());
+  if (zoom < 10 || zoom > 18) return;
+
+  const center = state.map.getCenter();
+  const lat = center.lat;
+  const lng = center.lng;
+
+  // Convertir grados a coordenadas de tile OSM
+  const x = Math.floor((lng + 180) / 360 * Math.pow(2, zoom));
+  const y = Math.floor((1 - Math.log(Math.tan(lat * Math.PI / 180) + 1 / Math.cos(lat * Math.PI / 180)) / Math.PI) / 2 * Math.pow(2, zoom));
+
+  // Calcular resolución para determinar cuántos tiles cubren 2km
+  const groundRes = 156543.03 * Math.cos(lat * Math.PI / 180) / Math.pow(2, zoom);
+  const tileSizeMeters = groundRes * 512;
+  const radiusInTiles = Math.max(1, Math.ceil(1000 / tileSizeMeters));
+
+  const tilesTemplate = state.isSatellite ? SATELLITE_URL : OSM_URL;
+
+  // Limitar el número de precargas para no saturar la red (máx 25 tiles extra)
+  const limit = Math.min(radiusInTiles, 2);
+
+  for (let dx = -limit; dx <= limit; dx++) {
+    for (let dy = -limit; dy <= limit; dy++) {
+      const tx = x + dx;
+      const ty = y + dy;
+      let url = tilesTemplate.replace('{z}', zoom);
+
+      // Manejar diferentes formatos de URL {x}/{y} vs {y}/{x}
+      if (tilesTemplate.indexOf('{x}/{y}') !== -1) {
+        url = url.replace('{x}', tx).replace('{y}', ty);
+      } else {
+        url = url.replace('{y}', ty).replace('{x}', tx);
+      }
+
+      // "Priming" de la caché del navegador cargando la imagen invisiblemente
+      const img = new Image();
+      img.src = url;
+    }
+  }
 }
 
 export function addTerrainSource() {
@@ -85,14 +132,14 @@ export function addTerrainSource() {
     state.map.addSource('terrain', { type: 'raster-dem', tiles: [TERRAIN_URL], tileSize: 256, encoding: 'terrarium', maxzoom: 15 });
   const exag = parseFloat(document.getElementById('terrainExaggeration').value);
   state.map.setTerrain({ source: 'terrain', exaggeration: exag });
-  try { 
-    state.map.setFog({ 
-      'color': 'rgb(15,18,30)', 
-      'high-color': 'rgb(40,50,80)', 
-      'horizon-blend': 0.08, 
-      'space-color': 'rgb(5,8,20)', 
-      'star-intensity': 0.5 
-    }); 
+  try {
+    state.map.setFog({
+      'color': 'rgb(15,18,30)',
+      'high-color': 'rgb(40,50,80)',
+      'horizon-blend': 0.08,
+      'space-color': 'rgb(5,8,20)',
+      'star-intensity': 0.5
+    });
   } catch (e) { }
 }
 

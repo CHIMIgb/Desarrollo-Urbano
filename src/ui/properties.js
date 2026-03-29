@@ -85,7 +85,7 @@ export function showPropsPanel(feat, lngLat) {
         <div class="form-field"><label>Ancho (m)</label><input type="number" id="prop-roadW" value="${p.widthM || 8}" min="2" max="60"/></div>
         <div class="form-field"><label>Carriles</label><input type="number" id="prop-lanes" value="${p.lanes || 2}" min="1" max="16"/></div>`;
     } else {
-        fields += `<div class="form-field"><label>Ancho (m)</label><input type="number" id="prop-widthM" value="${p.widthM || 4}" min="0.5" max="20"/></div>`;
+      fields += `<div class="form-field"><label>Ancho (m)</label><input type="number" id="prop-widthM" value="${p.widthM || 4}" min="0.5" max="20"/></div>`;
     }
     fields += `
       <div class="form-field opt-toggle" style="margin-top:6px;">
@@ -360,7 +360,7 @@ export function buildMeasureHTML(feat) {
   if (isRoad && p.length_m) items.push({ val: fmtLen(p.length_m), lbl: 'Longitud' }, { val: (p.widthM || 8) + 'm', lbl: 'Ancho' });
   if (!items.length) return '';
   return `<div class="measure-card" id="liveMeasures">
-    <div class="measure-title">📐 Medidas</div>
+    <div class="measure-title">Medidas</div>
     <div class="measure-grid">
       ${items.map(i => `<div class="measure-item"><div class="measure-val">${i.val}</div><div class="measure-unit">${i.lbl}</div></div>`).join('')}
     </div>
