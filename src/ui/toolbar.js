@@ -1,5 +1,6 @@
 import { state } from '../config/state.js';
 import { clearDrawing } from '../tools/drawing.js';
+import { createNewProject, listUserProjects, loadProjectById } from './io.js';
 
 export function toast(msg, type = 'info') {
   const container = document.getElementById('toastContainer');
@@ -110,6 +111,57 @@ export function initToolbarEvents() {
       import('../map/core.js').then(m => state.map.setStyle(m.buildStyle()));
     }
     toast(state.isSatellite ? 'Vista Satélite' : 'Vista Mapa', 'info');
+  });
+
+  document.getElementById('btnNew')?.addEventListener('click', () => {
+    if (confirm('¿Estás seguro de que quieres crear un nuevo proyecto? Se perderán los cambios no guardados en la nube.')) {
+      createNewProject();
+    }
+  });
+
+  document.getElementById('btnOpenProjects')?.addEventListener('click', async () => {
+    const modal = document.getElementById('projectsModal');
+    if (modal) {
+      modal.style.display = 'flex';
+      const list = document.getElementById('projectsList');
+      if (list) {
+        list.innerHTML = '<p style="text-align:center; padding:20px;">Cargando...</p>';
+        const projects = await listUserProjects();
+        renderProjectsList(projects);
+      }
+    }
+  });
+}
+
+function renderProjectsList(projects) {
+  const list = document.getElementById('projectsList');
+  if (!list) return;
+  
+  if (projects.length === 0) {
+    list.innerHTML = '<p style="text-align:center; padding:20px; color:var(--text-secondary);">No tienes proyectos guardados.</p>';
+    return;
+  }
+
+  list.innerHTML = '';
+  projects.forEach(p => {
+    const item = document.createElement('div');
+    item.className = 'project-item';
+    const date = new Date(p.updated_at).toLocaleDateString();
+    
+    item.innerHTML = `
+      <div class="project-info">
+        <div class="project-name-item">${p.name}</div>
+        <div class="project-date-item">Actualizado: ${date}</div>
+      </div>
+      <button class="btn btn-secondary btn-sm" data-id="${p.id}">Cargar</button>
+    `;
+    
+    item.querySelector('button').addEventListener('click', () => {
+      loadProjectById(p.id);
+      document.getElementById('projectsModal').style.display = 'none';
+    });
+    
+    list.appendChild(item);
   });
 }
 

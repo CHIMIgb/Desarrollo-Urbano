@@ -26,25 +26,24 @@ router.post('/save', authenticateToken, async (req, res) => {
     let currentProjectId = projectId;
 
     if (!currentProjectId) {
-      // Buscar el último proyecto si existe o crear uno nuevo (regla de uno a la vez)
-      const existing = await db.query('SELECT id FROM projects WHERE user_id = $1 ORDER BY updated_at DESC LIMIT 1', [userId]);
-      if (existing.rows.length > 0) {
-        currentProjectId = existing.rows[0].id;
-      } else {
-        const result = await db.query(
-          'INSERT INTO projects (user_id, name, next_id) VALUES ($1, $2, $3) RETURNING id',
-          [userId, name || 'Mi Proyecto Urbano', nextId]
-        );
-        currentProjectId = result.rows[0].id;
-      }
+      // Crear uno nuevo obligatoriamente si no hay ID (pide ser nuevo)
+      const result = await db.query(
+        'INSERT INTO projects (user_id, name, next_id) VALUES ($1, $2, $3) RETURNING id',
+        [userId, name || 'Mi Proyecto Urbano', nextId]
+      );
+      currentProjectId = result.rows[0].id;
     } else {
       // Actualizar el proyecto existente
+      const check = await db.query('SELECT id FROM projects WHERE id = $1 AND user_id = $2', [currentProjectId, userId]);
+      if (check.rows.length === 0) throw new Error('Proyecto no encontrado o no pertenece al usuario');
+
       await db.query('UPDATE projects SET name = $1, next_id = $2, updated_at = NOW() WHERE id = $3', [name, nextId, currentProjectId]);
     }
 
     // Limpiar características anteriores y añadir nuevas
     await db.query('DELETE FROM project_features WHERE project_id = $1', [currentProjectId]);
     
+    // Batch insert si hay muchas features (aquí simple loop por simplicidad, pero con COMMIT)
     for (const feat of features) {
       await db.query('INSERT INTO project_features (project_id, feature_data) VALUES ($1, $2)', [currentProjectId, feat]);
     }
@@ -54,7 +53,49 @@ router.post('/save', authenticateToken, async (req, res) => {
   } catch (err) {
     await db.query('ROLLBACK');
     console.error(err);
-    res.status(500).json({ error: 'Error al guardar el proyecto' });
+    res.status(500).json({ error: err.message || 'Error al guardar el proyecto' });
+  }
+});
+
+// LISTAR TODOS LOS PROYECTOS DEL USUARIO
+router.get('/all', authenticateToken, async (req, res) => {
+  const userId = req.user.id;
+  try {
+    const result = await db.query(
+      'SELECT id, name, updated_at, created_at FROM projects WHERE user_id = $1 ORDER BY updated_at DESC',
+      [userId]
+    );
+    res.json({ projects: result.rows });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Error al listar proyectos' });
+  }
+});
+
+// CARGAR PROYECTO ESPECÍFICO POR ID
+router.get('/:id', authenticateToken, async (req, res) => {
+  const userId = req.user.id;
+  const projectId = req.params.id;
+  try {
+    const projectResult = await db.query('SELECT * FROM projects WHERE id = $1 AND user_id = $2', [projectId, userId]);
+    if (projectResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Proyecto no encontrado' });
+    }
+
+    const project = projectResult.rows[0];
+    const featuresResult = await db.query('SELECT feature_data FROM project_features WHERE project_id = $1', [project.id]);
+
+    res.json({
+      project: {
+        id: project.id,
+        name: project.name,
+        nextId: project.next_id,
+        features: featuresResult.rows.map(r => r.feature_data)
+      }
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Error al cargar el proyecto' });
   }
 });
 

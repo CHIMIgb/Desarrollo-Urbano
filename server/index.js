@@ -13,15 +13,24 @@ app.use(cors());
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
-// Servir archivos estáticos del frontend (la raíz del proyecto)
-app.use(express.static(path.join(__dirname, '../')));
+// Logger simple para depuración
+app.use((req, res, next) => {
+  console.log(`[API LOG] ${req.method} ${req.url}`);
+  next();
+});
 
 // Rutas de API
 app.use('/api/auth', authRouter);
 app.use('/api/projects', projectsRouter);
 
-// Ruta para servir el index.html en cualquier otra ruta (SPA style)
-app.get('/*splat', (req, res) => {
+// Servir archivos estáticos del frontend (la raíz del proyecto)
+app.use(express.static(path.join(__dirname, '../')));
+
+// Catch-all: Envía index.html para cualquier otra ruta (SPA)
+app.use((req, res) => {
+  if (req.url.startsWith('/api/')) {
+    return res.status(404).json({ error: 'API endpoint not found' });
+  }
   res.sendFile(path.join(__dirname, '../index.html'));
 });
 
