@@ -9,7 +9,12 @@ import { initKeyboardShortcuts } from './src/ui/shortcuts.js';
 import { state } from './src/config/state.js';
 import { handleMapClick, handleMapDblClick, handleMouseMove, handleMouseUp } from './src/tools/interaction.js';
 
+import { initAuth } from './src/ui/auth.js';
+
 document.addEventListener('DOMContentLoaded', () => {
+  // Inicializar autenticación
+  initAuth();
+
   // Initialize map
   initMap();
 
