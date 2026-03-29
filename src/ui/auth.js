@@ -13,6 +13,9 @@ export function initAuth() {
   const token = localStorage.getItem('urbanplan_token');
   if (token) {
     checkSession(token);
+  } else {
+    // Si no hay token, mostramos el login inmediatamente
+    loginOverlay.style.display = 'flex';
   }
 
   // Evento Login
@@ -62,9 +65,11 @@ export function initAuth() {
         showApp(data.user);
       } else {
         localStorage.removeItem('urbanplan_token');
+        loginOverlay.style.display = 'flex';
       }
     } catch (err) {
       console.error('Error verificando sesión:', err);
+      loginOverlay.style.display = 'flex';
     }
   }
 
