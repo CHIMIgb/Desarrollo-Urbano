@@ -108,7 +108,7 @@ export function initIOEvents() {
   });
 }
 
-// CARGAR DEL SERVIDOR
+// CARGAR ÚLTIMO PROYECTO DEL SERVIDOR AL INICIAR
 export async function loadSavedState() {
   const token = localStorage.getItem('urbanplan_token');
   if (!token) return;
@@ -117,35 +117,76 @@ export async function loadSavedState() {
     const response = await fetch('/api/projects/load', {
       headers: { 'Authorization': token }
     });
-    if (!response.ok) {
-      if (response.status === 404) {
-        console.warn('API de proyectos no encontrada. ¿Reiniciaste el servidor?');
-      }
-      return;
-    }
-
-    const contentType = response.headers.get('content-type');
-    if (!contentType || !contentType.includes('application/json')) {
-      console.error('La respuesta no es JSON. Recibido:', contentType);
-      return;
-    }
+    if (!response.ok) return;
 
     const data = await response.json();
-    
-    if (data.project) {
-      state.features = data.project.features;
-      state.nextId = data.project.nextId;
-      state.currentProjectId = data.project.id;
-      
-      const nameDisplay = document.getElementById('projectName');
-      if (nameDisplay && data.project.name) nameDisplay.textContent = data.project.name;
-      
-      refreshMap();
-      updateStats();
-      toast('Proyecto cargado desde la nube', 'info');
-    }
+    if (data.project) applyProjectData(data.project);
+  } catch (e) { console.error('Error loading initial state', e); }
+}
+
+// LISTAR PROYECTOS
+export async function listUserProjects() {
+  const token = localStorage.getItem('urbanplan_token');
+  if (!token) return [];
+  try {
+    const response = await fetch('/api/projects/all', {
+      headers: { 'Authorization': token }
+    });
+    if (!response.ok) return [];
+    const data = await response.json();
+    return data.projects || [];
   } catch (e) { 
-    console.error('Error loading saved state from DB', e); 
-    toast('Error al cargar proyecto remoto', 'error');
+    console.error('Error listing projects', e); 
+    return [];
   }
+}
+
+// CARGAR POR ID
+export async function loadProjectById(id) {
+  const token = localStorage.getItem('urbanplan_token');
+  if (!token) return;
+  try {
+    const response = await fetch(`/api/projects/${id}`, {
+      headers: { 'Authorization': token }
+    });
+    if (!response.ok) {
+      toast('Error al cargar proyecto', 'error');
+      return;
+    }
+    const data = await response.json();
+    if (data.project) {
+      applyProjectData(data.project);
+      toast('Proyecto cargado', 'success');
+    }
+  } catch (e) { toast('Error de conexión', 'error'); }
+}
+
+// NUEVO PROYECTO
+export function createNewProject() {
+  state.features = [];
+  state.nextId = 1;
+  state.currentProjectId = null;
+  state.history = [];
+  state.future = [];
+  
+  const nameDisplay = document.getElementById('projectName');
+  if (nameDisplay) nameDisplay.textContent = 'Nuevo Proyecto Urbano';
+  
+  refreshMap();
+  updateStats();
+  toast('Nuevo proyecto iniciado', 'info');
+}
+
+function applyProjectData(project) {
+  state.features = project.features || [];
+  state.nextId = project.nextId || 1;
+  state.currentProjectId = project.id;
+  state.history = [JSON.stringify(state.features)];
+  state.future = [];
+  
+  const nameDisplay = document.getElementById('projectName');
+  if (nameDisplay && project.name) nameDisplay.textContent = project.name;
+  
+  refreshMap();
+  updateStats();
 }

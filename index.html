@@ -11,6 +11,22 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
   <link href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
+  <style>
+    .project-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px;
+      background: rgba(255,255,255,0.05);
+      border-radius: 8px;
+      margin-bottom: 8px;
+    }
+    .project-item:hover { background: rgba(255,255,255,0.1); }
+    .project-info { display: flex; flex-direction: column; gap: 2px; }
+    .project-name-item { font-weight: 600; font-size: 14px; color: #fff; }
+    .project-date-item { font-size: 11px; color: var(--text-secondary); }
+    .btn-sm { padding: 4px 8px; font-size: 12px; }
+  </style>
 </head>
 
 <body>
@@ -100,6 +116,13 @@
             <path d="M21 7v6h-6" />
             <path d="M3 17a9 9 0 0 1 9-9 9 9 0 0 1 6 2.3L21 13" />
           </svg>
+        </button>
+        <div class="divider-v"></div>
+        <button class="btn btn-ghost" id="btnNew" title="Nuevo Proyecto">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14m-7-7h14"/></svg>
+        </button>
+        <button class="btn btn-ghost" id="btnOpenProjects" title="Mis Proyectos">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
         </button>
         <div class="divider-v"></div>
         <button class="btn btn-primary" id="btnSave">
@@ -441,7 +464,27 @@
   </div>
 
   <!-- TOAST -->
-  <div class="toast-container" id="toastContainer"></div>
+  <!-- PROJECTS MODAL -->
+  <div id="projectsModal" class="login-overlay" style="display:none; z-index:2000;">
+    <div class="login-card" style="max-width:500px; width:90%;">
+      <div class="login-header">
+        <h3>Mis Proyectos en la Nube</h3>
+        <p>Selecciona un proyecto para cargar</p>
+      </div>
+      <div id="projectsList" style="max-height:300px; overflow-y:auto; margin:16px 0; display:flex; flex-direction:column; gap:8px;">
+        <!-- List item example:
+        <div class="project-item">
+          <span>Nombre del Proyecto</span>
+          <button class="btn btn-secondary btn-sm">Cargar</button>
+        </div>
+        -->
+        <p style="text-align:center; color:var(--text-secondary); padding:20px;">Cargando proyectos...</p>
+      </div>
+      <button class="btn btn-secondary" style="width:100%" onclick="document.getElementById('projectsModal').style.display='none'">Cerrar</button>
+    </div>
+  </div>
+
+  <div id="toastContainer" class="toast-container"></div>
 
   <!-- SCRIPTS -->
   <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
