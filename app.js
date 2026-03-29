@@ -111,15 +111,17 @@ function catmullRomClosed(pts, steps = 10) {
 // Format helpers
 function fmtLen(m) {
   if (m == null || isNaN(m)) return '—';
-  return m >= 1000 ? (m / 1000).toFixed(2) + ' km' : Math.round(m) + ' m';
+  if (m >= 1000) return (m / 1000).toFixed(2) + ' km';
+  return (Math.round(m * 10) / 10).toLocaleString() + ' m';
 }
 function fmtArea(m2) {
   if (m2 == null || isNaN(m2)) return '—';
-  return m2 >= 10000 ? (m2 / 10000).toFixed(2) + ' ha' : Math.round(m2) + ' m²';
+  if (m2 >= 10000) return (m2 / 10000).toFixed(2) + ' ha';
+  return (Math.round(m2 * 10) / 10).toLocaleString() + ' m²';
 }
 function fmtVol(m3) {
   if (m3 == null || isNaN(m3)) return '—';
-  return Math.round(m3).toLocaleString() + ' m³';
+  return (Math.round(m3 * 10) / 10).toLocaleString() + ' m³';
 }
 
 // ── TYPE CONFIG ───────────────────────────────────────────────
@@ -556,18 +558,18 @@ function placeBuilding(type, lng, lat) {
 // ── LINE (ROAD/RAILWAY) ───────────────────────────────────────
 function finishLine() {
   if (state.drawPoints.length < 2) return;
-  const isCurved = document.getElementById('roadCurved')?.checked;
-  const pts = isCurved && state.drawPoints.length > 2 ? catmullRom(state.drawPoints) : [...state.drawPoints];
+  const isCurved = false; // Default: straight, can be toggled in side panel
+  const pts = [...state.drawPoints];
   const type = state.tool === 'railway' ? 'railway' : 'road';
   const cfg = TYPE_CONFIG[type];
   const len = lineLength(pts);
-  const lanes = parseInt(document.getElementById('roadLanes')?.value || 2);
+  const lanes = 2; // Default 2 lanes
   const id = state.nextId++;
   const feat = {
     type: 'Feature', id,
     properties: {
       id, type: type, name: `${cfg.label} ${id}`, color: cfg.color, fillColor: cfg.fillColor,
-      length_m: Math.round(len), raw_pts: [...state.drawPoints], curved: !!isCurved, lanes: lanes, widthM: lanes * 3
+      length_m: len, raw_pts: [...state.drawPoints], curved: !!isCurved, lanes: lanes, widthM: lanes * 3
     },
     geometry: { type: 'LineString', coordinates: pts }
   };
@@ -575,12 +577,13 @@ function finishLine() {
   state.features.push(feat);
   clearDrawing(); refreshMap(); updateStats();
   toast(`${cfg.label} trazada — ${fmtLen(len)}`, 'success');
+  selectFeature(id);
 }
 
 // ── POLYGON ───────────────────────────────────────────────────
 function finishPolygon(type) {
-  const isCurved = document.getElementById('polyCurved')?.checked;
-  const pts = isCurved && state.drawPoints.length > 2 ? catmullRomClosed(state.drawPoints) : [...state.drawPoints, state.drawPoints[0]];
+  const isCurved = false; // Default: straight, can be curved in properties panel
+  const pts = [...state.drawPoints, state.drawPoints[0]];
   const cfg = TYPE_CONFIG[type];
   const area = polygonArea(pts);
   const peri = polygonPerimeter(pts);
@@ -588,8 +591,8 @@ function finishPolygon(type) {
   const feat = {
     type: 'Feature', id,
     properties: {
-      id, type, name: `${cfg.label} ${id}`, color: cfg.color, fillColor: cfg.fillColor,
-      area_m2: Math.round(area), perimeter_m: Math.round(peri), raw_pts: [...state.drawPoints], curved: !!isCurved
+      id, type: type, name: `${cfg.label} ${id}`, color: cfg.color, fillColor: cfg.fillColor,
+      area_m2: area, perimeter_m: peri, raw_pts: [...state.drawPoints], curved: !!isCurved
     },
     geometry: { type: 'Polygon', coordinates: [pts] },
   };
@@ -598,7 +601,7 @@ function finishPolygon(type) {
     feat.properties.floors = Math.round(cfg.defaultH / 3.5);
     feat.properties.uso_suelo = 'mixto';
   } else if (type === 'water') {
-    const depth = parseFloat(document.getElementById('waterDepth')?.value || 2);
+    const depth = 2; // Default 2m, can be edited in side panel
     feat.properties.depth_m = depth;
     feat.properties.volume_m3 = Math.round(area * depth);
   }
@@ -606,6 +609,7 @@ function finishPolygon(type) {
   state.features.push(feat);
   clearDrawing(); refreshMap();
   toast(`${cfg.label} — ${fmtArea(area)}`, 'success');
+  selectFeature(id);
 }
 
 // ── ADDITIONAL POINT/CIRCULAR TOOLS ─────────────────────────
@@ -623,7 +627,7 @@ function buildTreePolygon(lng, lat, radiusM) {
 
 function finishTree(lng, lat) {
   const treeType = document.getElementById('treeType')?.value || 'pino';
-  let totalH = parseFloat(document.getElementById('treeHeight')?.value || 8);
+  let totalH = 8; // Base height set to 8m (with organic variation below)
 
   // Randomize actual height slightly for organic scale 
   totalH = totalH * (0.85 + Math.random() * 0.3);
@@ -702,6 +706,7 @@ function finishTree(lng, lat) {
 
   state.features.push(...parts);
   pushHistory(); refreshMap(); updateStats();
+  selectFeature(trunkId);
 }
 function generateFurnitureParts(baseId, lng, lat, rot, fType) {
   const cfg = TYPE_CONFIG['furniture'];
@@ -818,12 +823,13 @@ function finishFurniture(lng, lat) {
   const parts = generateFurnitureParts(baseId, lng, lat, rot, fType);
   state.features.push(...parts);
   pushHistory(); refreshMap(); updateStats();
+  selectFeature(baseId);
 }
 
 function finishRadius(lng, lat) {
   const id = state.nextId++;
   const cfg = TYPE_CONFIG['radius'];
-  const r_m = parseFloat(document.getElementById('radiusMeters')?.value || 400);
+  const r_m = 400; // Default radius 400m
   const pts = [];
   for (let i = 0; i <= 32; i++) {
     const ang = (i / 32) * Math.PI * 2;
@@ -837,6 +843,7 @@ function finishRadius(lng, lat) {
     geometry: { type: 'Polygon', coordinates: [pts] }
   });
   pushHistory(); refreshMap(); updateStats();
+  selectFeature(id);
 }
 
 // ── DRAW PREVIEW ──────────────────────────────────────────────
@@ -967,9 +974,9 @@ function showPropsPanel(feat, lngLat) {
 
   if (['house', 'building'].includes(p.type)) {
     fields += `
-      <div class="form-field"><label>Ancho (m)</label><input type="number" id="prop-w" value="${p.width_m || 10}" min="2" max="500" step="0.5"/></div>
-      <div class="form-field"><label>Largo (m)</label><input type="number" id="prop-l" value="${p.length_m || 10}" min="2" max="500" step="0.5"/></div>
-      <div class="form-field"><label>Altura (m)</label><input type="number" id="prop-height" value="${p.height || 5}" min="1" max="600" step="0.5"/></div>
+      <div class="form-field"><label>Ancho (m)</label><input type="number" id="prop-w" value="${p.width_m || 10}" min="2" max="500" step="0.1"/></div>
+      <div class="form-field"><label>Largo (m)</label><input type="number" id="prop-l" value="${p.length_m || 10}" min="2" max="500" step="0.1"/></div>
+      <div class="form-field"><label>Altura (m)</label><input type="number" id="prop-height" value="${p.height || 5}" min="1" max="600" step="0.1"/></div>
       <div class="form-field"><label>Pisos</label><input type="number" id="prop-floors" value="${p.floors || 1}" min="1" max="200"/></div>
       <div class="form-field">
         <label>Rotación: <span id="propRotLabel">${Math.round(p.rotation || 0)}°</span></label>
@@ -983,7 +990,7 @@ function showPropsPanel(feat, lngLat) {
       </select></div>`;
   } else if (p.type === 'custom_building') {
     fields += `
-      <div class="form-field"><label>Altura (m)</label><input type="number" id="prop-height" value="${p.height || 30}" min="1" max="600" step="0.5"/></div>
+      <div class="form-field"><label>Altura (m)</label><input type="number" id="prop-height" value="${p.height || 30}" min="1" max="600" step="0.1"/></div>
       <div class="form-field"><label>Pisos</label><input type="number" id="prop-floors" value="${p.floors || 10}" min="1" max="200"/></div>
       <div class="form-field"><label>Uso de suelo</label><select id="prop-uso">
         <option value="habitacional" ${p.uso_suelo === 'habitacional' ? 'selected' : ''}>Habitacional</option>
@@ -1106,6 +1113,8 @@ function showPropsPanel(feat, lngLat) {
       if (!f) return;
       f.properties.height = parseFloat(hIn.value) || 30;
       refreshMap();
+      const mc = document.getElementById('liveMeasures');
+      if (mc) mc.innerHTML = buildMeasureHTML(f);
     };
     hIn?.addEventListener('input', rebuildCB);
     fIn?.addEventListener('input', () => { if (hIn) hIn.value = Math.round(parseFloat(fIn.value) * 3.5); rebuildCB(); });
@@ -1432,9 +1441,7 @@ document.getElementById('roadWidthSelect')?.addEventListener('change', function 
 
 // ── TOOL BUTTONS ──────────────────────────────────────────────
 const optionsBars = {
-  road: 'roadOptionsBar', railway: 'roadOptionsBar',
-  park: 'polygonOptionsBar', zone: 'polygonOptionsBar', terrain: 'polygonOptionsBar', custom_building: 'polygonOptionsBar',
-  water: 'waterOptionsBar', radius: 'radiusOptionsBar', tree: 'treeOptionsBar', furniture: 'furnitureOptionsBar'
+  tree: 'treeOptionsBar', furniture: 'furnitureOptionsBar'
 };
 document.querySelectorAll('.tool-btn[data-tool]').forEach(btn => {
   btn.addEventListener('click', () => setTool(btn.dataset.tool));
@@ -1446,7 +1453,7 @@ function setTool(tool) {
   document.querySelector(`[data-tool="${tool}"]`)?.classList.add('active');
 
   // Hide all option bars, show relevant one
-  ['roadOptionsBar', 'polygonOptionsBar', 'waterOptionsBar', 'radiusOptionsBar', 'treeOptionsBar', 'furnitureOptionsBar'].forEach(id => {
+  ['treeOptionsBar', 'furnitureOptionsBar'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.style.display = 'none';
   });
