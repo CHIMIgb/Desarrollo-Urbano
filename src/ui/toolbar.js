@@ -94,6 +94,16 @@ export function initToolbarEvents() {
     }
   });
 
+  document.getElementById('tool-3d')?.addEventListener('click', () => {
+    if (!state.map) return;
+    const is3D = state.map.getPitch() > 10;
+    state.map.easeTo({
+      pitch: is3D ? 0 : 65,
+      duration: 1000
+    });
+    toast(is3D ? 'Vista 2D' : 'Vista 3D', 'info');
+  });
+
   document.getElementById('tool-satellite')?.addEventListener('click', () => {
     state.isSatellite = !state.isSatellite;
     if (state.map) {
