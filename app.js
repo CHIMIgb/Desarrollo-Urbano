@@ -154,14 +154,68 @@ const state = {
 // ── MAP INIT ──────────────────────────────────────────────────
 let map;
 function initMap() {
+  // 1. Try to load saved view from localStorage
+  let initialView = {
+    center: [-99.1332, 19.4326], // Default: CDMX
+    zoom: 13,
+    pitch: 65,
+    bearing: -20
+  };
+
+  const savedView = localStorage.getItem('urbanPlan_view');
+  let hasSavedView = false;
+  if (savedView) {
+    try {
+      initialView = JSON.parse(savedView);
+      hasSavedView = true;
+    } catch (e) { console.error('Error loading saved view', e); }
+  }
+
   map = new maplibregl.Map({
-    container: 'map', style: buildStyle(),
-    center: [-99.1332, 19.4326], zoom: 13, pitch: 65, bearing: -20, antialias: true, maxPitch: 85,
+    container: 'map',
+    style: buildStyle(),
+    center: initialView.center,
+    zoom: initialView.zoom,
+    pitch: initialView.pitch,
+    bearing: initialView.bearing,
+    antialias: true,
+    maxPitch: 85,
   });
+
+  // 2. If no saved view, try geolocation
+  if (!hasSavedView && navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+      pos => {
+        const center = [pos.coords.longitude, pos.coords.latitude];
+        map.flyTo({ center, zoom: 16, duration: 2000 });
+        // Save initial spot
+        saveMapView();
+      },
+      err => { console.warn('Geolocation denied or failed', err); },
+      { enableHighAccuracy: true }
+    );
+  }
+
   map.addControl(new maplibregl.NavigationControl({ showCompass: true }), 'bottom-right');
   map.addControl(new maplibregl.ScaleControl({ unit: 'metric' }), 'bottom-left');
   map.addControl(new maplibregl.FullscreenControl(), 'bottom-right');
   map.doubleClickZoom.disable();
+
+  // Save view state on any move
+  const saveMapView = () => {
+    const view = {
+      center: map.getCenter().toArray(),
+      zoom: map.getZoom(),
+      pitch: map.getPitch(),
+      bearing: map.getBearing()
+    };
+    localStorage.setItem('urbanPlan_view', JSON.stringify(view));
+  };
+
+  map.on('moveend', saveMapView);
+  map.on('zoomend', saveMapView);
+  map.on('pitchend', saveMapView);
+  map.on('rotateend', saveMapView);
 
   map.on('load', () => { addTerrainSource(); addDataLayers(); toast('Terreno 3D listo', 'success'); });
   map.on('mousemove', e => {
