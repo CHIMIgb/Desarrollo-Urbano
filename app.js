@@ -442,13 +442,13 @@ function addDataLayers() {
     paint: { 'line-color': '#f97316', 'line-width': ['interpolate', ['linear'], ['zoom'], 10, 1, 18, 3], 'line-dasharray': [2, 2] }
   });
 
-  const bldFilter = ['match', ['get', 'type'], ['house', 'building', 'custom_building'], true, false];
+  const bldFilter = ['match', ['get', 'type'], ['house', 'building', 'custom_building', 'building_part'], true, false];
   map.addLayer({
     id: 'layer-buildings', type: 'fill-extrusion', source: 'urban-data', filter: bldFilter,
     paint: {
       'fill-extrusion-color': ['get', 'fillColor'],
       'fill-extrusion-height': ['get', 'height'],
-      'fill-extrusion-base': 0,
+      'fill-extrusion-base': ['coalesce', ['get', 'base_height'], 0],
       'fill-extrusion-opacity': 0.85,
     }
   });
@@ -582,31 +582,99 @@ function handleMapDblClick(e) {
   e.preventDefault();
 }
 
+function generateBuildingParts(baseId, lng, lat, w, l, h, rot, type) {
+  const cfg = TYPE_CONFIG[type];
+  const parts = [];
+  const floors = Math.round(h / 3.5) || 1;
+  const darkFac = (col, amt) => {
+    // Simple hex darken (not perfect but works for low-poly)
+    return col === cfg.fillColor ? '#374151' : col; 
+  };
+
+  // 1. Cuerpo Principal
+  parts.push({
+    type: 'Feature', id: baseId,
+    properties: {
+      id: baseId, type, name: `${cfg.label} ${baseId}`, height: h, floors,
+      color: cfg.color, fillColor: cfg.fillColor, 
+      uso_suelo: type === 'building' ? 'comercial' : 'habitacional',
+      center_lng: lng, center_lat: lat, width_m: w, length_m: l, rotation: rot,
+      area_m2: w * l
+    },
+    geometry: { type: 'Polygon', coordinates: [buildingPolygon(lng, lat, w, l, rot)] }
+  });
+
+  const addPartBox = (dlngM, dlatM, pw, pl, pBase, pHeight, pCol) => {
+    const rad = rot * Math.PI / 180;
+    const dx = dlngM * Math.cos(rad) - dlatM * Math.sin(rad);
+    const dy = dlngM * Math.sin(rad) + dlatM * Math.cos(rad);
+    const dlat = dy / 111320;
+    const dlng = dx / (40075000 * Math.cos(lat * Math.PI / 180) / 360);
+    const id = state.nextId++;
+    parts.push({
+      type: 'Feature', id,
+      properties: { id, parent_id: baseId, type: 'building_part', color: pCol, fillColor: pCol, base_height: pBase, height: pHeight },
+      geometry: { type: 'Polygon', coordinates: [buildingPolygon(lng + dlng, lat + dlat, pw, pl, rot)] }
+    });
+  };
+
+  if (type === 'house') {
+    // Techo a dos aguas más triangular (8 pasos)
+    const roofCol = '#451a03'; // Marrón oscuro / Teja
+    const steps = 8;
+    for (let i = 0; i < steps; i++) {
+        const ratio = 1 - (i / steps);
+        const bH = h + (i * (1.8 / steps));
+        const tH = bH + (1.8 / steps);
+        // El techo se encoge en el ancho (w) para formar el ángulo
+        addPartBox(0, 0, (w + 0.6) * ratio, l + 0.6, bH, tH, roofCol);
+    }
+  } else if (type === 'building') {
+    // Detalles de Azotea
+    addPartBox(0, 0, w * 0.3, l * 0.3, h, h + 3, '#94a3b8'); // Cuarto de máquinas
+    
+    // Ventanas dinámicas (proporcionales: 1 cada 5 metros aprox)
+    const winCol = '#93c5fd'; // Azul claro
+    const numW = Math.max(1, Math.floor(w / 5));
+    const numL = Math.max(1, Math.floor(l / 5));
+
+    for (let f = 0; f < floors; f++) {
+      const bH = f * 3.5 + 1.2;
+      const tH = bH + 1.2;
+      
+      // Lados Norte/Sur (distribución a lo largo del ancho w)
+      for (let i = 0; i < numW; i++) {
+          const offX = (numW > 1) ? (-w/2 + (w / (numW + 1)) * (i + 1)) : 0;
+          addPartBox(offX, l/2, 2, 0.1, bH, tH, winCol); // Norte
+          addPartBox(offX, -l/2, 2, 0.1, bH, tH, winCol); // Sur
+      }
+      // Lados Este/Oeste (distribución a lo largo del largo l)
+      for (let i = 0; i < numL; i++) {
+          const offY = (numL > 1) ? (-l/2 + (l / (numL + 1)) * (i + 1)) : 0;
+          addPartBox(w/2, offY, 0.1, 2, bH, tH, winCol); // Este
+          addPartBox(-w/2, offY, 0.1, 2, bH, tH, winCol); // Oeste
+      }
+    }
+  }
+
+  return parts;
+}
+
 // ── PLACE BUILDING ────────────────────────────────────────────
 function placeBuilding(type, lng, lat) {
   const cfg = TYPE_CONFIG[type];
-  const widthM = cfg.defW || 10;
-  const lengthM = cfg.defL || 10;
-  const height = cfg.defaultH || 5;
-  const rotation = 0;
-  const floors = Math.round(height / 3.5) || 1;
-  const coords = buildingPolygon(lng, lat, widthM, lengthM, rotation);
-  const id = state.nextId++;
-  const feat = {
-    type: 'Feature', id,
-    properties: {
-      id, type, name: `${cfg.label} ${id}`, height, floors,
-      color: cfg.color, fillColor: cfg.fillColor, uso_suelo: type === 'building' ? 'comercial' : 'habitacional',
-      center_lng: lng, center_lat: lat, width_m: widthM, length_m: lengthM, rotation,
-      area_m2: widthM * lengthM
-    },
-    geometry: { type: 'Polygon', coordinates: [coords] },
-  };
+  const w = cfg.defW || 10;
+  const l = cfg.defL || 10;
+  const h = cfg.defaultH || 5;
+  const baseId = state.nextId++;
+  
+  const allParts = generateBuildingParts(baseId, lng, lat, w, l, h, 0, type);
+  state.features.push(...allParts);
+  
   pushHistory();
-  state.features.push(feat);
   refreshMap();
   toast(`${cfg.label} colocado`, 'success');
-  selectFeature(id, { lng, lat });
+  selectFeature(baseId, { lng, lat });
 }
 
 // ── LINE (ROAD/RAILWAY) ───────────────────────────────────────
@@ -1118,15 +1186,22 @@ function showPropsPanel(feat, lngLat) {
     const rebuildGeom = () => {
       const f = state.features.find(f => f.properties.id === state.selectedIds[0]);
       if (!f) return;
-      f.properties.width_m = parseFloat(wIn.value) || 10;
-      f.properties.length_m = parseFloat(lIn.value) || 10;
-      f.properties.height = parseFloat(hIn.value) || 5;
-      f.properties.rotation = parseFloat(rotRange.value) || 0;
-      f.properties.area_m2 = f.properties.width_m * f.properties.length_m;
-      f.geometry.coordinates = [buildingPolygon(f.properties.center_lng, f.properties.center_lat, f.properties.width_m, f.properties.length_m, f.properties.rotation)];
+      const w = parseFloat(wIn.value) || 10;
+      const l = parseFloat(lIn.value) || 10;
+      const h = parseFloat(hIn.value) || 5;
+      const rot = parseFloat(rotRange.value) || 0;
+
+      const baseId = f.properties.id;
+      // Eliminar partes viejas
+      state.features = state.features.filter(x => !(x.properties.id === baseId || x.properties.parent_id === baseId));
+      
+      // Regenerar partes nuevas
+      const newParts = generateBuildingParts(baseId, f.properties.center_lng, f.properties.center_lat, w, l, h, rot, f.properties.type);
+      state.features.push(...newParts);
+
       refreshMap();
       const mc = document.getElementById('liveMeasures');
-      if (mc) mc.innerHTML = buildMeasureHTML(f);
+      if (mc) mc.innerHTML = buildMeasureHTML(state.features.find(x => x.properties.id === baseId));
     };
 
     rotRange.addEventListener('input', () => { rotLabel.textContent = rotRange.value + '°'; rebuildGeom(); });
