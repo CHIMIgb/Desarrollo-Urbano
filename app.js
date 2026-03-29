@@ -378,30 +378,30 @@ function addDataLayers() {
     }
   });
 
-  const laneRatios = [
-    [2, 0, 3, -0.166, 4, -0.25, 5, -0.3, 6, -0.333, 7, -0.357],
-    [3, 0.166, 4, 0, 5, -0.1, 6, -0.166, 7, -0.214],
-    [4, 0.25, 5, 0.1, 6, 0, 7, -0.071],
-    [5, 0.3, 6, 0.166, 7, 0.071],
-    [6, 0.333, 7, 0.214],
-    [7, 0.357]
-  ];
-  laneRatios.forEach((ratios, i) => {
-    const matchExpr = ['match', ['coalesce', ['get', 'lanes'], 2]];
-    for (let j = 0; j < ratios.length; j += 2) { matchExpr.push(ratios[j], ratios[j + 1]); }
-    matchExpr.push(0);
+  // Lane Dividers (Yellow dashed lines for roads)
+  // We'll support up to 10 lanes. A divider exists at index k (1 to N-1) for N lanes.
+  for (let k = 1; k <= 9; k++) {
     map.addLayer({
-      id: `layer-roads-div-${i + 1}`, type: 'line', source: 'urban-data',
-      filter: ['all', ['==', ['get', 'type'], 'road'], ['>=', ['coalesce', ['get', 'lanes'], 2], ratios[0]]],
+      id: `layer-roads-div-${k}`, type: 'line', source: 'urban-data',
+      // This divider 'k' exists if total lanes > k
+      filter: ['all', ['==', ['get', 'type'], 'road'], ['>', ['coalesce', ['get', 'lanes'], 2], k]],
       layout: { 'line-join': 'round', 'line-cap': 'round' },
       paint: {
-        'line-color': '#ffffff', 'line-dasharray': [6, 4],
-        'line-width': ['interpolate', ['linear'], ['zoom'], 14, 2, 20, 6],
-        'line-opacity': ['interpolate', ['linear'], ['zoom'], 13, 0, 14, 0.9],
-        'line-offset': ['*', zoomInterpolation, matchExpr]
+        'line-color': '#fbbf24',
+        'line-dasharray': [4, 3],
+        'line-width': ['interpolate', ['linear'], ['zoom'], 14, 2.5, 20, 10],
+        'line-opacity': 1.0,
+        'line-blur': 0.5,
+        // Offset = TotalPixelWidth * (k/lanes - 0.5)
+        // Fixed: interpolate MUST be at the top level when using zoom
+        'line-offset': ['interpolate', ['exponential', 2], ['zoom'],
+          12, ['*', ['/', ['coalesce', ['get', 'widthM'], 7], 1.0], ['-', ['/', k, ['coalesce', ['get', 'lanes'], 2]], 0.5]],
+          16, ['*', ['*', ['coalesce', ['get', 'widthM'], 7], 2.4], ['-', ['/', k, ['coalesce', ['get', 'lanes'], 2]], 0.5]],
+          20, ['*', ['*', ['coalesce', ['get', 'widthM'], 7], 8.0], ['-', ['/', k, ['coalesce', ['get', 'lanes'], 2]], 0.5]]
+        ]
       }
     });
-  });
+  }
 
   const zoneFilter = ['match', ['get', 'type'], ['zone', 'park', 'terrain', 'water', 'radius'], true, false];
   map.addLayer({
@@ -1532,7 +1532,7 @@ document.getElementById('layersList').addEventListener('change', () => {
   // Roads and lane dividers visibility
   const rVis = t.road ? 'visible' : 'none';
   if (map.getLayer('layer-roads')) map.setLayoutProperty('layer-roads', 'visibility', rVis);
-  for (let i = 1; i <= 6; i++) {
+  for (let i = 1; i <= 9; i++) {
     if (map.getLayer(`layer-roads-div-${i}`)) map.setLayoutProperty(`layer-roads-div-${i}`, 'visibility', rVis);
   }
 
