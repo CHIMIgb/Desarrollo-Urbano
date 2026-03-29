@@ -590,10 +590,6 @@ function generateBuildingParts(baseId, lng, lat, w, l, h, rot, type) {
   const cfg = TYPE_CONFIG[type];
   const parts = [];
   const floors = Math.round(h / 3.5) || 1;
-  const darkFac = (col, amt) => {
-    // Simple hex darken (not perfect but works for low-poly)
-    return col === cfg.fillColor ? '#374151' : col; 
-  };
 
   // 1. Cuerpo Principal
   parts.push({
@@ -622,43 +618,40 @@ function generateBuildingParts(baseId, lng, lat, w, l, h, rot, type) {
     });
   };
 
-  if (type === 'house') {
-    // Techo a dos aguas más triangular (8 pasos)
-    const roofCol = '#451a03'; // Marrón oscuro / Teja
-    const steps = 8;
-    for (let i = 0; i < steps; i++) {
-        const ratio = 1 - (i / steps);
-        const bH = h + (i * (1.8 / steps));
-        const tH = bH + (1.8 / steps);
-        // El techo se encoge en el ancho (w) para formar el ángulo
-        addPartBox(0, 0, (w + 0.6) * ratio, l + 0.6, bH, tH, roofCol);
-    }
-  } else if (type === 'building') {
-    // Detalles de Azotea
-    addPartBox(0, 0, w * 0.3, l * 0.3, h, h + 3, '#94a3b8'); // Cuarto de máquinas
-    
-    // Ventanas dinámicas (proporcionales: 1 cada 5 metros aprox)
+  const addWindows = () => {
     const winCol = '#93c5fd'; // Azul claro
     const numW = Math.max(1, Math.floor(w / 5));
     const numL = Math.max(1, Math.floor(l / 5));
-
     for (let f = 0; f < floors; f++) {
       const bH = f * 3.5 + 1.2;
       const tH = bH + 1.2;
-      
-      // Lados Norte/Sur (distribución a lo largo del ancho w)
       for (let i = 0; i < numW; i++) {
           const offX = (numW > 1) ? (-w/2 + (w / (numW + 1)) * (i + 1)) : 0;
           addPartBox(offX, l/2, 2, 0.1, bH, tH, winCol); // Norte
           addPartBox(offX, -l/2, 2, 0.1, bH, tH, winCol); // Sur
       }
-      // Lados Este/Oeste (distribución a lo largo del largo l)
       for (let i = 0; i < numL; i++) {
           const offY = (numL > 1) ? (-l/2 + (l / (numL + 1)) * (i + 1)) : 0;
           addPartBox(w/2, offY, 0.1, 2, bH, tH, winCol); // Este
           addPartBox(-w/2, offY, 0.1, 2, bH, tH, winCol); // Oeste
       }
     }
+  };
+
+  if (type === 'house') {
+    const roofCol = '#451a03';
+    const steps = 8;
+    for (let i = 0; i < steps; i++) {
+        const ratio = 1 - (i / steps);
+        const bH = h + (i * (1.8 / steps));
+        const tH = bH + (1.8 / steps);
+        addPartBox(0, 0, (w + 0.6) * ratio, l + 0.6, bH, tH, roofCol);
+    }
+  } else if (type === 'building') {
+    addPartBox(0, 0, w * 0.3, l * 0.3, h, h + 3, '#94a3b8'); // Cuarto máquinas
+    addWindows();
+  } else if (type === 'custom_building') {
+    addWindows();
   }
 
   return parts;
