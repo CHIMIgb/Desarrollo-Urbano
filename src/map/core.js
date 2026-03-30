@@ -82,6 +82,8 @@ export function initMap() {
       document.getElementById('tool-terrain-toggle')?.classList.add('active');
     } else {
       document.getElementById('tool-terrain-toggle')?.classList.remove('active');
+      state.map.setTerrain(null); // FIX: Force cleanup of terrain matrix to prevent invisible extrusions
+      if (state.map.setFog) state.map.setFog(null); // FIX: Remove rogue fog that might occlude flat maps
     }
   });
 }

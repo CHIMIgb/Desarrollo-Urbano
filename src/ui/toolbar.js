@@ -108,7 +108,7 @@ export function initToolbarEvents() {
   document.getElementById('tool-satellite')?.addEventListener('click', () => {
     state.isSatellite = !state.isSatellite;
     if (state.map) {
-      import('../map/core.js').then(m => state.map.setStyle(m.buildStyle()));
+      import('../map/core.js').then(m => state.map.setStyle(m.buildStyle(), { diff: false }));
     }
     toast(state.isSatellite ? 'Vista Satélite' : 'Vista Mapa', 'info');
   });
