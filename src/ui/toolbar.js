@@ -1,6 +1,7 @@
 import { state } from '../config/state.js';
 import { clearDrawing } from '../tools/drawing.js';
 import { createNewProject, listUserProjects, loadProjectById } from './io.js';
+import { importOSMContext } from '../tools/osm.js';
 
 export function toast(msg, type = 'info') {
   const container = document.getElementById('toastContainer');
@@ -148,6 +149,10 @@ export function initToolbarEvents() {
         renderProjectsList(projects);
       }
     }
+  });
+
+  document.getElementById('btnImportOSM')?.addEventListener('click', () => {
+    importOSMContext();
   });
 }
 
