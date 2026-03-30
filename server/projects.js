@@ -72,14 +72,13 @@ router.get('/all', authenticateToken, async (req, res) => {
   }
 });
 
-// CARGAR PROYECTO ESPECÍFICO POR ID
-router.get('/:id', authenticateToken, async (req, res) => {
+// CARGAR ÚLTIMO PROYECTO (debe estar ANTES de /:id para evitar que Express capture "load" como parámetro)
+router.get('/load', authenticateToken, async (req, res) => {
   const userId = req.user.id;
-  const projectId = req.params.id;
   try {
-    const projectResult = await db.query('SELECT * FROM projects WHERE id = $1 AND user_id = $2', [projectId, userId]);
+    const projectResult = await db.query('SELECT * FROM projects WHERE user_id = $1 ORDER BY updated_at DESC LIMIT 1', [userId]);
     if (projectResult.rows.length === 0) {
-      return res.status(404).json({ error: 'Proyecto no encontrado' });
+      return res.json({ project: null });
     }
 
     const project = projectResult.rows[0];
@@ -99,13 +98,17 @@ router.get('/:id', authenticateToken, async (req, res) => {
   }
 });
 
-// CARGAR ÚLTIMO PROYECTO
-router.get('/load', authenticateToken, async (req, res) => {
+// CARGAR PROYECTO ESPECÍFICO POR ID (debe estar DESPUÉS de las rutas con nombre fijo)
+router.get('/:id', authenticateToken, async (req, res) => {
   const userId = req.user.id;
+  const projectId = parseInt(req.params.id, 10);
+  if (isNaN(projectId)) {
+    return res.status(400).json({ error: 'ID de proyecto inválido' });
+  }
   try {
-    const projectResult = await db.query('SELECT * FROM projects WHERE user_id = $1 ORDER BY updated_at DESC LIMIT 1', [userId]);
+    const projectResult = await db.query('SELECT * FROM projects WHERE id = $1 AND user_id = $2', [projectId, userId]);
     if (projectResult.rows.length === 0) {
-      return res.json({ project: null });
+      return res.status(404).json({ error: 'Proyecto no encontrado' });
     }
 
     const project = projectResult.rows[0];

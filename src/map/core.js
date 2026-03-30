@@ -43,6 +43,8 @@ export function initMap() {
     );
   }
 
+
+
   state.map.addControl(new maplibregl.NavigationControl({ showCompass: true }), 'bottom-right');
   state.map.addControl(new maplibregl.ScaleControl({ unit: 'metric' }), 'bottom-left');
   state.map.addControl(new maplibregl.FullscreenControl(), 'bottom-right');

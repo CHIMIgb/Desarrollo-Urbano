@@ -113,7 +113,7 @@ export function addDataLayers() {
       'fill-extrusion-color': ['get', 'fillColor'],
       'fill-extrusion-height': ['get', 'height'],
       'fill-extrusion-base': ['coalesce', ['get', 'base_height'], 0],
-      'fill-extrusion-opacity': 0.85,
+      'fill-extrusion-opacity': 0.9
     }
   });
   state.map.addLayer({
