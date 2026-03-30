@@ -113,6 +113,24 @@ export function initToolbarEvents() {
     toast(state.isSatellite ? 'Vista Satélite' : 'Vista Mapa', 'info');
   });
 
+  document.getElementById('tool-terrain-toggle')?.addEventListener('click', () => {
+    if (!state.map) return;
+    // state.terrainEnabled: undefined/true = activo, false = inactivo
+    if (state.terrainEnabled === false) {
+      // Activar relieve
+      import('../map/core.js').then(m => m.addTerrainSource());
+      state.terrainEnabled = true;
+      document.getElementById('tool-terrain-toggle')?.classList.add('active');
+      toast('Relieve 3D activado', 'info');
+    } else {
+      // Desactivar relieve
+      state.map.setTerrain(null);
+      state.terrainEnabled = false;
+      document.getElementById('tool-terrain-toggle')?.classList.remove('active');
+      toast('Relieve 3D desactivado', 'info');
+    }
+  });
+
   document.getElementById('btnNew')?.addEventListener('click', () => {
     if (confirm('¿Estás seguro de que quieres crear un nuevo proyecto? Se perderán los cambios no guardados en la nube.')) {
       createNewProject();

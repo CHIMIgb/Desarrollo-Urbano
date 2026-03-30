@@ -69,8 +69,16 @@ export function initMap() {
   state.map.on('moveend', () => { saveMapView(); preloadNearbyTiles(); });
 
   state.map.on('style.load', () => {
-    addTerrainSource();
+    // Restaurar capas de datos siempre
     addDataLayers();
+    // Restaurar terreno solo si estaba habilitado (o aún no se ha definido el estado = primera carga)
+    if (state.terrainEnabled !== false) {
+      addTerrainSource();
+      state.terrainEnabled = true;
+      document.getElementById('tool-terrain-toggle')?.classList.add('active');
+    } else {
+      document.getElementById('tool-terrain-toggle')?.classList.remove('active');
+    }
   });
 }
 
