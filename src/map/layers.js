@@ -5,7 +5,20 @@ import { deleteSelection } from '../tools/selection.js';
 
 export function addDataLayers() {
   if (!state.map) return;
-  
+
+  // Limpiar capas y fuentes existentes antes de recrear (necesario para cambios de estilo)
+  const layerIds = [
+    'layer-edit-handles', 'highlight-polygons', 'layer-draw-pts', 'layer-draw-fill',
+    'layer-draw-line', 'layer-buildings-outline', 'layer-buildings', 'layer-furniture',
+    'layer-trees-3d', 'layer-zones-line', 'layer-zones-fill', 'layer-paths',
+    'layer-roads', 'layer-railways', 'layer-railways-dash'
+  ];
+  for (let k = 1; k <= 9; k++) layerIds.push(`layer-roads-div-${k}`);
+  layerIds.forEach(id => { if (state.map.getLayer(id)) state.map.removeLayer(id); });
+  ['urban-data', 'draw-preview', 'edit-handles'].forEach(id => {
+    if (state.map.getSource(id)) state.map.removeSource(id);
+  });
+
   state.map.addSource('urban-data', { type: 'geojson', data: buildGeoJSON() });
 
   // Roads

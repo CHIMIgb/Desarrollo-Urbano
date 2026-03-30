@@ -1,6 +1,6 @@
 import { state, TERRAIN_URL, GLYPHS_URL, SATELLITE_URL, OSM_URL } from '../config/state.js';
 import { toast } from '../ui/toolbar.js'; // Will create this later
-import { addDataLayers } from './layers.js'; // Will create this later
+import { addDataLayers, setupLayerInteractivity } from './layers.js';
 
 export function initMap() {
   let initialView = {
@@ -71,6 +71,10 @@ export function initMap() {
   state.map.on('style.load', () => {
     // Restaurar capas de datos siempre
     addDataLayers();
+    // Re-bindear eventos de interactividad en las capas recreadas
+    setupLayerInteractivity();
+    // Restaurar visibilidad de capas según checkboxes del panel
+    restoreLayerVisibility();
     // Restaurar terreno solo si estaba habilitado (o aún no se ha definido el estado = primera carga)
     if (state.terrainEnabled !== false) {
       addTerrainSource();
@@ -160,4 +164,15 @@ export function buildGeoJSON() {
 export function refreshMap() {
   state.map.getSource('urban-data')?.setData(buildGeoJSON());
   import('../ui/toolbar.js').then(m => m.updateStats());
+}
+
+/**
+ * Restaura la visibilidad de capas según el estado actual de los checkboxes
+ * del panel de capas. Necesario después de un setStyle() que destruye todas las capas.
+ */
+function restoreLayerVisibility() {
+  const layersList = document.getElementById('layersList');
+  if (layersList) {
+    layersList.dispatchEvent(new Event('change', { bubbles: true }));
+  }
 }
