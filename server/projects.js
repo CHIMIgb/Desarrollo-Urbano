@@ -17,8 +17,15 @@ const authenticateToken = (req, res, next) => {
 
 // GUARDAR PROYECTO
 router.post('/save', authenticateToken, async (req, res) => {
-  const { name, features, nextId, projectId } = req.body;
+  const { name, features, nextId, projectId, mapView } = req.body;
   const userId = req.user.id;
+
+  // Extraer campos de vista del mapa con valores por defecto
+  const centerLng = mapView?.center?.[0] ?? -99.1332;
+  const centerLat = mapView?.center?.[1] ?? 19.4326;
+  const zoom      = mapView?.zoom      ?? 13;
+  const pitch     = mapView?.pitch     ?? 65;
+  const bearing   = mapView?.bearing   ?? -20;
 
   try {
     await db.query('BEGIN');
@@ -26,24 +33,29 @@ router.post('/save', authenticateToken, async (req, res) => {
     let currentProjectId = projectId;
 
     if (!currentProjectId) {
-      // Crear uno nuevo obligatoriamente si no hay ID (pide ser nuevo)
       const result = await db.query(
-        'INSERT INTO projects (user_id, name, next_id) VALUES ($1, $2, $3) RETURNING id',
-        [userId, name || 'Mi Proyecto Urbano', nextId]
+        `INSERT INTO projects (user_id, name, next_id, map_center_lng, map_center_lat, map_zoom, map_pitch, map_bearing)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id`,
+        [userId, name || 'Mi Proyecto Urbano', nextId, centerLng, centerLat, zoom, pitch, bearing]
       );
       currentProjectId = result.rows[0].id;
     } else {
-      // Actualizar el proyecto existente
       const check = await db.query('SELECT id FROM projects WHERE id = $1 AND user_id = $2', [currentProjectId, userId]);
       if (check.rows.length === 0) throw new Error('Proyecto no encontrado o no pertenece al usuario');
 
-      await db.query('UPDATE projects SET name = $1, next_id = $2, updated_at = NOW() WHERE id = $3', [name, nextId, currentProjectId]);
+      await db.query(
+        `UPDATE projects
+            SET name = $1, next_id = $2,
+                map_center_lng = $3, map_center_lat = $4,
+                map_zoom = $5, map_pitch = $6, map_bearing = $7,
+                updated_at = NOW()
+          WHERE id = $8`,
+        [name, nextId, centerLng, centerLat, zoom, pitch, bearing, currentProjectId]
+      );
     }
 
-    // Limpiar características anteriores y añadir nuevas
+    // Limpiar features anteriores y añadir nuevas
     await db.query('DELETE FROM project_features WHERE project_id = $1', [currentProjectId]);
-    
-    // Batch insert si hay muchas features (aquí simple loop por simplicidad, pero con COMMIT)
     for (const feat of features) {
       await db.query('INSERT INTO project_features (project_id, feature_data) VALUES ($1, $2)', [currentProjectId, feat]);
     }
@@ -72,14 +84,12 @@ router.get('/all', authenticateToken, async (req, res) => {
   }
 });
 
-// CARGAR ÚLTIMO PROYECTO (debe estar ANTES de /:id para evitar que Express capture "load" como parámetro)
+// CARGAR ÚLTIMO PROYECTO (debe estar ANTES de /:id)
 router.get('/load', authenticateToken, async (req, res) => {
   const userId = req.user.id;
   try {
     const projectResult = await db.query('SELECT * FROM projects WHERE user_id = $1 ORDER BY updated_at DESC LIMIT 1', [userId]);
-    if (projectResult.rows.length === 0) {
-      return res.json({ project: null });
-    }
+    if (projectResult.rows.length === 0) return res.json({ project: null });
 
     const project = projectResult.rows[0];
     const featuresResult = await db.query('SELECT feature_data FROM project_features WHERE project_id = $1', [project.id]);
@@ -89,7 +99,13 @@ router.get('/load', authenticateToken, async (req, res) => {
         id: project.id,
         name: project.name,
         nextId: project.next_id,
-        features: featuresResult.rows.map(r => r.feature_data)
+        features: featuresResult.rows.map(r => r.feature_data),
+        mapView: {
+          center: [parseFloat(project.map_center_lng), parseFloat(project.map_center_lat)],
+          zoom:    parseFloat(project.map_zoom),
+          pitch:   parseFloat(project.map_pitch),
+          bearing: parseFloat(project.map_bearing)
+        }
       }
     });
   } catch (err) {
@@ -102,14 +118,11 @@ router.get('/load', authenticateToken, async (req, res) => {
 router.get('/:id', authenticateToken, async (req, res) => {
   const userId = req.user.id;
   const projectId = parseInt(req.params.id, 10);
-  if (isNaN(projectId)) {
-    return res.status(400).json({ error: 'ID de proyecto inválido' });
-  }
+  if (isNaN(projectId)) return res.status(400).json({ error: 'ID de proyecto inválido' });
+
   try {
     const projectResult = await db.query('SELECT * FROM projects WHERE id = $1 AND user_id = $2', [projectId, userId]);
-    if (projectResult.rows.length === 0) {
-      return res.status(404).json({ error: 'Proyecto no encontrado' });
-    }
+    if (projectResult.rows.length === 0) return res.status(404).json({ error: 'Proyecto no encontrado' });
 
     const project = projectResult.rows[0];
     const featuresResult = await db.query('SELECT feature_data FROM project_features WHERE project_id = $1', [project.id]);
@@ -119,7 +132,13 @@ router.get('/:id', authenticateToken, async (req, res) => {
         id: project.id,
         name: project.name,
         nextId: project.next_id,
-        features: featuresResult.rows.map(r => r.feature_data)
+        features: featuresResult.rows.map(r => r.feature_data),
+        mapView: {
+          center: [parseFloat(project.map_center_lng), parseFloat(project.map_center_lat)],
+          zoom:    parseFloat(project.map_zoom),
+          pitch:   parseFloat(project.map_pitch),
+          bearing: parseFloat(project.map_bearing)
+        }
       }
     });
   } catch (err) {

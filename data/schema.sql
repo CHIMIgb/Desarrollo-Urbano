@@ -16,6 +16,12 @@ CREATE TABLE IF NOT EXISTS projects (
     user_id INT REFERENCES users(id) ON DELETE CASCADE,
     name VARCHAR(255) NOT NULL,
     next_id INT DEFAULT 1,
+    -- Vista del mapa (cámara) al momento de guardar
+    map_center_lng DOUBLE PRECISION DEFAULT -99.1332,
+    map_center_lat DOUBLE PRECISION DEFAULT 19.4326,
+    map_zoom DOUBLE PRECISION DEFAULT 13,
+    map_pitch DOUBLE PRECISION DEFAULT 65,
+    map_bearing DOUBLE PRECISION DEFAULT -20,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );

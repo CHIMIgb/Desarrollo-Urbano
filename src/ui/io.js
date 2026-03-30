@@ -79,11 +79,24 @@ export function initIOEvents() {
 
   // GUARDAR EN BASE DE DATOS
   document.getElementById('btnSave')?.addEventListener('click', async () => {
+    // Capturar vista actual del mapa
+    let mapView = null;
+    if (state.map) {
+      const center = state.map.getCenter();
+      mapView = {
+        center:  [center.lng, center.lat],
+        zoom:    state.map.getZoom(),
+        pitch:   state.map.getPitch(),
+        bearing: state.map.getBearing()
+      };
+    }
+
     const saveData = {
       name: document.getElementById('projectName')?.textContent || 'Mi Proyecto Urbano',
       features: state.features,
       nextId: state.nextId,
-      projectId: state.currentProjectId
+      projectId: state.currentProjectId,
+      mapView
     };
 
     try {
@@ -98,7 +111,7 @@ export function initIOEvents() {
       const data = await response.json();
       if (response.ok) {
         state.currentProjectId = data.projectId;
-        toast('Proyecto guardado en la nube', 'success');
+        toast('Proyecto guardado en la nube 📍', 'success');
       } else {
         toast('Error al guardar: ' + data.error, 'error');
       }
@@ -186,7 +199,22 @@ function applyProjectData(project) {
   
   const nameDisplay = document.getElementById('projectName');
   if (nameDisplay && project.name) nameDisplay.textContent = project.name;
-  
+
+  // Restaurar vista del mapa guardada (volar a la ubicación exacta del proyecto)
+  if (project.mapView && state.map) {
+    const { center, zoom, pitch, bearing } = project.mapView;
+    if (center && zoom != null) {
+      state.map.flyTo({
+        center,
+        zoom,
+        pitch:   pitch   ?? 65,
+        bearing: bearing ?? 0,
+        duration: 1200,
+        essential: true
+      });
+    }
+  }
+
   refreshMap();
   updateStats();
 }
