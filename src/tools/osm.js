@@ -4,11 +4,22 @@ import { toast } from '../ui/toolbar.js';
 import { pushHistory } from './interaction.js';
 
 /**
+ * Espejos públicos de Overpass para evitar bloqueos por IP y Timeouts.
+ */
+const OSM_ENDPOINTS = [
+  'https://overpass-api.de/api/interpreter',
+  'https://overpass.kumi.systems/api/interpreter',
+  'https://lz4.overpass-api.de/api/interpreter'
+];
+
+/**
  * Realiza la descarga, parseo y conversión matemática de los datos espaciales 
  * reales desde la API de OpenStreetMap al lienzo vectorial 3D de la app.
  */
-export async function importOSMContext() {
+export async function importOSMContext(retryCount = 0) {
   if (!state.map) return;
+
+  const endpoint = OSM_ENDPOINTS[retryCount % OSM_ENDPOINTS.length];
 
   const zoom = state.map.getZoom();
   // Validar nivel de zoom para no saturar al servidor OSM gratuito
@@ -39,15 +50,24 @@ export async function importOSMContext() {
     out skel qt;
   `;
 
-  toast('Consultando satélites (OpenStreetMap)...', 'info');
+  toast(`Consultando satélites (Servidor ${retryCount + 1})...`, 'info');
   const btn = document.getElementById('btnImportOSM');
   if (btn) btn.style.opacity = '0.5';
 
   try {
-    const response = await fetch('https://overpass-api.de/api/interpreter', {
+    const response = await fetch(endpoint, {
       method: 'POST',
       body: query
     });
+
+    if (response.status === 429 || response.status === 504) {
+      if (retryCount < 2) {
+        toast('Servidor saturado, reintentando con otro espejo...', 'warning');
+        await new Promise(r => setTimeout(r, 2000));
+        return importOSMContext(retryCount + 1);
+      }
+      throw new Error(`Server saturated (${response.status})`);
+    }
 
     if (!response.ok) throw new Error('Network response was not ok');
     
@@ -140,7 +160,9 @@ export async function importOSMContext() {
 
   } catch (err) {
     console.error('Error importando OSM:', err);
-    toast('Fallo al comunicarse con OSM.', 'error');
+    if (retryCount >= 2) {
+      toast('Los servidores de OSM están muy ocupados. Intenta en una zona más pequeña o más tarde.', 'error');
+    }
   } finally {
     if (btn) btn.style.opacity = '1';
   }
