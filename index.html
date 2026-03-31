@@ -523,45 +523,50 @@
         </button>
       </div>
       <div class="stats-body" id="stats-body">
-        <div class="stat-item">
-          <div class="stat-info">
-            <span class="stat-label">Terreno (Base)</span>
-            <span class="stat-val" id="val-terrain-area">0 m²</span>
+        <!-- Parte fija superior: Resumen -->
+        <div class="stats-summary-fixed">
+          <div class="stat-item">
+            <div class="stat-info">
+              <span class="stat-label">Terreno (Base)</span>
+              <span class="stat-val" id="val-terrain-area">0 m²</span>
+            </div>
           </div>
-        </div>
-        <div class="stat-item">
-          <div class="stat-info">
-            <span class="stat-label">COS (Ocupación)</span>
-            <span class="stat-val" id="val-cos">0%</span>
+          <div class="stat-item">
+            <div class="stat-info">
+              <span class="stat-label">COS (Ocupación)</span>
+              <span class="stat-val" id="val-cos">0%</span>
+            </div>
+            <div class="stat-bar-bg"><div class="stat-bar-fill" id="bar-cos" style="width: 0%"></div></div>
           </div>
-          <div class="stat-bar-bg"><div class="stat-bar-fill" id="bar-cos" style="width: 0%"></div></div>
-        </div>
-        <div class="stat-item">
-          <div class="stat-info">
-            <span class="stat-label">CUS (Densidad)</span>
-            <span class="stat-val" id="val-cus">0.0</span>
+          <div class="stat-item">
+            <div class="stat-info">
+              <span class="stat-label">CUS (Densidad)</span>
+              <span class="stat-val" id="val-cus">0.0</span>
+            </div>
+            <div class="stat-bar-bg"><div class="stat-bar-fill" id="bar-cus" style="width: 0%; background: var(--accent)"></div></div>
           </div>
-          <div class="stat-bar-bg"><div class="stat-bar-fill" id="bar-cus" style="width: 0%; background: var(--accent)"></div></div>
-        </div>
-        <div class="stat-item">
-          <div class="stat-info">
-            <span class="stat-label">Área Verde</span>
-            <span class="stat-val" id="val-green">0%</span>
+          <div class="stat-item">
+            <div class="stat-info">
+              <span class="stat-label">Área Verde</span>
+              <span class="stat-val" id="val-green">0%</span>
+            </div>
+            <div class="stat-bar-bg"><div class="stat-bar-fill" id="bar-green" style="width: 0%; background: #22c55e"></div></div>
           </div>
-          <div class="stat-bar-bg"><div class="stat-bar-fill" id="bar-green" style="width: 0%; background: #22c55e"></div></div>
-        </div>
-        <div class="stat-item">
-          <div class="stat-info">
-            <span class="stat-label">Población Estimada</span>
-            <span class="stat-val" id="val-pop">0 hab.</span>
+          <div class="stat-item">
+            <div class="stat-info">
+              <span class="stat-label">Población Estimada</span>
+              <span class="stat-val" id="val-pop">0 hab.</span>
+            </div>
           </div>
         </div>
         
-        <!-- Desglose por Lote individual -->
-        <div class="stats-breakdown" id="stats-breakdown">
-          <div class="breakdown-label">Desglose por Lote</div>
-          <div class="lot-list" id="lot-list">
-            <!-- Inyectado dinámicamente -->
+        <!-- Parte scrollable inferior: Desglose por lotes -->
+        <div class="stats-scroll-area">
+          <div class="stats-breakdown" id="stats-breakdown">
+            <div class="breakdown-label">Desglose por Lote</div>
+            <div class="lot-list" id="lot-list">
+              <!-- Inyectado dinámicamente -->
+            </div>
           </div>
         </div>
       </div>

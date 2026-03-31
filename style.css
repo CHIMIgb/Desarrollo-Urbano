@@ -779,17 +779,31 @@ html, body { height: 100%; overflow: hidden; font-family: 'Inter', sans-serif; b
 }
 
 .stats-body {
+  padding: 0; /* Quitamos el padding global para manejarlo internamente */
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  height: 100%;
+}
+
+.stats-summary-fixed {
   padding: 16px;
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 16px;
+  flex-shrink: 0;
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.stats-scroll-area {
+  padding: 0 16px 16px 16px;
   overflow-y: auto;
   flex: 1;
 }
 
-/* Scrollbar para el cuerpo del dashboard */
-.stats-body::-webkit-scrollbar { width: 4px; }
-.stats-body::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
+/* Scrollbar para la zona inferior */
+.stats-scroll-area::-webkit-scrollbar { width: 4px; }
+.stats-scroll-area::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
 
 .stat-item {
   display: flex;
@@ -843,7 +857,7 @@ html, body { height: 100%; overflow: hidden; font-family: 'Inter', sans-serif; b
 
 /* --- Desglose Multi-Lote --- */
 .stats-breakdown {
-  margin-top: 10px;
+  margin-top: 0; /* Removido margen ya que está en zona scroll */
   padding-top: 15px;
   border-top: 1px dashed rgba(255,255,255,0.15);
   display: flex;
