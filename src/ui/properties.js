@@ -21,21 +21,35 @@ export function showPropsPanel(feat, lngLat) {
     ${measHTML}`;
 
   if (['house', 'building'].includes(p.type)) {
+    if (!p.osm_id) {
+      fields += `
+        <div class="form-field"><label>Ancho (m)</label><input type="number" id="prop-w" value="${p.width_m || 10}" min="2" max="500" step="0.1"/></div>
+        <div class="form-field"><label>Largo (m)</label><input type="number" id="prop-l" value="${p.length_m || 10}" min="2" max="500" step="0.1"/></div>
+      `;
+    }
+    
     fields += `
-      <div class="form-field"><label>Ancho (m)</label><input type="number" id="prop-w" value="${p.width_m || 10}" min="2" max="500" step="0.1"/></div>
-      <div class="form-field"><label>Largo (m)</label><input type="number" id="prop-l" value="${p.length_m || 10}" min="2" max="500" step="0.1"/></div>
       <div class="form-field"><label>Altura (m)</label><input type="number" id="prop-height" value="${p.height || 5}" min="1" max="600" step="0.1"/></div>
       <div class="form-field"><label>Pisos</label><input type="number" id="prop-floors" value="${p.floors || 1}" min="1" max="200"/></div>
-      <div class="form-field">
-        <label>Rotación: <span id="propRotLabel">${Math.round(p.rotation || 0)}°</span></label>
-        <input type="range" id="prop-rotation" min="0" max="359" step="1" value="${p.rotation || 0}" style="width:100%"/>
-      </div>
+    `;
+
+    if (!p.osm_id) {
+      fields += `
+        <div class="form-field">
+          <label>Rotación: <span id="propRotLabel">${Math.round(p.rotation || 0)}°</span></label>
+          <input type="range" id="prop-rotation" min="0" max="359" step="1" value="${p.rotation || 0}" style="width:100%"/>
+        </div>
+      `;
+    }
+
+    fields += `
       <div class="form-field"><label>Uso de suelo</label><select id="prop-uso">
         <option value="habitacional" ${p.uso_suelo === 'habitacional' ? 'selected' : ''}>Habitacional</option>
         <option value="comercial"    ${p.uso_suelo === 'comercial' ? 'selected' : ''}>Comercial</option>
         <option value="mixto"        ${p.uso_suelo === 'mixto' ? 'selected' : ''}>Mixto</option>
         <option value="industrial"   ${p.uso_suelo === 'industrial' ? 'selected' : ''}>Industrial</option>
-      </select></div>`;
+      </select></div>
+    `;
   } else if (p.type === 'custom_building') {
     fields += `
       <div class="form-field"><label>Altura (m)</label><input type="number" id="prop-height" value="${p.height || 30}" min="1" max="600" step="0.1"/></div>
@@ -117,19 +131,26 @@ export function showPropsPanel(feat, lngLat) {
     const rebuildGeom = () => {
       const f = state.features.find(f => f.properties.id === state.selectedIds[0]);
       if (!f) return;
-      const w = parseFloat(wIn.value) || 10;
-      const l = parseFloat(lIn.value) || 10;
       const h = parseFloat(hIn.value) || 5;
-      const rot = parseFloat(rotRange.value) || 0;
 
-      const baseId = f.properties.id;
-      state.features = state.features.filter(x => !(x.properties.id === baseId || x.properties.parent_id === baseId));
-      const newParts = generateBuildingParts(baseId, f.properties.center_lng, f.properties.center_lat, w, l, h, rot, f.properties.type);
-      state.features.push(...newParts);
+      if (f.properties.osm_id) {
+        // Solo actualizar altura, preservar geometría original de OSM
+        f.properties.height = h;
+        if (fIn) f.properties.floors = Math.round(h / 3.5);
+      } else {
+        const w = parseFloat(wIn?.value) || 10;
+        const l = parseFloat(lIn?.value) || 10;
+        const rot = parseFloat(rotRange?.value) || 0;
+
+        const baseId = f.properties.id;
+        state.features = state.features.filter(x => !(x.properties.id === baseId || x.properties.parent_id === baseId));
+        const newParts = generateBuildingParts(baseId, f.properties.center_lng, f.properties.center_lat, w, l, h, rot, f.properties.type);
+        state.features.push(...newParts);
+      }
 
       refreshMap();
       const mc = document.getElementById('liveMeasures');
-      if (mc) mc.innerHTML = buildMeasureHTML(state.features.find(x => x.properties.id === baseId));
+      if (mc) mc.innerHTML = buildMeasureHTML(f);
     };
 
     rotRange?.addEventListener('input', () => { if (rotLabel) rotLabel.textContent = rotRange.value + '°'; rebuildGeom(); });

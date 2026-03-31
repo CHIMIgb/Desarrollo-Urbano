@@ -158,6 +158,17 @@
           </button>
         </div>
         <div class="tool-group">
+          <div class="tool-label">Contexto Geográfico</div>
+          <button class="tool-btn" id="btnImportOSM" title="Importar ciudad desde OSM (Vista actual)">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z" />
+              <path d="M12 11v6" />
+              <path d="M9 14l3 3 3-3" />
+            </svg>
+            <span>Generar OSM</span>
+          </button>
+        </div>
+        <div class="tool-group">
           <div class="tool-label">Objetos</div>
           <button class="tool-btn" id="tool-house" data-tool="house" title="Casa (H)">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -493,6 +504,7 @@
   <div id="toastContainer" class="toast-container"></div>
 
   <!-- SCRIPTS -->
+  <script src="https://unpkg.com/osmtogeojson@3.0.0-beta.5/osmtogeojson.js"></script>
   <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
   <script type="module" src="app.js"></script>
 </body>

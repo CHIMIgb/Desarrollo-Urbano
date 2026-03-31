@@ -35,6 +35,7 @@ export const state = {
   lastDragPos: null, 
   isDragging: false,
   draggingVertexIdx: null,
+  terrainEnabled: false, // Relieve desactivado por defecto
   currentProjectId: null, // ID del proyecto activo en la base de datos
   map: null // Will be initialized here
 };
