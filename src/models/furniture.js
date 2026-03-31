@@ -84,6 +84,57 @@ export function generateFurnitureParts(baseId, lng, lat, rot, fType) {
     addCircle(0.08, 0.5, 5.5, poleCol);
     addCircle(0.6, 5.5, 5.6, poleCol);
     addCircle(0.5, 5.4, 5.5, '#fef08a');
+  } else if (fType === 'banca') {
+    // Banco estilo parque (Madera + Metal)
+    parts[0].properties.height = 0;
+    parts[0].properties.color = '#1f2937';
+    const woodCol = '#92400e';
+    const metalCol = '#1f2937';
+    // Patas / Soportes
+    addOffBox(0.8, 0, 0.1, 0.6, 0, 0.4, 0.6, metalCol);
+    addOffBox(-0.8, 0, 0.1, 0.6, 0, 0.4, 0.6, metalCol);
+    addOffBox(0.8, 0.25, 0.08, 0.08, 0, 0, 0.5, metalCol);
+    addOffBox(0.8, -0.25, 0.08, 0.08, 0, 0, 0.5, metalCol);
+    addOffBox(-0.8, 0.25, 0.08, 0.08, 0, 0, 0.5, metalCol);
+    addOffBox(-0.8, -0.25, 0.08, 0.08, 0, 0, 0.5, metalCol);
+    // Asiento (Tablones)
+    addOffBox(0, 0, 1.8, 0.1, 0, 0.5, 0.55, woodCol);
+    addOffBox(0, 0.15, 1.8, 0.1, 0, 0.5, 0.55, woodCol);
+    addOffBox(0, -0.15, 1.8, 0.1, 0, 0.5, 0.55, woodCol);
+    // Respaldo
+    addOffBox(0, -0.3, 1.8, 0.1, 0, 0.6, 1.1, woodCol);
+  } else if (fType === 'parada_bus') {
+    // Estructura de marquesina
+    const glassCol = 'rgba(186, 230, 253, 0.4)';
+    const frameCol = '#475569';
+    // Base Hormigon
+    parts[0].geometry.coordinates = [buildingPolygon(lng, lat, 4.0, 1.5, rot)];
+    parts[0].properties.height = 0.15;
+    // Marco y Techo
+    addOffBox(0, -0.6, 3.8, 0.1, 0, 0.1, 2.5, frameCol); // Pared fondo
+    addOffBox(0, -0.6, 3.7, 0.05, 0, 0.5, 2.4, glassCol); // Vidrio fondo
+    addOffBox(1.9, 0, 0.1, 1.2, 0, 0.1, 2.5, frameCol); // Lateral 1
+    addOffBox(-1.9, 0, 0.1, 1.2, 0, 0.1, 2.5, frameCol); // Lateral 2
+    addOffBox(0, 0, 4.0, 1.3, 0, 2.5, 2.6, frameCol); // Techo
+    // Banca interna
+    addOffBox(0, -0.4, 2.5, 0.4, 0, 0.4, 0.5, '#94a3b8');
+  } else if (fType === 'bolardo') {
+    // Poste protector
+    addCircle(0.15, 0.0, 0.9, '#475569');
+    addCircle(0.16, 0.8, 0.9, '#fbbf24'); // Franja reflectante
+  } else if (fType === 'papelera') {
+    // Bote de basura
+    addCircle(0.05, 0.0, 1.1, '#64748b'); // Poste
+    addCircle(0.2, 0.4, 1.0, '#334155'); // Bote
+    addCircle(0.22, 1.0, 1.05, '#1e293b'); // Tapa
+  } else if (fType === 'macetero') {
+    // Maceta de concreto con arbusto
+    const concreteCol = '#94a3b8';
+    addOffBox(0, 0, 0.8, 0.8, 0, 0, 0.6, concreteCol);
+    addOffBox(0, 0, 0.7, 0.7, 0, 0.5, 0.61, '#3f6212'); // Tierra
+    // Arbusto simplificado (bolas verdes)
+    addCircle(0.4, 0.6, 1.2, '#166534');
+    addCircle(0.3, 1.1, 1.4, '#15803d');
   }
 
   return parts;
