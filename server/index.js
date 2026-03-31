@@ -10,7 +10,7 @@ const PORT = process.env.PORT || 3000;
 
 // Middleware
 app.use(cors());
-const maxLimit = process.env.MAX_PAYLOAD_SIZE || '50mb';
+const maxLimit = process.env.MAX_PAYLOAD_SIZE || '100mb';
 app.use(express.json({ limit: maxLimit }));
 app.use(express.urlencoded({ limit: maxLimit, extended: true }));
 
