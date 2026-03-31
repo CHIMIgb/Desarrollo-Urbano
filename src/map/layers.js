@@ -163,7 +163,12 @@ export function addDataLayers() {
   state.map.addSource('edit-handles', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
   state.map.addLayer({
     id: 'layer-edit-handles', type: 'circle', source: 'edit-handles',
-    paint: { 'circle-radius': 6, 'circle-color': '#fff', 'circle-stroke-width': 2, 'circle-stroke-color': '#ef4444' }
+    paint: { 
+      'circle-radius': ['case', ['==', ['get', 'isSelected'], true], 8, 6],
+      'circle-color': ['case', ['==', ['get', 'isSelected'], true], '#6366f1', '#fff'],
+      'circle-stroke-width': ['case', ['==', ['get', 'isSelected'], true], 3, 2],
+      'circle-stroke-color': ['case', ['==', ['get', 'isSelected'], true], '#fff', '#ef4444']
+    }
   });
 }
 

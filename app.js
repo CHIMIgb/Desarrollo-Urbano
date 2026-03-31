@@ -67,6 +67,9 @@ document.addEventListener('DOMContentLoaded', async () => {
        }
      });
 
+     // Panel de Edición Precisa (Grado de Ingeniería)
+     import('./src/ui/precision_panel.js').then(m => m.initPrecisionPanel());
+
      // Sync sliders for camera
      state.map.on('rotate', () => {
        const b = Math.round(state.map.getBearing());

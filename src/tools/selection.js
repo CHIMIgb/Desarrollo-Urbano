@@ -55,7 +55,8 @@ export function updateEditHandles() {
     const f = state.features.find(x => x.properties.id === state.selectedIds[0]);
     if (f && f.properties.raw_pts && !['house', 'building'].includes(f.properties.type)) {
       f.properties.raw_pts.forEach((pt, idx) => {
-        feats.push({ type: 'Feature', properties: { fid: f.properties.id, idx }, geometry: { type: 'Point', coordinates: pt } });
+        const isSelected = (state.selectedVertexIdx === idx);
+        feats.push({ type: 'Feature', properties: { fid: f.properties.id, idx, isSelected }, geometry: { type: 'Point', coordinates: pt } });
       });
     }
   }
