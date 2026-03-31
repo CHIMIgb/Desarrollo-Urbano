@@ -86,12 +86,17 @@ export function generateFurnitureParts(baseId, lng, lat, rot, fType) {
     addCircle(0.5, 5.4, 5.5, '#fef08a');
   } else if (fType === 'banca') {
     // Banco estilo parque (Madera + Metal)
-    parts[0].properties.height = 0.5;
+    parts[0].properties.height = 0;
+    parts[0].properties.color = '#1f2937';
     const woodCol = '#92400e';
     const metalCol = '#1f2937';
     // Patas / Soportes
     addOffBox(0.8, 0, 0.1, 0.6, 0, 0.4, 0.6, metalCol);
     addOffBox(-0.8, 0, 0.1, 0.6, 0, 0.4, 0.6, metalCol);
+    addOffBox(0.8, 0.25, 0.08, 0.08, 0, 0, 0.5, metalCol);
+    addOffBox(0.8, -0.25, 0.08, 0.08, 0, 0, 0.5, metalCol);
+    addOffBox(-0.8, 0.25, 0.08, 0.08, 0, 0, 0.5, metalCol);
+    addOffBox(-0.8, -0.25, 0.08, 0.08, 0, 0, 0.5, metalCol);
     // Asiento (Tablones)
     addOffBox(0, 0, 1.8, 0.1, 0, 0.5, 0.55, woodCol);
     addOffBox(0, 0.15, 1.8, 0.1, 0, 0.5, 0.55, woodCol);
