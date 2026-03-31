@@ -900,12 +900,45 @@ html, body { height: 100%; overflow: hidden; font-family: 'Inter', sans-serif; b
   box-shadow: 0 0 15px rgba(99, 102, 241, 0.2);
 }
 
+.lot-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
 .lot-name {
   font-size: 13px;
   font-weight: 700;
   color: #fff;
-  margin-bottom: 8px;
+  margin-bottom: 0;
   display: block;
+}
+
+.btn-locate-lot {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--text-muted);
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.btn-locate-lot:hover {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+  transform: scale(1.1);
+  box-shadow: 0 0 12px rgba(99, 102, 241, 0.4);
+}
+
+.btn-locate-lot:active {
+  transform: scale(0.95);
 }
 
 .lot-grid {

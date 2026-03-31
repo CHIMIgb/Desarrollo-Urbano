@@ -115,7 +115,15 @@ function renderLotBreakdown(lots) {
     
     return `
       <div class="lot-card ${lot.isSelected ? 'selected' : ''}" data-id="${lot.id}">
-        <span class="lot-name">${lot.name}</span>
+        <div class="lot-card-header">
+          <span class="lot-name">${lot.name}</span>
+          <button class="btn-locate-lot" title="Centrar cámara en este lote" data-id="${lot.id}">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <circle cx="12" cy="12" r="3" />
+              <path d="M3 12h3m12 0h3M12 3v3m0 12v3" />
+            </svg>
+          </button>
+        </div>
         <div class="lot-grid">
           <div class="lot-sub-stat">
             <span class="lot-sub-label">COS</span>
@@ -144,6 +152,27 @@ function renderLotBreakdown(lots) {
       const id = parseInt(card.dataset.id);
       import('../tools/selection.js').then(m => m.selectFeature(id, null));
     };
+
+    // Botón de localización (Fly-to)
+    const btnLocate = card.querySelector('.btn-locate-lot');
+    if (btnLocate) {
+      btnLocate.onclick = (e) => {
+        e.stopPropagation(); // Evitar que el clic en el botón también dispare la selección del lote si no es deseado
+        const id = parseInt(btnLocate.dataset.id);
+        const feature = state.features.find(f => f.properties.id === id);
+        if (feature && state.map) {
+          const center = getFeatureCenter(feature);
+          if (center) {
+            state.map.flyTo({
+              center: [center.lng, center.lat],
+              zoom: 17,
+              pitch: 45,
+              duration: 2000
+            });
+          }
+        }
+      };
+    }
   });
 }
 
