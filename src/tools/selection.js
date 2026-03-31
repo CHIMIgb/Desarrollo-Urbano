@@ -3,6 +3,7 @@ import { showPropsPanel, showMultiPropsPanel } from '../ui/properties.js'; // Wi
 import { pushHistory } from './interaction.js';
 import { refreshMap } from '../map/core.js';
 import { toast } from '../ui/toolbar.js';
+import { updateGlobalStats } from '../ui/stats.js';
 
 export function getGroupIds(ids) {
   const gids = new Set();
@@ -44,6 +45,7 @@ export function updateSelectionUI(lngLat) {
     state.popup?.remove(); state.popup = null;
   }
   updateEditHandles();
+  updateGlobalStats();
 }
 
 export function updateEditHandles() {

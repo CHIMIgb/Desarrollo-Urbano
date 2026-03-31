@@ -116,3 +116,39 @@ export function fmtVol(m3) {
   if (m3 == null || isNaN(m3)) return '—';
   return (Math.round(m3 * 10) / 10).toLocaleString() + ' m³';
 }
+
+/**
+ * Algoritmo Ray-Casting para determinar si un punto está dentro de un polígono.
+ */
+export function isPointInPolygon(point, polygon) {
+  const x = point[0], y = point[1];
+  let inside = false;
+  for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
+    const xi = polygon[i][0], yi = polygon[i][1];
+    const xj = polygon[j][0], yj = polygon[j][1];
+    const intersect = ((yi > y) !== (yj > y)) && (x < (xj - xi) * (y - yi) / (yj - yi) + xi);
+    if (intersect) inside = !inside;
+  }
+  return inside;
+}
+
+/**
+ * Calcula el centro visual (centroide) de una entidad geográfica.
+ */
+export function getFeatureCenter(feature) {
+  const g = feature.geometry;
+  if (g.type === 'Point') return { lng: g.coordinates[0], lat: g.coordinates[1] };
+  if (g.type === 'Polygon' || g.type === 'MultiPolygon') {
+    const coords = g.type === 'Polygon' ? g.coordinates[0] : g.coordinates[0][0];
+    const lngs = coords.map(c => c[0]), lats = coords.map(c => c[1]);
+    return {
+      lng: (Math.max(...lngs) + Math.min(...lngs)) / 2,
+      lat: (Math.max(...lats) + Math.min(...lats)) / 2
+    };
+  }
+  if (g.type === 'LineString') {
+    const c = g.coordinates[Math.floor(g.coordinates.length / 2)];
+    return { lng: c[0], lat: c[1] };
+  }
+  return null;
+}
