@@ -51,6 +51,7 @@ export const TYPE_CONFIG = {
 export const state = {
   features: [], 
   selectedIds: [], 
+  selectedVertexIdx: null,
   tool: 'select',
   is3D: true, 
   isSatellite: true,

@@ -33,6 +33,15 @@ app.get('/api/config', (req, res) => {
   });
 });
 
+// Seguridad: Bloquear acceso a archivos sensibles del backend
+app.use((req, res, next) => {
+  const forbidden = ['/server', '/data', '/package', '/.env', '/README'];
+  if (forbidden.some(f => req.path.startsWith(f))) {
+    return res.status(403).json({ error: 'Acceso denegado a archivos internos' });
+  }
+  next();
+});
+
 // Servir archivos estaticos del frontend (la raiz del proyecto)
 app.use(express.static(path.join(__dirname, '../')));
 
