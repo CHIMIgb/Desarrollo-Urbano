@@ -4,6 +4,7 @@
   "description": "@ -0,0 +1,90 @@\r # Urban Planning 3D (Modular Edition)",
   "main": "app.js",
   "scripts": {
+    "start": "node server/index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
