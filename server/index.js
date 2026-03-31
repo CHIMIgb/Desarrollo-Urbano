@@ -10,8 +10,9 @@ const PORT = process.env.PORT || 3000;
 
 // Middleware
 app.use(cors());
-app.use(express.json({ limit: '50mb' }));
-app.use(express.urlencoded({ limit: '50mb', extended: true }));
+const maxLimit = process.env.MAX_PAYLOAD_SIZE;
+app.use(express.json({ limit: maxLimit }));
+app.use(express.urlencoded({ limit: maxLimit, extended: true }));
 
 // Logger simple para depuración
 app.use((req, res, next) => {

@@ -6,8 +6,8 @@ export function initMap() {
   let initialView = {
     center: [-99.1332, 19.4326],
     zoom: 13,
-    pitch: 65,
-    bearing: -20
+    pitch: 0,
+    bearing: 0
   };
 
   const savedView = localStorage.getItem('urbanPlan_view');
