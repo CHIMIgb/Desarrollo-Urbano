@@ -1,45 +1,158 @@
 import { state } from '../config/state.js';
-import { polygonArea, fmtArea } from '../utils/geo.js';
+import { polygonArea, fmtArea, isPointInPolygon, getFeatureCenter } from '../utils/geo.js';
 
 /**
  * Lógica de cálculo y actualización del Dashboard de Métricas Urbanas.
- * Se encarga de analizar todas las entidades del mapa y extraer ratios normativos.
+ * Se encarga de analizar todas las entidades del mapa y extraer ratios normativos (Global e Individual).
  */
 export function updateGlobalStats() {
   const dashboard = document.getElementById('stats-dashboard');
   if (!dashboard) return;
 
-  let totalTerrainArea = 0;
-  let occupiedArea = 0;      // Área de desplante (pisada) de edificios
-  let totalBuiltArea = 0;     // Área total (desplante * niveles)
-  let greenArea = 0;          // Áreas de parques y agua
+  const lotListEl = document.getElementById('lot-list');
+  const breakdownContainer = document.getElementById('stats-breakdown');
 
+  // --- 1. PREPARACIÓN DE DATOS ---
+  const terrainFeatures = state.features.filter(f => f.properties.type === 'terrain');
+  const selectedTerrainIds = new Set(state.selectedIds.filter(id => {
+    const f = state.features.find(x => x.properties.id === id);
+    return f && f.properties.type === 'terrain';
+  }));
+
+  // Estructura para almacenar métricas por cada lote
+  const lotsMetrics = terrainFeatures.map(t => {
+    const coords = t.geometry.type === 'Polygon' ? t.geometry.coordinates[0] : t.geometry.coordinates[0][0];
+    return {
+      id: t.properties.id,
+      name: t.properties.name || `Lote ${t.properties.id}`,
+      baseArea: polygonArea(coords),
+      coords: coords,
+      occupiedArea: 0,
+      totalBuiltArea: 0,
+      greenArea: 0,
+      isSelected: selectedTerrainIds.has(t.properties.id)
+    };
+  });
+
+  // Métricas Globales
+  let globalBaseArea = 0;
+  let globalOccupiedArea = 0;
+  let globalTotalBuiltArea = 0;
+  let globalGreenArea = 0;
+
+  // --- 2. PROCESAMIENTO ESPACIAL (UNA SOLA PASADA) ---
   state.features.forEach(f => {
     const type = f.properties.type;
     const geom = f.geometry;
-    
-    // Ignorar si no tiene geometría de polígono válida
     if (geom.type !== 'Polygon' && geom.type !== 'MultiPolygon') return;
     
-    // El cálculo de área necesita las coordenadas del anillo exterior
     const coords = geom.type === 'Polygon' ? geom.coordinates[0] : geom.coordinates[0][0];
     const area = polygonArea(coords);
 
+    // Cálculos Globales
     if (type === 'terrain') {
-      totalTerrainArea += area;
-    } else if (['building', 'house', 'custom_building'].includes(type)) {
-      // Evitar contar hijos de edificios (ventanas, techos) para no duplicar área
-      if (f.properties.parent_id) return;
-      
-      occupiedArea += area;
-      const floors = f.properties.floors || 1;
-      totalBuiltArea += (area * floors);
+      globalBaseArea += area;
+    } else if (['building', 'house', 'custom_building'].includes(type) && !f.properties.parent_id) {
+      globalOccupiedArea += area;
+      globalTotalBuiltArea += (area * (f.properties.floors || 1));
     } else if (['park', 'water'].includes(type)) {
-      greenArea += area;
+      globalGreenArea += area;
+    }
+
+    // Cálculos Individuales (Point-in-Polygon)
+    if (type !== 'terrain') {
+      const center = getFeatureCenter(f);
+      if (center) {
+        lotsMetrics.forEach(lot => {
+          if (isPointInPolygon([center.lng, center.lat], lot.coords)) {
+            if (['building', 'house', 'custom_building'].includes(type) && !f.properties.parent_id) {
+              lot.occupiedArea += area;
+              lot.totalBuiltArea += (area * (f.properties.floors || 1));
+            } else if (['park', 'water'].includes(type)) {
+              lot.greenArea += area;
+            }
+          }
+        });
+      }
     }
   });
 
-  // Actualizar UI
+  // --- 3. ACTUALIZACIÓN UI ---
+  
+  // A. Actualizar Sección Resumen (Si hay selección de terreno, priorizar ese; si no, global)
+  const activeFocus = lotsMetrics.find(l => l.isSelected) || {
+    baseArea: globalBaseArea,
+    occupiedArea: globalOccupiedArea,
+    totalBuiltArea: globalTotalBuiltArea,
+    greenArea: globalGreenArea,
+    isGlobal: true
+  };
+
+  updateSummaryUI(activeFocus);
+
+  // B. Renderizar Desglose por Lote
+  if (breakdownContainer) {
+    breakdownContainer.style.display = terrainFeatures.length > 0 ? 'block' : 'none';
+    renderLotBreakdown(lotsMetrics);
+  }
+}
+
+/**
+ * Renderiza la lista de tarjetas de lotes individuales.
+ */
+function renderLotBreakdown(lots) {
+  const listEl = document.getElementById('lot-list');
+  if (!listEl) return;
+
+  if (lots.length === 0) {
+    listEl.innerHTML = '<div style="font-size:11px; opacity:0.5; padding:10px">No hay terrenos definidos.</div>';
+    return;
+  }
+
+  listEl.innerHTML = lots.map(lot => {
+    const cos = lot.baseArea > 0 ? (lot.occupiedArea / lot.baseArea) * 100 : 0;
+    const cus = lot.baseArea > 0 ? (lot.totalBuiltArea / lot.baseArea) : 0;
+    
+    return `
+      <div class="lot-card ${lot.isSelected ? 'selected' : ''}" data-id="${lot.id}">
+        <span class="lot-name">${lot.name}</span>
+        <div class="lot-grid">
+          <div class="lot-sub-stat">
+            <span class="lot-sub-label">COS</span>
+            <span class="lot-sub-val ${cos > 75 ? 'alert' : ''}">${cos.toFixed(1)}%</span>
+          </div>
+          <div class="lot-sub-stat">
+            <span class="lot-sub-label">CUS</span>
+            <span class="lot-sub-val ${cus > 4.0 ? 'alert' : ''}">${cus.toFixed(2)}</span>
+          </div>
+          <div class="lot-sub-stat">
+            <span class="lot-sub-label">Área</span>
+            <span class="lot-sub-val">${fmtArea(lot.baseArea)}</span>
+          </div>
+          <div class="lot-sub-stat">
+            <span class="lot-sub-label">Verde</span>
+            <span class="lot-sub-val">${((lot.greenArea / lot.baseArea) * 100 || 0).toFixed(0)}%</span>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  // Eventos de clic para seleccionar lote desde el dashboard
+  listEl.querySelectorAll('.lot-card').forEach(card => {
+    card.onclick = (e) => {
+      const id = parseInt(card.dataset.id);
+      import('../tools/selection.js').then(m => m.selectFeature(id, null));
+    };
+  });
+}
+
+/**
+ * Actualiza la parte superior (resumen) del Dashboard.
+ */
+function updateSummaryUI(data) {
+  const dashboard = document.getElementById('stats-dashboard');
+  const titleEl = document.querySelector('.stats-title');
   const elTerrain = document.getElementById('val-terrain-area');
   const elCos = document.getElementById('val-cos');
   const elCus = document.getElementById('val-cus');
@@ -50,23 +163,43 @@ export function updateGlobalStats() {
   const barCus = document.getElementById('bar-cus');
   const barGreen = document.getElementById('bar-green');
 
-  if (elTerrain) elTerrain.textContent = fmtArea(totalTerrainArea);
+  if (titleEl) {
+    titleEl.style.cursor = data.isGlobal ? 'default' : 'pointer';
+    titleEl.title = data.isGlobal ? '' : 'Haga clic para volver a Vista Global';
+    
+    titleEl.innerHTML = data.isGlobal 
+      ? `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg> Métricas Globales`
+      : `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg> ${data.name}`;
 
-  if (totalTerrainArea > 0) {
-    const cosValue = (occupiedArea / totalTerrainArea) * 100;
-    const cusValue = totalBuiltArea / totalTerrainArea;
-    const greenRatio = (greenArea / totalTerrainArea) * 100;
-    const estimatedPop = Math.floor(totalBuiltArea / 35); // 35m2 por persona
+    // Click en título para volver a Global
+    titleEl.onclick = (e) => {
+      if (!data.isGlobal) {
+        e.stopPropagation();
+        import('../tools/selection.js').then(m => {
+          state.selectedIds = [];
+          m.updateSelectionUI();
+        });
+      }
+    };
+  }
+
+  if (elTerrain) elTerrain.textContent = fmtArea(data.baseArea);
+
+  if (data.baseArea > 0) {
+    const cosValue = (data.occupiedArea / data.baseArea) * 100;
+    const cusValue = data.totalBuiltArea / data.baseArea;
+    const greenRatio = (data.greenArea / data.baseArea) * 100;
+    const estimatedPop = Math.floor(data.totalBuiltArea / 35); 
 
     if (elCos) {
       elCos.textContent = `${cosValue.toFixed(1)}%`;
-      elCos.classList.toggle('exceeded', cosValue > 70); // Alerta si > 70%
+      elCos.classList.toggle('exceeded', cosValue > 75); 
     }
     if (barCos) barCos.style.width = `${Math.min(cosValue, 100)}%`;
 
     if (elCus) {
       elCus.textContent = cusValue.toFixed(2);
-      elCus.classList.toggle('exceeded', cusValue > 3.0); // Alerta si densidad extrema
+      elCus.classList.toggle('exceeded', cusValue > 4.0); 
     }
     if (barCus) barCus.style.width = `${Math.min((cusValue / 4) * 100, 100)}%`;
 
@@ -77,7 +210,6 @@ export function updateGlobalStats() {
     
     dashboard.classList.remove('no-terrain');
   } else {
-    // Si no hay terreno, resetear a cero o mostrar aviso
     if (elCos) elCos.textContent = '0%';
     if (elCus) elCus.textContent = '0.0';
     if (elGreen) elGreen.textContent = '0%';
