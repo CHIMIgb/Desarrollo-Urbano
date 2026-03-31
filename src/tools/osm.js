@@ -1,4 +1,4 @@
-import { state, TYPE_CONFIG } from '../config/state.js';
+import { state, TYPE_CONFIG, publicConfig } from '../config/state.js';
 import { refreshMap } from '../map/core.js';
 import { toast } from '../ui/toolbar.js';
 import { pushHistory } from './interaction.js';
@@ -6,11 +6,7 @@ import { pushHistory } from './interaction.js';
 /**
  * Espejos públicos de Overpass para evitar bloqueos por IP y Timeouts.
  */
-const OSM_ENDPOINTS = [
-  'https://overpass-api.de/api/interpreter',
-  'https://overpass.kumi.systems/api/interpreter',
-  'https://lz4.overpass-api.de/api/interpreter'
-];
+const getOsmEndpoints = () => publicConfig.OSM_OVERPASS_ENDPOINTS;
 
 /**
  * Realiza la descarga, parseo y conversión matemática de los datos espaciales 
@@ -18,8 +14,8 @@ const OSM_ENDPOINTS = [
  */
 export async function importOSMContext(retryCount = 0) {
   if (!state.map) return;
-
-  const endpoint = OSM_ENDPOINTS[retryCount % OSM_ENDPOINTS.length];
+  const endpoints = getOsmEndpoints();
+  const endpoint = endpoints[retryCount % endpoints.length];
 
   const zoom = state.map.getZoom();
   // Validar nivel de zoom para no saturar al servidor OSM gratuito

@@ -6,13 +6,16 @@ import { initToolbarEvents } from './src/ui/toolbar.js';
 import { initSearchEvents } from './src/ui/search.js';
 import { initIOEvents, loadSavedState } from './src/ui/io.js';
 import { initKeyboardShortcuts } from './src/ui/shortcuts.js';
-import { state } from './src/config/state.js';
+import { state, loadPublicConfig } from './src/config/state.js';
 import { handleMapClick, handleMapDblClick, handleMouseMove, handleMouseUp } from './src/tools/interaction.js';
 import { initStatsEvents, updateGlobalStats } from './src/ui/stats.js';
 
 import { initAuth } from './src/ui/auth.js';
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
+  // Cargar configuración remota (OSM de un servidor .env)
+  await loadPublicConfig();
+
   // Inicializar autenticación
   initAuth();
 

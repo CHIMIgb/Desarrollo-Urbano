@@ -24,6 +24,15 @@ app.use((req, res, next) => {
 app.use('/api/auth', authRouter);
 app.use('/api/projects', projectsRouter);
 
+// Endpoint para configuraciÃ³n pÃºblica (OSM, etc.)
+app.get('/api/config', (req, res) => {
+  res.json({
+    OSM_TILE_URL: process.env.OSM_TILE_URL || 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+    OSM_NOMINATIM_URL: process.env.OSM_NOMINATIM_URL || 'https://nominatim.openstreetmap.org/search',
+    OSM_OVERPASS_ENDPOINTS: (process.env.OSM_OVERPASS_ENDPOINTS || '').split(',').filter(e => e.trim())
+  });
+});
+
 // Servir archivos estáticos del frontend (la raíz del proyecto)
 app.use(express.static(path.join(__dirname, '../')));
 
