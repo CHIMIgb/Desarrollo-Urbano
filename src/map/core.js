@@ -1,6 +1,7 @@
 import { state, TERRAIN_URL, GLYPHS_URL, SATELLITE_URL, OSM_URL } from '../config/state.js';
 import { toast } from '../ui/toolbar.js'; // Will create this later
 import { addDataLayers, setupLayerInteractivity } from './layers.js';
+import { updateGlobalStats } from '../ui/stats.js';
 
 export function initMap() {
   let initialView = {
@@ -166,6 +167,7 @@ export function buildGeoJSON() {
 export function refreshMap() {
   state.map.getSource('urban-data')?.setData(buildGeoJSON());
   import('../ui/toolbar.js').then(m => m.updateStats());
+  updateGlobalStats();
 }
 
 /**

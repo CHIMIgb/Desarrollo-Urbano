@@ -21,6 +21,8 @@
   --amber: #f59e0b;
   --red: #f87171;
   --purple: #a78bfa;
+  --glass-bg: rgba(15, 18, 25, 0.7);
+  --glass-border: rgba(255, 255, 255, 0.08);
   --radius: 8px;
   --radius-lg: 12px;
   --header-h: 52px;
@@ -714,3 +716,132 @@ html, body { height: 100%; overflow: hidden; font-family: 'Inter', sans-serif; b
   color: #f87171;
   text-decoration: underline;
 }
+
+/* --- Dashboard de Métricas Urbanas --- */
+.stats-dashboard {
+  position: absolute;
+  bottom: 30px;
+  left: 100px; /* Separado de la toolbar izquierda */
+  width: 280px;
+  background: var(--glass-bg);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--glass-border);
+  border-radius: 12px;
+  color: var(--text-primary);
+  z-index: 50; /* Por debajo de modales pero arriba de capas de dibujo */
+  box-shadow: 0 12px 40px rgba(0,0,0,0.5);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: hidden;
+  font-family: 'Inter', sans-serif;
+  display: flex;
+  flex-direction: column;
+}
+
+.stats-dashboard.collapsed {
+  height: 44px;
+}
+
+.stats-header {
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: rgba(255,255,255,0.03);
+  cursor: pointer;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+
+.stats-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--accent);
+}
+
+.stats-toggle {
+  background: none !important;
+  border: none !important;
+  color: var(--text-secondary) !important;
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  transition: transform 0.3s;
+}
+
+.stats-dashboard.collapsed .stats-toggle {
+  transform: rotate(180deg);
+}
+
+.stats-body {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.stat-item {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.stat-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.stat-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.stat-val {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.stat-bar-bg {
+  height: 4px;
+  background: rgba(255,255,255,0.1);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.stat-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent), #818cf8);
+  width: 0%;
+  transition: width 0.6s ease;
+}
+
+.stats-footer {
+  padding: 8px 16px;
+  font-size: 10px;
+  color: var(--text-secondary);
+  font-style: italic;
+  border-top: 1px solid rgba(255,255,255,0.05);
+  background: rgba(0,0,0,0.1);
+}
+
+.stat-val.exceeded {
+  color: #ef4444;
+  text-shadow: 0 0 8px rgba(239, 68, 68, 0.4);
+}
+
+/* Estado sin terreno definido */
+.stats-dashboard.no-terrain .stat-val {
+  opacity: 0.4;
+}
+.stats-dashboard.no-terrain .stat-bar-fill {
+  opacity: 0.2;
+}
+

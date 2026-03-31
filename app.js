@@ -8,6 +8,7 @@ import { initIOEvents, loadSavedState } from './src/ui/io.js';
 import { initKeyboardShortcuts } from './src/ui/shortcuts.js';
 import { state } from './src/config/state.js';
 import { handleMapClick, handleMapDblClick, handleMouseMove, handleMouseUp } from './src/tools/interaction.js';
+import { initStatsEvents, updateGlobalStats } from './src/ui/stats.js';
 
 import { initAuth } from './src/ui/auth.js';
 
@@ -27,6 +28,10 @@ document.addEventListener('DOMContentLoaded', () => {
      
      // Load saved state (if any)
      loadSavedState();
+
+     // Stats Dashboard
+     initStatsEvents();
+     updateGlobalStats();
 
      // Map-specific interaction events
      state.map.on('click', handleMapClick);
