@@ -1006,25 +1006,20 @@ html, body { height: 100%; overflow: hidden; font-family: 'Inter', sans-serif; b
 
 /* ============================================================ PRECISION PANEL */
 .precision-panel {
-  position: absolute;
-  top: 12px;
-  right: 12px;
-  width: 280px;
-  max-height: calc(100vh - 100px);
-  background: var(--glass-bg);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid var(--glass-border);
-  border-radius: 12px;
+  position: relative;
+  width: 100%;
+  background: var(--bg-700);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
   color: var(--text-primary);
-  z-index: 30;
-  box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+  z-index: 10;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   overflow: hidden;
   font-family: 'Inter', sans-serif;
   display: flex;
   flex-direction: column;
   animation: precFadeIn 0.25s ease;
+  margin-bottom: 12px;
 }
 
 @keyframes precFadeIn {
