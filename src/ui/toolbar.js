@@ -71,6 +71,11 @@ export function initToolbarEvents() {
     if (state.map) state.map.setBearing(v);
   });
 
+  document.getElementById('furnitureRot')?.addEventListener('input', function () {
+    const v = parseInt(this.value);
+    document.getElementById('furnitureRotVal').textContent = v + '°';
+  });
+
   document.getElementById('layersList')?.addEventListener('change', updateLayersVisibility);
   
   document.querySelectorAll('.tool-btn[data-tool]').forEach(btn => {
