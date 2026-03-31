@@ -1,4 +1,4 @@
-import { state } from '../config/state.js';
+import { state, publicConfig } from '../config/state.js';
 
 export function initSearchEvents() {
   let searchTimer;
@@ -29,7 +29,7 @@ export function initSearchEvents() {
 async function doSearch(q) {
   const searchResults = document.getElementById('searchResults');
   try {
-    const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=5&q=${encodeURIComponent(q)}`, { 
+    const res = await fetch(`${publicConfig.OSM_NOMINATIM_URL}?format=json&limit=5&q=${encodeURIComponent(q)}`, { 
       headers: { 'Accept-Language': 'es' } 
     });
     const data = await res.json();

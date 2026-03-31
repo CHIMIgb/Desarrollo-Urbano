@@ -1,5 +1,33 @@
 export const SATELLITE_URL = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}';
-export const OSM_URL = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
+export let OSM_URL = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
+
+export const publicConfig = {
+  OSM_TILE_URL: OSM_URL,
+  OSM_NOMINATIM_URL: 'https://nominatim.openstreetmap.org/search',
+  OSM_OVERPASS_ENDPOINTS: [
+    'https://overpass-api.de/api/interpreter',
+    'https://overpass.kumi.systems/api/interpreter',
+    'https://lz4.overpass-api.de/api/interpreter'
+  ]
+};
+
+export async function loadPublicConfig() {
+  try {
+    const res = await fetch('/api/config');
+    const data = await res.json();
+    if (data.OSM_TILE_URL) {
+      OSM_URL = data.OSM_TILE_URL;
+      publicConfig.OSM_TILE_URL = data.OSM_TILE_URL;
+    }
+    if (data.OSM_NOMINATIM_URL) publicConfig.OSM_NOMINATIM_URL = data.OSM_NOMINATIM_URL;
+    if (data.OSM_OVERPASS_ENDPOINTS && data.OSM_OVERPASS_ENDPOINTS.length) {
+      publicConfig.OSM_OVERPASS_ENDPOINTS = data.OSM_OVERPASS_ENDPOINTS;
+    }
+    console.log('[CONFIG] Configuración remota de OSM cargada con éxito');
+  } catch (e) {
+    console.warn('[CONFIG] Error cargando configuración remota, usando valores por defecto');
+  }
+}
 export const TERRAIN_URL = 'https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png';
 export const GLYPHS_URL = 'https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf';
 
