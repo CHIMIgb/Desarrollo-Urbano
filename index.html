@@ -508,6 +508,81 @@
       </aside>
     </div>
 
+
+    <!-- Dashboard de Métricas Urbanas -->
+    <div class="stats-dashboard" id="stats-dashboard">
+      <div class="stats-header" id="stats-header">
+        <div class="stats-title">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="20" x2="18" y2="10" />
+            <line x1="12" y1="20" x2="12" y2="4" />
+            <line x1="6" y1="20" x2="6" y2="14" />
+          </svg>
+          Métricas Normativas
+        </div>
+        <button id="btnBackToGlobal" class="btn-back-global" style="display:none" title="Volver a métricas globales">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path d="M19 12H5M12 19l-7-7 7-7" />
+          </svg>
+          Global
+        </button>
+        <button class="stats-toggle" id="btnStatsToggle">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="6 9 12 15 18 9"></polyline>
+          </svg>
+        </button>
+      </div>
+      <div class="stats-body" id="stats-body">
+        <div class="stats-summary-fixed">
+          <div class="stat-item">
+            <div class="stat-info">
+              <span class="stat-label">Terreno (Base)</span>
+              <span class="stat-val" id="val-terrain-area">0 m²</span>
+            </div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-info">
+              <span class="stat-label">COS (Ocupación)</span>
+              <span class="stat-val" id="val-cos">0%</span>
+            </div>
+            <div class="stat-bar-bg">
+              <div class="stat-bar-fill" id="bar-cos" style="width: 0%"></div>
+            </div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-info">
+              <span class="stat-label">CUS (Densidad)</span>
+              <span class="stat-val" id="val-cus">0.00</span>
+            </div>
+            <div class="stat-bar-bg">
+              <div class="stat-bar-fill" id="bar-cus" style="width: 0%"></div>
+            </div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-info">
+              <span class="stat-label">Área Verde</span>
+              <span class="stat-val" id="val-green">0%</span>
+            </div>
+            <div class="stat-bar-bg">
+              <div class="stat-bar-fill" id="bar-green" style="width: 0%"></div>
+            </div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-info">
+              <span class="stat-label">Población Estimada</span>
+              <span class="stat-val" id="val-pop">0 hab.</span>
+            </div>
+          </div>
+        </div>
+        <div class="stats-scroll-area">
+          <div class="stats-breakdown" id="stats-breakdown" style="display:none">
+            <div class="breakdown-label">Desglose por Lote</div>
+            <div class="lot-list" id="lot-list"></div>
+          </div>
+        </div>
+      </div>
+      <div class="stats-footer">Cálculo basado en polígonos de "Terreno"</div>
+    </div>
   </div>
 
   <!-- TOAST -->
@@ -533,93 +608,15 @@
     </div>
   </div>
 
+
+
   <div id="toastContainer" class="toast-container"></div>
 
   <!-- SCRIPTS -->
   <script src="https://unpkg.com/osmtogeojson@3.0.0-beta.5/osmtogeojson.js"></script>
   <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
   <script type="module" src="app.js"></script>
-  <!-- Dashboard de Métricas Urbanas -->
-  <div class="stats-dashboard" id="stats-dashboard">
-    <div class="stats-header" id="stats-header">
-      <div class="stats-title">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <line x1="18" y1="20" x2="18" y2="10" />
-          <line x1="12" y1="20" x2="12" y2="4" />
-          <line x1="6" y1="20" x2="6" y2="14" />
-        </svg>
-        Métricas Normativas
-      </div>
-      <button id="btnBackToGlobal" class="btn-back-global" style="display:none" title="Volver a métricas globales">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-          <path d="M19 12H5M12 19l-7-7 7-7" />
-        </svg>
-        Global
-      </button>
-      <button class="stats-toggle" id="btnStatsToggle">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <polyline points="6 9 12 15 18 9"></polyline>
-        </svg>
-      </button>
-    </div>
-    <div class="stats-body" id="stats-body">
-      <!-- Parte fija superior: Resumen -->
-      <div class="stats-summary-fixed">
-        <div class="stat-item">
-          <div class="stat-info">
-            <span class="stat-label">Terreno (Base)</span>
-            <span class="stat-val" id="val-terrain-area">0 m²</span>
-          </div>
-        </div>
-        <div class="stat-item">
-          <div class="stat-info">
-            <span class="stat-label">COS (Ocupación)</span>
-            <span class="stat-val" id="val-cos">0%</span>
-          </div>
-          <div class="stat-bar-bg">
-            <div class="stat-bar-fill" id="bar-cos" style="width: 0%"></div>
-          </div>
-        </div>
-        <div class="stat-item">
-          <div class="stat-info">
-            <span class="stat-label">CUS (Densidad)</span>
-            <span class="stat-val" id="val-cus">0.0</span>
-          </div>
-          <div class="stat-bar-bg">
-            <div class="stat-bar-fill" id="bar-cus" style="width: 0%; background: var(--accent)"></div>
-          </div>
-        </div>
-        <div class="stat-item">
-          <div class="stat-info">
-            <span class="stat-label">Área Verde</span>
-            <span class="stat-val" id="val-green">0%</span>
-          </div>
-          <div class="stat-bar-bg">
-            <div class="stat-bar-fill" id="bar-green" style="width: 0%; background: #22c55e"></div>
-          </div>
-        </div>
-        <div class="stat-item">
-          <div class="stat-info">
-            <span class="stat-label">Población Estimada</span>
-            <span class="stat-val" id="val-pop">0 hab.</span>
-          </div>
-        </div>
-      </div>
 
-      <!-- Parte scrollable inferior: Desglose por lotes -->
-      <div class="stats-scroll-area">
-        <div class="stats-breakdown" id="stats-breakdown">
-          <div class="breakdown-label">Desglose por Lote</div>
-          <div class="lot-list" id="lot-list">
-            <!-- Inyectado dinámicamente -->
-          </div>
-        </div>
-      </div>
-    </div>
-    <div class="stats-footer">
-      Cálculo basado en polígonos de "Terreno"
-    </div>
-  </div>
 </body>
 
 </html>
