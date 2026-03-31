@@ -2,9 +2,10 @@ import { state } from '../config/state.js';
 import { pushHistory } from '../tools/interaction.js';
 import { refreshMap } from '../map/core.js';
 import { updateStats, toast } from './toolbar.js';
+import { calculateCurrentMetrics } from './stats.js';
 
 export function initIOEvents() {
-  // EXPORTAR CON AUDITORÍA
+  // EXPORTAR CON AUDITORIA
   document.getElementById('btnExport')?.addEventListener('click', async () => {
     const data = JSON.stringify({
       features: state.features,
@@ -34,12 +35,12 @@ export function initIOEvents() {
           details: { filename: a.download, featureCount: state.features.length }
         })
       });
-    } catch (e) { console.warn('Error registrando auditoría de exportación', e); }
+    } catch (e) { console.warn('Error registrando auditoria de exportacion', e); }
 
     toast('Proyecto exportado y registrado', 'success');
   });
 
-  // IMPORTAR CON AUDITORÍA
+  // IMPORTAR CON AUDITORIA
   document.getElementById('fileImport')?.addEventListener('change', e => {
     const file = e.target.files[0];
     if (!file) return;
@@ -69,8 +70,8 @@ export function initIOEvents() {
             })
           });
 
-          toast('Proyecto importado con éxito', 'success');
-        } else toast('Archivo inválido', 'error');
+          toast('Proyecto importado con exito', 'success');
+        } else toast('Archivo invalido', 'error');
       } catch (err) { toast('Error al procesar el archivo', 'error'); }
     };
     reader.readAsText(file);
@@ -96,8 +97,11 @@ export function initIOEvents() {
       features: state.features,
       nextId: state.nextId,
       projectId: state.currentProjectId,
-      mapView
+      mapView,
+      metrics: calculateCurrentMetrics()
     };
+    
+    console.log('[DEBUG] Enviando datos de guardado:', saveData);
 
     try {
       const response = await fetch('/api/projects/save', {
@@ -116,12 +120,12 @@ export function initIOEvents() {
         toast('Error al guardar: ' + data.error, 'error');
       }
     } catch (err) {
-      toast('Error de conexión al guardar', 'error');
+      toast('Error de conexion al guardar', 'error');
     }
   });
 }
 
-// CARGAR ÚLTIMO PROYECTO DEL SERVIDOR AL INICIAR
+// CARGAR ULTIMO PROYECTO DEL SERVIDOR AL INICIAR
 export async function loadSavedState() {
   const token = localStorage.getItem('urbanplan_token');
   if (!token) return;
@@ -171,7 +175,7 @@ export async function loadProjectById(id) {
       applyProjectData(data.project);
       toast('Proyecto cargado', 'success');
     }
-  } catch (e) { toast('Error de conexión', 'error'); }
+  } catch (e) { toast('Error de conexion', 'error'); }
 }
 
 // NUEVO PROYECTO
@@ -200,7 +204,7 @@ function applyProjectData(project) {
   const nameDisplay = document.getElementById('projectName');
   if (nameDisplay && project.name) nameDisplay.textContent = project.name;
 
-  // Restaurar vista del mapa guardada (volar a la ubicación exacta del proyecto)
+  // Restaurar vista del mapa guardada (volar a la ubicacion exacta del proyecto)
   if (project.mapView && state.map) {
     const { center, zoom, pitch, bearing } = project.mapView;
     if (center && zoom != null) {
