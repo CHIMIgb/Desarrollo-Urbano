@@ -978,4 +978,30 @@ html, body { height: 100%; overflow: hidden; font-family: 'Inter', sans-serif; b
   opacity: 0.15;
 }
 
+.btn-back-global {
+  background: rgba(99, 102, 241, 0.15);
+  border: 1px solid rgba(99, 102, 241, 0.3);
+  color: #a5b4fc;
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+  margin-left: auto;
+  margin-right: 12px;
+}
+
+.btn-back-global:hover {
+  background: rgba(99, 102, 241, 0.3);
+  border-color: var(--accent);
+  color: #fff;
+  transform: translateX(-2px);
+}
+
 

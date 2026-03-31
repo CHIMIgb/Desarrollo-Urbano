@@ -121,6 +121,11 @@ export function updateGlobalStats() {
 
   updateSummaryUI(activeFocus);
 
+  const btnBack = document.getElementById('btnBackToGlobal');
+  if (btnBack) {
+    btnBack.style.display = activeFocus.isGlobal ? 'none' : 'flex';
+  }
+
   const breakdownContainer = document.getElementById('stats-breakdown');
   if (breakdownContainer) {
     breakdownContainer.style.display = data.lots.length > 0 ? 'block' : 'none';
@@ -271,4 +276,12 @@ export function initStatsEvents() {
   });
 
   header?.addEventListener('click', toggle);
+
+  document.getElementById('btnBackToGlobal')?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    import('../tools/selection.js').then(m => {
+      state.selectedIds = [];
+      m.updateSelectionUI();
+    });
+  });
 }
