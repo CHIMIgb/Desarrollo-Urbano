@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Fondo Oscuro Redondeado Cuadrado tipo App -->
+  <rect width="512" height="512" rx="128" fill="#181b22"/>
+  <!-- Bloque Isometrico (Edificio / Terreno 3D) -->
+  <!-- Techo brillante -->
+  <path d="M256 120 L384 200 L256 280 L128 200 Z" fill="#818cf8"/>
+  <!-- Fachada Derecha -->
+  <path d="M256 280 L384 200 L384 360 L256 440 Z" fill="#4f46e5"/>
+  <!-- Fachada Izquierda -->
+  <path d="M128 200 L256 280 L256 440 L128 360 Z" fill="#6366f1"/>
+</svg>
