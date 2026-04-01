@@ -5,6 +5,10 @@ export function initAuth() {
   const appContainer = document.getElementById('appContainer');
   const loginForm = document.getElementById('loginForm');
   const loginError = document.getElementById('loginError');
+  const registerForm = document.getElementById('registerForm');
+  const registerError = document.getElementById('registerError');
+  const btnShowRegister = document.getElementById('btnShowRegister');
+  const btnShowLogin = document.getElementById('btnShowLogin');
   const userNameLabel = document.getElementById('userNameLabel');
   const userInitial = document.getElementById('userInitial');
   const btnLogout = document.getElementById('btnLogout');
@@ -17,6 +21,19 @@ export function initAuth() {
     // Si no hay token, mostramos el login inmediatamente
     loginOverlay.style.display = 'flex';
   }
+
+  // Intercambiar formularios
+  btnShowRegister.addEventListener('click', (e) => {
+    e.preventDefault();
+    loginForm.style.display = 'none';
+    registerForm.style.display = 'block'; // Or flex depending on css
+  });
+
+  btnShowLogin.addEventListener('click', (e) => {
+    e.preventDefault();
+    registerForm.style.display = 'none';
+    loginForm.style.display = 'block';
+  });
 
   // Evento Login
   loginForm.addEventListener('submit', async (e) => {
@@ -47,6 +64,39 @@ export function initAuth() {
       console.error(err);
       loginError.textContent = 'Error de conexión con el servidor';
       loginError.style.display = 'block';
+    }
+  });
+
+  // Evento Registro
+  registerForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const username = document.getElementById('regUser').value;
+    const full_name = document.getElementById('regName').value;
+    const email = document.getElementById('regEmail').value;
+    const password = document.getElementById('regPass').value;
+
+    try {
+      const response = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, full_name, email, password })
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        localStorage.setItem('urbanplan_token', data.token);
+        localStorage.setItem('urbanplan_user', JSON.stringify(data.user));
+        showApp(data.user);
+        import('./io.js').then(m => m.loadSavedState());
+      } else {
+        registerError.textContent = data.error || 'Error al registrarse';
+        registerError.style.display = 'block';
+      }
+    } catch (err) {
+      console.error(err);
+      registerError.textContent = 'Error de conexión con el servidor';
+      registerError.style.display = 'block';
     }
   });
 
