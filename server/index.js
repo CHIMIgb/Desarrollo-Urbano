@@ -52,7 +52,13 @@ app.use((req, res) => {
     return res.status(404).json({ error: `API endpoint not found: ${req.url}` });
   }
   // Si no es API y no se encontro archivo estatico, enviamos el index por si es una ruta SPA
-  res.sendFile(path.join(__dirname, '../index.html'));
+  const indexPath = path.join(__dirname, '../index.html');
+  const fs = require('fs');
+  if (fs.existsSync(indexPath)) {
+    res.sendFile(indexPath);
+  } else {
+    res.status(404).send('Frontend no encontrado (index.html no existe).');
+  }
 });
 
 // Catch-all de errores Express (Manejador Global)
