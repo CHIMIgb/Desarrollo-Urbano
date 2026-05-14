@@ -3,7 +3,7 @@ import { buildingPolygon } from '../utils/geo.js';
 import { buildTreePolygon } from './trees.js';
 import { pushHistory } from '../tools/interaction.js';
 import { refreshMap } from '../map/core.js';
-import { toast, updateStats } from '../ui/toolbar.js';
+import { toast } from '../ui/toolbar.js';
 import { selectFeature } from '../tools/selection.js';
 
 export function generateFurnitureParts(baseId, lng, lat, rot, fType) {
@@ -146,6 +146,6 @@ export function finishFurniture(lng, lat) {
   const baseId = state.nextId++;
   const parts = generateFurnitureParts(baseId, lng, lat, rot, fType);
   state.features.push(...parts);
-  pushHistory(); refreshMap(); updateStats();
+  pushHistory(); refreshMap();
   selectFeature(baseId);
 }

@@ -16,19 +16,7 @@ export function toast(msg, type = 'info') {
   setTimeout(() => { t.style.opacity = '0'; t.style.transform = 'translateY(10px)'; setTimeout(() => t.remove(), 400); }, 3000);
 }
 
-export function updateStats() {
-  const cnt = { house: 0, building: 0, road: 0, park: 0, zone: 0, terrain: 0, path: 0, sidewalk: 0 };
-  state.features.forEach(f => { cnt[f.properties.type] = (cnt[f.properties.type] || 0) + 1; });
-  const sh = document.getElementById('stat-houses');
-  const sb = document.getElementById('stat-buildings');
-  const sr = document.getElementById('stat-roads');
-  const sp = document.getElementById('stat-parks');
-  if (sh) sh.textContent = cnt.house;
-  if (sb) sb.textContent = cnt.building;
-  if (sr) sr.textContent = cnt.road;
-  if (sp) sp.textContent = cnt.park + cnt.zone + cnt.terrain + cnt.path + cnt.sidewalk;
-}
-
+// La función updateStats ha sido consolidada en stats.js (updateGlobalStats)
 export function setTool(tool) {
   state.tool = tool; 
   clearDrawing();
@@ -258,7 +246,6 @@ function updateLayersVisibility() {
 EventBus.on(Events.TOAST, ({ msg, type }) => toast(msg, type));
 
 EventBus.on(Events.STATS_UPDATE, () => {
-  updateStats();
-  // También actualizar el dashboard global de métricas
+  // Ahora stats.js es la única fuente de verdad para todas las estadísticas (incluyendo los contadores simples)
   import('./stats.js').then(m => m.updateGlobalStats());
 });

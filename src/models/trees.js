@@ -1,7 +1,7 @@
 import { state, TYPE_CONFIG } from '../config/state.js';
 import { pushHistory } from '../tools/interaction.js';
 import { refreshMap } from '../map/core.js';
-import { toast, updateStats } from '../ui/toolbar.js';
+import { toast } from '../ui/toolbar.js';
 import { selectFeature } from '../tools/selection.js';
 
 export function buildTreePolygon(lng, lat, radiusM) {
@@ -93,6 +93,6 @@ export function finishTree(lng, lat) {
   }
 
   state.features.push(...parts);
-  pushHistory(); refreshMap(); updateStats();
+  pushHistory(); refreshMap();
   selectFeature(trunkId);
 }

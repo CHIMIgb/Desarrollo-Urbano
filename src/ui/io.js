@@ -1,7 +1,7 @@
 import { state } from '../config/state.js';
 import { pushHistory } from '../tools/interaction.js';
 import { refreshMap } from '../map/core.js';
-import { updateStats, toast } from './toolbar.js';
+import { toast } from './toolbar.js';
 import { calculateCurrentMetrics } from './stats.js';
 
 export function initIOEvents() {
@@ -54,7 +54,7 @@ export function initIOEvents() {
           const nameDisplay = document.getElementById('projectName');
           if (nameDisplay && data.projectName) nameDisplay.textContent = data.projectName;
 
-          pushHistory(); refreshMap(); updateStats();
+          pushHistory(); refreshMap();
 
           // Registrar en AUDIT LOG
           await fetch('/api/projects/audit', {
@@ -200,7 +200,7 @@ export function createNewProject() {
   if (nameDisplay) nameDisplay.textContent = 'Nuevo Proyecto Urbano';
 
   refreshMap();
-  updateStats();
+  
   toast('Nuevo proyecto iniciado', 'info');
 }
 
@@ -230,5 +230,5 @@ function applyProjectData(project) {
   }
 
   refreshMap();
-  updateStats();
+  
 }
