@@ -2,7 +2,7 @@ import { state, TYPE_CONFIG } from '../config/state.js';
 import { lineLength, polygonArea, polygonPerimeter, catmullRom, catmullRomClosed, fmtArea, fmtLen } from '../utils/geo.js';
 import { pushHistory } from './interaction.js';
 import { refreshMap } from '../map/core.js';
-import { toast, updateStats } from '../ui/toolbar.js';
+import { toast } from '../ui/toolbar.js';
 import { selectFeature } from './selection.js';
 
 export function finishLine() {
@@ -27,7 +27,7 @@ export function finishLine() {
   };
   pushHistory();
   state.features.push(feat);
-  clearDrawing(); refreshMap(); updateStats();
+  clearDrawing(); refreshMap();
   toast(`${cfg.label} trazada — ${fmtLen(len)}`, 'success');
   selectFeature(id);
 }
@@ -87,7 +87,7 @@ export function finishRadius(lng, lat) {
     properties: { id, type: 'radius', name: `Radio ${id}`, color: cfg.color, fillColor: cfg.fillColor, raw_pts: [...pts], radius_m: r_m, area_m2: Math.round(Math.PI * r_m * r_m) },
     geometry: { type: 'Polygon', coordinates: [pts] }
   });
-  pushHistory(); refreshMap(); updateStats();
+  pushHistory(); refreshMap();
   selectFeature(id);
 }
 

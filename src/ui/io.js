@@ -1,7 +1,7 @@
 import { state } from '../config/state.js';
 import { pushHistory } from '../tools/interaction.js';
 import { refreshMap } from '../map/core.js';
-import { updateStats, toast } from './toolbar.js';
+import { toast } from './toolbar.js';
 import { calculateCurrentMetrics } from './stats.js';
 
 export function initIOEvents() {
@@ -54,7 +54,7 @@ export function initIOEvents() {
           const nameDisplay = document.getElementById('projectName');
           if (nameDisplay && data.projectName) nameDisplay.textContent = data.projectName;
 
-          pushHistory(); refreshMap(); updateStats();
+          pushHistory(); refreshMap();
 
           // Registrar en AUDIT LOG
           await fetch('/api/projects/audit', {
@@ -80,6 +80,13 @@ export function initIOEvents() {
 
   // GUARDAR EN BASE DE DATOS
   document.getElementById('btnSave')?.addEventListener('click', async () => {
+    const btnSave = document.getElementById('btnSave');
+    const originalBtnHTML = btnSave.innerHTML;
+    
+    btnSave.disabled = true;
+    btnSave.innerHTML = '<span class="spinner-container"><span class="spinner"></span><span>Guardando...</span></span>';
+    toast('Guardando proyecto...', 'info');
+
     // Capturar vista actual del mapa
     let mapView = null;
     if (state.map) {
@@ -121,6 +128,9 @@ export function initIOEvents() {
       }
     } catch (err) {
       toast('Error de conexion al guardar', 'error');
+    } finally {
+      btnSave.disabled = false;
+      btnSave.innerHTML = originalBtnHTML;
     }
   });
 }
@@ -190,7 +200,7 @@ export function createNewProject() {
   if (nameDisplay) nameDisplay.textContent = 'Nuevo Proyecto Urbano';
 
   refreshMap();
-  updateStats();
+  
   toast('Nuevo proyecto iniciado', 'info');
 }
 
@@ -220,5 +230,5 @@ function applyProjectData(project) {
   }
 
   refreshMap();
-  updateStats();
+  
 }

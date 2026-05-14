@@ -48,23 +48,5 @@ export const TYPE_CONFIG = {
   furniture: { label: 'Mobiliario', color: '#9ca3af', fillColor: '#d1d5db' }
 };
 
-export const state = {
-  features: [], 
-  selectedIds: [], 
-  selectedVertexIdx: null,
-  tool: 'select',
-  is3D: true, 
-  isSatellite: true,
-  drawPoints: [],
-  history: [], 
-  future: [],
-  nextId: 1, 
-  popup: null,
-  draggingFeatureId: null, 
-  lastDragPos: null, 
-  isDragging: false,
-  draggingVertexIdx: null,
-  terrainEnabled: false, // Relieve desactivado por defecto
-  currentProjectId: null, // ID del proyecto activo en la base de datos
-  map: null // Will be initialized here
-};
+// El estado ahora vive en store.js — re-exportar para compatibilidad.
+export { state } from './store.js';

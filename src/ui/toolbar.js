@@ -1,4 +1,6 @@
 import { state } from '../config/state.js';
+import { EventBus, Events } from '../config/events.js';
+import { undo, redo, emitToast } from '../config/store.js';
 import { clearDrawing } from '../tools/drawing.js';
 import { createNewProject, listUserProjects, loadProjectById } from './io.js';
 import { importOSMContext } from '../tools/osm.js';
@@ -14,19 +16,7 @@ export function toast(msg, type = 'info') {
   setTimeout(() => { t.style.opacity = '0'; t.style.transform = 'translateY(10px)'; setTimeout(() => t.remove(), 400); }, 3000);
 }
 
-export function updateStats() {
-  const cnt = { house: 0, building: 0, road: 0, park: 0, zone: 0, terrain: 0, path: 0, sidewalk: 0 };
-  state.features.forEach(f => { cnt[f.properties.type] = (cnt[f.properties.type] || 0) + 1; });
-  const sh = document.getElementById('stat-houses');
-  const sb = document.getElementById('stat-buildings');
-  const sr = document.getElementById('stat-roads');
-  const sp = document.getElementById('stat-parks');
-  if (sh) sh.textContent = cnt.house;
-  if (sb) sb.textContent = cnt.building;
-  if (sr) sr.textContent = cnt.road;
-  if (sp) sp.textContent = cnt.park + cnt.zone + cnt.terrain + cnt.path + cnt.sidewalk;
-}
-
+// La función updateStats ha sido consolidada en stats.js (updateGlobalStats)
 export function setTool(tool) {
   state.tool = tool; 
   clearDrawing();
@@ -83,19 +73,14 @@ export function initToolbarEvents() {
   });
   
   document.getElementById('btnUndo')?.addEventListener('click', () => {
-    if (state.history.length > 1) {
-      state.future.push(JSON.stringify(state.features));
-      const last = state.history.pop();
-      state.features = JSON.parse(state.history[state.history.length - 1]);
+    if (undo()) {
       import('../map/core.js').then(m => m.refreshMap());
       toast('Deshecho', 'info');
     }
   });
 
   document.getElementById('btnRedo')?.addEventListener('click', () => {
-    if (state.future.length > 0) {
-      state.history.push(JSON.stringify(state.features));
-      state.features = JSON.parse(state.future.pop());
+    if (redo()) {
       import('../map/core.js').then(m => m.refreshMap());
       toast('Rehecho', 'info');
     }
@@ -254,3 +239,13 @@ function updateLayersVisibility() {
   if (state.map.getLayer('layer-railways')) state.map.setLayoutProperty('layer-railways', 'visibility', railVis);
   if (state.map.getLayer('layer-railways-dash')) state.map.setLayoutProperty('layer-railways-dash', 'visibility', railVis);
 }
+
+// ── Suscripciones al EventBus ──────────────────────────────────
+// Estos listeners permiten que map/core.js emita eventos sin conocer este módulo.
+
+EventBus.on(Events.TOAST, ({ msg, type }) => toast(msg, type));
+
+EventBus.on(Events.STATS_UPDATE, () => {
+  // Ahora stats.js es la única fuente de verdad para todas las estadísticas (incluyendo los contadores simples)
+  import('./stats.js').then(m => m.updateGlobalStats());
+});

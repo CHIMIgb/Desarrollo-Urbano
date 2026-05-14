@@ -2,10 +2,13 @@
   "name": "desarrollo-urbano",
   "version": "1.0.0",
   "description": "@ -0,0 +1,90 @@\r # Urban Planning 3D (Modular Edition)",
-  "main": "app.js",
+  "main": "server/index.js",
   "scripts": {
     "start": "node server/index.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:ui": "vitest --ui",
+    "test:coverage": "vitest run --coverage"
   },
   "repository": {
     "type": "git",
@@ -26,5 +29,8 @@
     "express": "^5.2.1",
     "jsonwebtoken": "^9.0.3",
     "pg": "^8.20.0"
+  },
+  "devDependencies": {
+    "vitest": "^4.1.6"
   }
 }

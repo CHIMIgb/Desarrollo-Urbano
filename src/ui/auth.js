@@ -40,6 +40,11 @@ export function initAuth() {
     e.preventDefault();
     const username = document.getElementById('loginUser').value;
     const password = document.getElementById('loginPass').value;
+    const submitBtn = loginForm.querySelector('button[type="submit"]');
+    const originalBtnText = submitBtn.innerHTML;
+
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<span class="spinner-container"><span class="spinner"></span><span>Accediendo...</span></span>';
 
     try {
       const response = await fetch('/api/auth/login', {
@@ -64,6 +69,9 @@ export function initAuth() {
       console.error(err);
       loginError.textContent = 'Error de conexión con el servidor';
       loginError.style.display = 'block';
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = originalBtnText;
     }
   });
 

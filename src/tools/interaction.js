@@ -1,4 +1,5 @@
 import { state } from '../config/state.js';
+import { pushHistory as _storePushHistory } from '../config/store.js';
 import { refreshMap } from '../map/core.js';
 import { updateEditHandles } from './selection.js';
 import { updateLiveMeasure, updateDrawPreview, finishLine, finishPolygon, finishRadius } from './drawing.js';
@@ -8,10 +9,10 @@ import { finishFurniture } from '../models/furniture.js';
 import { catmullRom, catmullRomClosed, lineLength, polygonArea, polygonPerimeter } from '../utils/geo.js';
 import { buildMeasureHTML } from '../ui/properties.js';
 
+// Re-exportar pushHistory desde el Store para que todos los módulos
+// que actualmente importan de aquí sigan funcionando sin cambios.
 export function pushHistory() {
-  state.history.push(JSON.stringify({ features: state.features, nextId: state.nextId }));
-  if (state.history.length > 50) state.history.shift();
-  state.future = [];
+  _storePushHistory();
 }
 
 export function handleMouseMove(e) {

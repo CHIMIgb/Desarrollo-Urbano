@@ -3,7 +3,7 @@
    Cálculos de transformación precisa para vértices y features.
    ============================================================= */
 import { state } from '../config/state.js';
-import { haversine } from '../utils/geo.js';
+import { haversine, getFeatureCenter } from '../utils/geo.js';
 import { catmullRom, catmullRomClosed, lineLength, polygonArea, polygonPerimeter } from '../utils/geo.js';
 import { refreshMap } from '../map/core.js';
 import { pushHistory, translateFeature } from './interaction.js';
@@ -133,7 +133,7 @@ export function moveFeatureByPolar(featureId, distanceM, bearingDeg) {
   const f = state.features.find(x => x.properties.id === featureId);
   if (!f) return false;
 
-  const center = getFeatureCenterLocal(f);
+  const center = getFeatureCenter(f);
   if (!center) return false;
 
   pushHistory();
@@ -157,7 +157,7 @@ export function moveFeatureToCoord(featureId, lng, lat) {
   const f = state.features.find(x => x.properties.id === featureId);
   if (!f) return false;
 
-  const center = getFeatureCenterLocal(f);
+  const center = getFeatureCenter(f);
   if (!center) return false;
 
   pushHistory();
@@ -227,27 +227,4 @@ export function getVertexInfo(featureId, vertexIdx) {
   }
 
   return info;
-}
-
-// ── Utilidad Interna ──────────────────────────────────────────
-
-/**
- * Obtiene el centro/centroide de una feature (versión local para evitar
- * dependencias circulares). Misma lógica que geo.js getFeatureCenter.
- */
-function getFeatureCenterLocal(feat) {
-  const g = feat.geometry;
-  if (g.type === 'Point') return { lng: g.coordinates[0], lat: g.coordinates[1] };
-  if (g.type === 'LineString') {
-    const m = Math.floor(g.coordinates.length / 2);
-    return { lng: g.coordinates[m][0], lat: g.coordinates[m][1] };
-  }
-  if (g.type === 'Polygon' || g.type === 'MultiPolygon') {
-    const c = g.type === 'Polygon' ? g.coordinates[0] : g.coordinates[0][0];
-    return {
-      lng: c.reduce((s, p) => s + p[0], 0) / c.length,
-      lat: c.reduce((s, p) => s + p[1], 0) / c.length
-    };
-  }
-  return null;
 }

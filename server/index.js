@@ -1,8 +1,9 @@
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
-const authRouter = require('./auth');
-const projectsRouter = require('./projects');
+const authRouter = require('./routes/auth');
+const projectsRouter = require('./routes/projects');
+const { errorHandler } = require('./middleware/errorMiddleware');
 require('dotenv').config();
 
 const app = express();
@@ -55,15 +56,16 @@ app.use((req, res) => {
   res.sendFile(path.join(__dirname, '../index.html'));
 });
 
-// Catch-all de errores Express (Manejador Global)
+// Catch-all de errores Express (Manejador Global unificado)
 app.use((err, req, res, next) => {
   if (err.type === 'request.aborted') {
     console.warn(`[WARN] Cliente aborto la peticion HTTP prematuramente en ${req.url}`);
     return res.status(400).end();
   }
-  console.error('[ERROR] Error interno del servidor:', err);
-  res.status(500).json({ error: 'Error interno de servidor' });
+  next(err);
 });
+
+app.use(errorHandler);
 
 app.listen(PORT, () => {
   console.log(`Servidor UrbanPlan 3D corriendo en http://localhost:${PORT}`);
