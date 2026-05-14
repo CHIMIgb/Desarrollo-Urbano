@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Urban Planning 3D — Prototipo de Terreno</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <meta name="description"
+    content="Prototipo de modelado 3D de terreno urbano con datos satelitales. Editor de carreteras, casas y edificios sobre terreno real." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .project-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 8px;
+      margin-bottom: 8px;
+    }
+
+    .project-item:hover {
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    .project-info {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .project-name-item {
+      font-weight: 600;
+      font-size: 14px;
+      color: #fff;
+    }
+
+    .project-date-item {
+      font-size: 11px;
+      color: var(--text-secondary);
+    }
+
+    .btn-sm {
+      padding: 4px 8px;
+      font-size: 12px;
+    }
+  </style>
+</head>
+
+<body>
+  <!-- LOGIN MODAL / OVERLAY -->
+  <div id="loginOverlay" class="login-overlay">
+    <div class="login-card">
+      <div class="login-header">
+        <svg width="40" height="40" viewBox="0 0 28 28" fill="none">
+          <rect x="2" y="14" width="8" height="12" rx="1" fill="#6366f1" />
+          <rect x="12" y="8" width="8" height="18" rx="1" fill="#8b5cf6" />
+          <rect x="22" y="11" width="4" height="15" rx="1" fill="#a78bfa" />
+        </svg>
+        <h2>UrbanPlan 3D</h2>
+        <p>Inicia sesión para acceder al editor</p>
+      </div>
+      <form id="loginForm" class="login-form">
+        <div class="form-group">
+          <label for="loginUser">Usuario</label>
+          <input type="text" id="loginUser" required placeholder="admin" autocomplete="username">
+        </div>
+        <div class="form-group">
+          <label for="loginPass">Contraseña</label>
+          <input type="password" id="loginPass" required placeholder="••••••••" autocomplete="current-password">
+        </div>
+        <div id="loginError" class="login-error" style="display:none"></div>
+        <button type="submit" class="btn btn-primary btn-full">Entrar</button>
+        <p style="text-align:center; font-size:13px; color:var(--text-secondary); margin-top:16px;">
+          ¿No tienes una cuenta? <a href="#" id="btnShowRegister" style="color:#a78bfa; text-decoration:none;">Regístrate aquí</a>
+        </p>
+      </form>
+
+      <form id="registerForm" class="login-form" style="display:none">
+        <div style="display:flex; gap:16px;">
+          <!-- Columna 1 -->
+          <div style="flex:1;">
+            <div class="form-group">
+              <label for="regUser">Usuario</label>
+              <input type="text" id="regUser" required placeholder="tu_usuario" autocomplete="username">
+            </div>
+            <div class="form-group">
+              <label for="regEmail">Correo</label>
+              <input type="email" id="regEmail" required placeholder="correo@ejemplo.com" autocomplete="email">
+            </div>
+          </div>
+          <!-- Columna 2 -->
+          <div style="flex:1;">
+            <div class="form-group">
+              <label for="regName">Nombre Completo</label>
+              <input type="text" id="regName" required placeholder="Juan Pérez" autocomplete="name">
+            </div>
+            <div class="form-group">
+              <label for="regPass">Contraseña</label>
+              <input type="password" id="regPass" required placeholder="••••••••" autocomplete="new-password">
+            </div>
+          </div>
+        </div>
+        <div id="registerError" class="login-error" style="display:none"></div>
+        <button type="submit" class="btn btn-primary btn-full">Crear Cuenta</button>
+        <p style="text-align:center; font-size:13px; color:var(--text-secondary); margin-top:16px;">
+          ¿Ya tienes cuenta? <a href="#" id="btnShowLogin" style="color:#a78bfa; text-decoration:none;">Inicia sesión</a>
+        </p>
+      </form>
+    </div>
+  </div>
+
+  <div id="appContainer" style="display:none">
+    <!-- HEADER -->
+    <header class="app-header">
+      <div class="header-left">
+        <div class="logo">
+          <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+            <rect x="2" y="14" width="8" height="12" rx="1" fill="#6366f1" />
+            <rect x="12" y="8" width="8" height="18" rx="1" fill="#8b5cf6" />
+            <rect x="22" y="11" width="4" height="15" rx="1" fill="#a78bfa" />
+            <path d="M2 14 L26 14" stroke="#4ade80" stroke-width="1.5" stroke-dasharray="3,2" />
+          </svg>
+          <span class="logo-text">UrbanPlan <span class="logo-tag">3D</span></span>
+        </div>
+        <div class="project-name" id="projectName" contenteditable="true" spellcheck="false">Proyecto Sin Título</div>
+      </div>
+      <div class="header-actions" style="display:flex; gap:12px;">
+        <label class="btn btn-secondary" style="cursor:pointer; display:flex; gap:6px; align-items:center;"
+          title="Cargar proyecto">
+          <input type="file" id="fileImport" accept=".json" style="display:none" />
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+            <polyline points="17 8 12 3 7 8" />
+            <line x1="12" y1="3" x2="12" y2="15" />
+          </svg>
+          Importar
+        </label>
+        <button class="btn btn-primary" id="btnExport" style="display:flex; gap:6px; align-items:center;"
+          title="Guardar proyecto">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+            <polyline points="7 10 12 15 17 10" />
+            <line x1="12" y1="15" x2="12" y2="3" />
+          </svg>
+          Exportar
+        </button>
+      </div>
+      <div class="header-center">
+        <div class="search-box">
+          <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="2">
+            <circle cx="11" cy="11" r="8" />
+            <path d="m21 21-4.35-4.35" />
+          </svg>
+          <input type="text" id="searchInput" placeholder="Buscar ubicación..." autocomplete="off" />
+          <div class="search-results" id="searchResults"></div>
+        </div>
+      </div>
+      <div class="header-right">
+        <button class="btn btn-ghost" id="btnUndo" title="Deshacer (Ctrl+Z)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 7v6h6" />
+            <path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13" />
+          </svg>
+        </button>
+        <button class="btn btn-ghost" id="btnRedo" title="Rehacer (Ctrl+Y)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 7v6h-6" />
+            <path d="M3 17a9 9 0 0 1 9-9 9 9 0 0 1 6 2.3L21 13" />
+          </svg>
+        </button>
+        <div class="divider-v"></div>
+        <button class="btn btn-ghost" id="btnNew" title="Nuevo Proyecto">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 5v14m-7-7h14" />
+          </svg>
+        </button>
+        <button class="btn btn-ghost" id="btnOpenProjects" title="Mis Proyectos">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
+          </svg>
+        </button>
+        <div class="divider-v"></div>
+        <button class="btn btn-primary" id="btnSave">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
+            <polyline points="17 21 17 13 7 13 7 21" />
+            <polyline points="7 3 7 8 15 8" />
+          </svg>
+          Guardar
+        </button>
+        <div class="divider-v"></div>
+        <div class="user-profile" id="userProfile">
+          <div class="user-avatar" id="userInitial">U</div>
+          <div class="user-info">
+            <span class="user-name" id="userNameLabel">Cargando...</span>
+            <button class="btn-logout" id="btnLogout">Cerrar sesión</button>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- MAIN LAYOUT -->
+    <div class="app-body">
+      <!-- LEFT TOOLBAR -->
+      <aside class="toolbar" id="toolbar">
+        <div class="tool-group">
+          <div class="tool-label">Navegación</div>
+          <button class="tool-btn active" id="tool-select" data-tool="select" title="Seleccionar (S)">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M5 3l14 9-7 1-4 6z" />
+            </svg>
+            <span>Seleccionar</span>
+          </button>
+        </div>
+        <div class="tool-group">
+          <div class="tool-label">Contexto Geográfico</div>
+          <button class="tool-btn" id="btnImportOSM" title="Importar ciudad desde OSM (Vista actual)">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z" />
+              <path d="M12 11v6" />
+              <path d="M9 14l3 3 3-3" />
+            </svg>
+            <span>Generar OSM</span>
+          </button>
+        </div>
+        <div class="tool-group">
+          <div class="tool-label">Objetos</div>
+          <button class="tool-btn" id="tool-house" data-tool="house" title="Casa (H)">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+              <polyline points="9 22 9 12 15 12 15 22" />
+            </svg>
+            <span>Casa</span>
+          </button>
+          <button class="tool-btn" id="tool-building" data-tool="building" title="Edificio Caja (B)">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="3" width="18" height="18" rx="1" />
+              <line x1="9" y1="3" x2="9" y2="21" />
+              <line x1="15" y1="3" x2="15" y2="21" />
+              <line x1="3" y1="9" x2="21" y2="9" />
+              <line x1="3" y1="15" x2="21" y2="15" />
+            </svg>
+            <span>Edificio</span>
+          </button>
+          <button class="tool-btn" id="tool-custom-building" data-tool="custom_building" title="Silueta 3D (C)">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
+            </svg>
+            <span>Silueta 3D</span>
+          </button>
+          <button class="tool-btn" data-tool="furniture" title="Mobiliario Urbano">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 22v-6m0-12v2m-4 4h8M8 10h8m-8 4h8M7 6h10v10H7z" />
+            </svg>
+            <span>Mobiliario</span>
+          </button>
+          <button class="tool-btn" id="tool-park" data-tool="park" title="Parque (P)">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 2a7 7 0 0 1 7 7c0 4-3 6-5 8H10C8 15 5 13 5 9a7 7 0 0 1 7-7z" />
+              <line x1="12" y1="17" x2="12" y2="22" />
+              <line x1="9" y1="22" x2="15" y2="22" />
+            </svg>
+            <span>Parque</span>
+          </button>
+          <button class="tool-btn" data-tool="water" title="Agua / Lagos">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z" />
+            </svg>
+            <span>Agua</span>
+          </button>
+          <button class="tool-btn" data-tool="tree" title="Árbol 3D">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 2v6" />
+              <path d="M4 14l8-8 8 8a9 9 0 0 1-16 0z" />
+              <path d="M12 22v-4" />
+            </svg>
+            <span>Árbol</span>
+          </button>
+        </div>
+        <div class="tool-group">
+          <div class="tool-label">Trazado</div>
+          <button class="tool-btn" id="tool-road" data-tool="road" title="Carretera (R)">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M3 17h4l2-8h6l2 8h4" />
+              <line x1="7" y1="11" x2="17" y2="11" />
+            </svg>
+            <span>Carretera</span>
+          </button>
+          <button class="tool-btn" id="tool-path" data-tool="path" title="Camino / Sendero">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M13 18l5-5-5-5M6 13h12" />
+            </svg>
+            <span>Camino</span>
+          </button>
+          <button class="tool-btn" id="tool-sidewalk" data-tool="sidewalk" title="Banqueta / Acera">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="11" width="18" height="2" rx="1" />
+              <path d="M5 11v-3m14 3v-3M9 11v-3m6 3v-3" />
+            </svg>
+            <span>Banqueta</span>
+          </button>
+          <button class="tool-btn" id="tool-zone" data-tool="zone" title="Zona (Z)">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="3 11 22 2 13 21 11 13 3 11" />
+            </svg>
+            <span>Zona</span>
+          </button>
+          <button class="tool-btn" id="tool-terrain" data-tool="terrain" title="Terreno/Parcela (T)">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="3" width="18" height="18" rx="2" />
+              <path d="M3 9h18M3 15h18M9 3v18M15 3v18" stroke-dasharray="2 2" />
+            </svg>
+            <span>Terreno</span>
+          </button>
+          <button class="tool-btn" data-tool="railway" title="Vía Férrea">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="4" y1="12" x2="20" y2="12" />
+              <line x1="4" y1="17" x2="20" y2="17" />
+              <line x1="8" y1="9" x2="8" y2="20" />
+              <line x1="16" y1="9" x2="16" y2="20" />
+            </svg>
+            <span>Tren</span>
+          </button>
+          <button class="tool-btn" data-tool="radius" title="Radio de Influencia (Isócrona)">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10" />
+              <circle cx="12" cy="12" r="3" />
+              <line x1="12" y1="12" x2="19" y2="19" />
+            </svg>
+            <span>Radio / Isócrona</span>
+          </button>
+        </div>
+        <div class="tool-group">
+          <div class="tool-label">Edición</div>
+          <button class="tool-btn" id="tool-move" data-tool="move" title="Mover (M)">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M5 9l-3 3 3 3M9 5l3-3 3 3M9 19l3 3 3-3M19 9l3 3-3 3M2 12h20M12 2v20" />
+            </svg>
+            <span>Mover</span>
+          </button>
+          <button class="tool-btn tool-btn-danger" id="tool-delete" data-tool="delete" title="Borrar (Del)">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="3 6 5 6 21 6" />
+              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
+            </svg>
+            <span>Borrar</span>
+          </button>
+        </div>
+        <div class="tool-group">
+          <div class="tool-label">Vista</div>
+          <button class="tool-btn" id="tool-3d" title="Vista 3D">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 2L2 7l10 5 10-5-10-5z" />
+              <path d="M2 17l10 5 10-5" />
+              <path d="M2 12l10 5 10-5" />
+            </svg>
+            <span>3D / 2D</span>
+          </button>
+          <button class="tool-btn" id="tool-satellite" title="Satélite / Mapa">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10" />
+              <line x1="2" y1="12" x2="22" y2="12" />
+              <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+            </svg>
+            <span>Satélite</span>
+          </button>
+          <button class="tool-btn" id="tool-terrain-toggle" title="Activar / Desactivar Relieve 3D">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M8 3l4 8 5-5 5 15H2L8 3z" />
+            </svg>
+            <span>Relieve</span>
+          </button>
+        </div>
+      </aside>
+
+      <!-- MAP CONTAINER -->
+      <main class="map-wrapper">
+        <!-- contextual options bars (trees and furniture still active) -->
+
+
+        <div class="options-bar" id="treeOptionsBar" style="display:none">
+          <span class="opt-label">Árbol 3D</span>
+          <div class="opt-divider"></div>
+          <div class="form-field">
+            <select id="treeType">
+              <option value="pino">Pino Clásico</option>
+              <option value="abeto">Abeto Denso</option>
+              <option value="roble">Roble</option>
+              <option value="ovalado">Árbol Ovalado</option>
+              <option value="seco">Árbol Seco</option>
+            </select>
+          </div>
+
+        </div>
+
+        <div class="options-bar" id="furnitureOptionsBar" style="display:none">
+          <span class="opt-label">Mobiliario</span>
+          <div class="opt-divider"></div>
+          <div class="form-field">
+            <select id="furnitureType">
+              <option value="semaforo">Semáforo (Vehicular + Peatonal)</option>
+              <option value="semaforo_brazo">Semáforo con Brazo</option>
+              <option value="farol">Farol Clásico (Parque)</option>
+              <option value="luminaria">Luz Moderna (Poste Alto)</option>
+              <option value="disco">Luz de Disco (Plaza)</option>
+              <option value="banca">Banca / Banco de Parque</option>
+              <option value="parada_bus">Parada de Autobús (Marquesina)</option>
+              <option value="bolardo">Bolardo (Metal / Concreto)</option>
+              <option value="papelera">Papelera / Bote de Basura</option>
+              <option value="macetero">Macetero Urbano com Arbusto</option>
+            </select>
+          </div>
+        </div>
+
+
+
+        <div id="map"></div>
+        <!-- Road drawing hint -->
+        <div class="draw-hint" id="drawHint" style="display:none">
+          <span id="drawHintText">Click izquierdo para colocar puntos &mdash; Click derecho para terminar</span>
+        </div>
+        <!-- Coordinate display -->
+        <div class="coord-display" id="coordDisplay">0.000000, 0.000000</div>
+        <!-- Live area display while drawing -->
+        <div class="draw-measure" id="drawMeasure" style="display:none"></div>
+      </main>
+
+      <!-- RIGHT PANEL -->
+      <aside class="props-panel" id="propsPanel">
+        <!-- Layers Tab -->
+        <div class="panel-section">
+          <div class="panel-title">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="12 2 2 7 12 12 22 7 12 2" />
+              <polyline points="2 17 12 22 22 17" />
+              <polyline points="2 12 12 17 22 12" />
+            </svg>
+            Capas
+          </div>
+          <div class="panel-header">
+            <h3>Capas (Visibilidad)</h3>
+          </div>
+          <div class="layers-list" id="layersList">
+            <label class="layer-item"><input type="checkbox" checked data-layer="house" /><span class="layer-dot"
+                style="background:#f59e0b"></span>Casas</label>
+            <label class="layer-item"><input type="checkbox" checked data-layer="building" /><span class="layer-dot"
+                style="background:#6366f1"></span>Edificios</label>
+            <label class="layer-item"><input type="checkbox" checked data-layer="custom_building" /><span
+                class="layer-dot" style="background:#8b5cf6"></span>Siluetas 3D</label>
+            <label class="layer-item"><input type="checkbox" checked data-layer="water" /><span class="layer-dot"
+                style="background:#0ea5e9"></span>Agua</label>
+            <label class="layer-item"><input type="checkbox" checked data-layer="furniture" /><span class="layer-dot"
+                style="background:#9ca3af"></span>Mobiliario</label>
+            <label class="layer-item"><input type="checkbox" checked data-layer="tree" /><span class="layer-dot"
+                style="background:#22c55e"></span>Árboles 3D</label>
+            <label class="layer-item"><input type="checkbox" checked data-layer="road" /><span class="layer-dot"
+                style="background:#94a3b8"></span>Carreteras</label>
+            <label class="layer-item"><input type="checkbox" checked data-layer="path" /><span class="layer-dot"
+                style="background:#a8a29e"></span>Caminos</label>
+            <label class="layer-item"><input type="checkbox" checked data-layer="sidewalk" /><span class="layer-dot"
+                style="background:#cbd5e1"></span>Banquetas</label>
+            <label class="layer-item"><input type="checkbox" checked data-layer="railway" /><span class="layer-dot"
+                style="background:#475569"></span>Vías Férreas</label>
+            <label class="layer-item"><input type="checkbox" checked data-layer="park" /><span class="layer-dot"
+                style="background:#4ade80"></span>Parques</label>
+            <label class="layer-item"><input type="checkbox" checked data-layer="zone" /><span class="layer-dot"
+                style="background:#f472b6"></span>Zonas</label>
+            <label class="layer-item"><input type="checkbox" checked data-layer="terrain" /><span class="layer-dot"
+                style="background:#fb923c"></span>Terrenos</label>
+            <label class="layer-item"><input type="checkbox" checked data-layer="radius" /><span class="layer-dot"
+                style="background:#c026d3"></span>Isócronas</label>
+          </div>
+        </div>
+
+        <!-- Properties -->
+        <div class="panel-section" id="propsSection" style="display:none">
+          <div class="panel-title">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="3" />
+              <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07" />
+            </svg>
+            Propiedades
+          </div>
+          
+          <!-- Panel de Edición Precisa Integrado -->
+          <div class="precision-panel" id="precisionPanel" style="display:none"></div>
+
+          <div class="props-form" id="propsForm"></div>
+        </div>
+
+        <!-- Stats -->
+        <div class="panel-section">
+          <div class="panel-title">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="18" y1="20" x2="18" y2="10" />
+              <line x1="12" y1="20" x2="12" y2="4" />
+              <line x1="6" y1="20" x2="6" y2="14" />
+            </svg>
+            Estadísticas
+          </div>
+          <div class="stats-grid" id="statsGrid">
+            <div class="stat-card">
+              <div class="stat-val" id="stat-houses">0</div>
+              <div class="stat-lbl">Casas</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-val" id="stat-buildings">0</div>
+              <div class="stat-lbl">Edificios</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-val" id="stat-roads">0</div>
+              <div class="stat-lbl">Vías</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-val" id="stat-parks">0</div>
+              <div class="stat-lbl">Parques</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Terrain Settings -->
+        <div class="panel-section">
+          <div class="panel-title">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="m8 3 4 8 5-5 5 15H2L8 3z" />
+            </svg>
+            Terreno 3D (Cámara)
+          </div>
+          <div class="form-field">
+            <label>Exageración (Relieve): <span id="terrainExVal">1.5x</span></label>
+            <input type="range" id="terrainExaggeration" min="1" max="5" step="0.1" value="1.5">
+          </div>
+          <div class="form-field">
+            <label>Inclinación (Cámara): <span id="cameraPitchVal">65°</span></label>
+            <input type="range" id="cameraPitch" min="0" max="85" step="1" value="65">
+          </div>
+          <div class="form-field">
+            <label>Giro (Brújula): <span id="cameraBearingVal">0°</span></label>
+            <input type="range" id="cameraBearing" min="-180" max="180" step="1" value="0">
+          </div>
+        </div>
+      </aside>
+    </div>
+
+
+    <!-- Dashboard de Métricas Urbanas -->
+    <div class="stats-dashboard" id="stats-dashboard">
+      <div class="stats-header" id="stats-header">
+        <div class="stats-title">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="20" x2="18" y2="10" />
+            <line x1="12" y1="20" x2="12" y2="4" />
+            <line x1="6" y1="20" x2="6" y2="14" />
+          </svg>
+          Métricas Normativas
+        </div>
+        <button id="btnBackToGlobal" class="btn-back-global" style="display:none" title="Volver a métricas globales">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path d="M19 12H5M12 19l-7-7 7-7" />
+          </svg>
+          Global
+        </button>
+        <button class="stats-toggle" id="btnStatsToggle">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="6 9 12 15 18 9"></polyline>
+          </svg>
+        </button>
+      </div>
+      <div class="stats-body" id="stats-body">
+        <div class="stats-summary-fixed">
+          <div class="stat-item">
+            <div class="stat-info">
+              <span class="stat-label">Terreno (Base)</span>
+              <span class="stat-val" id="val-terrain-area">0 m²</span>
+            </div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-info">
+              <span class="stat-label">COS (Ocupación)</span>
+              <span class="stat-val" id="val-cos">0%</span>
+            </div>
+            <div class="stat-bar-bg">
+              <div class="stat-bar-fill" id="bar-cos" style="width: 0%"></div>
+            </div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-info">
+              <span class="stat-label">CUS (Densidad)</span>
+              <span class="stat-val" id="val-cus">0.00</span>
+            </div>
+            <div class="stat-bar-bg">
+              <div class="stat-bar-fill" id="bar-cus" style="width: 0%"></div>
+            </div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-info">
+              <span class="stat-label">Área Verde</span>
+              <span class="stat-val" id="val-green">0%</span>
+            </div>
+            <div class="stat-bar-bg">
+              <div class="stat-bar-fill" id="bar-green" style="width: 0%"></div>
+            </div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-info">
+              <span class="stat-label">Población Estimada</span>
+              <span class="stat-val" id="val-pop">0 hab.</span>
+            </div>
+          </div>
+        </div>
+        <div class="stats-scroll-area">
+          <div class="stats-breakdown" id="stats-breakdown" style="display:none">
+            <div class="breakdown-label">Desglose por Lote</div>
+            <div class="lot-list" id="lot-list"></div>
+          </div>
+        </div>
+      </div>
+      <div class="stats-footer">Cálculo basado en polígonos de "Terreno"</div>
+    </div>
+  </div>
+
+  <!-- TOAST -->
+  <!-- PROJECTS MODAL -->
+  <div id="projectsModal" class="login-overlay" style="display:none; z-index:2000;">
+    <div class="login-card" style="max-width:500px; width:90%;">
+      <div class="login-header">
+        <h3>Mis Proyectos en la Nube</h3>
+        <p>Selecciona un proyecto para cargar</p>
+      </div>
+      <div id="projectsList"
+        style="max-height:300px; overflow-y:auto; margin:16px 0; display:flex; flex-direction:column; gap:8px;">
+        <!-- List item example:
+        <div class="project-item">
+          <span>Nombre del Proyecto</span>
+          <button class="btn btn-secondary btn-sm">Cargar</button>
+        </div>
+        -->
+        <p style="text-align:center; color:var(--text-secondary); padding:20px;">Cargando proyectos...</p>
+      </div>
+      <button class="btn btn-secondary" style="width:100%"
+        onclick="document.getElementById('projectsModal').style.display='none'">Cerrar</button>
+    </div>
+  </div>
+
+
+
+  <div id="toastContainer" class="toast-container"></div>
+
+  <!-- SCRIPTS -->
+  <script src="https://unpkg.com/osmtogeojson@3.0.0-beta.5/osmtogeojson.js"></script>
+  <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+  <script type="module" src="app.js"></script>
+
+</body>
+
+</html>

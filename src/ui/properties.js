@@ -1,11 +1,13 @@
 import { state, TYPE_CONFIG } from '../config/state.js';
-import { fmtLen, fmtArea, fmtVol, polygonArea, polygonPerimeter, catmullRom, catmullRomClosed, lineLength } from '../utils/geo.js';
+import { fmtLen, fmtArea, fmtVol } from '../utils/geo.js';
 import { pushHistory, getFeatureCenter } from '../tools/interaction.js';
 import { refreshMap } from '../map/core.js';
 import { toast } from './toolbar.js';
 import { deleteSelection, groupSelectedFeatures, ungroupSelectedFeatures } from '../tools/selection.js';
 import { generateBuildingParts } from '../models/buildings.js';
 import { generateFurnitureParts } from '../models/furniture.js';
+import { rebuildLineGeometry } from '../models/roads.js';
+import { rebuildPolygonGeometry, rebuildRadiusGeometry } from '../models/zones.js';
 
 export function showPropsPanel(feat, lngLat) {
   const p = feat.properties, cfg = TYPE_CONFIG[p.type] || {};
@@ -197,19 +199,10 @@ export function showPropsPanel(feat, lngLat) {
     const rebuildPoly = () => {
       const f = state.features.find(f => f.properties.id === state.selectedIds[0]);
       if (!f) return;
-      if (curvedCb) {
-        f.properties.curved = curvedCb.checked;
-        if (f.properties.raw_pts) {
-          const coords = f.properties.curved && f.properties.raw_pts.length > 2 ? catmullRomClosed(f.properties.raw_pts) : [...f.properties.raw_pts, f.properties.raw_pts[0]];
-          f.geometry.coordinates = [coords];
-          f.properties.area_m2 = Math.round(polygonArea(coords));
-          f.properties.perimeter_m = Math.round(polygonPerimeter(coords));
-        }
-      }
-      if (p.type === 'water' && depthIn) {
-        f.properties.depth_m = parseFloat(depthIn.value) || 2;
-        f.properties.volume_m3 = Math.round(f.properties.area_m2 * f.properties.depth_m);
-      }
+      rebuildPolygonGeometry(f, {
+        curved: curvedCb ? curvedCb.checked : undefined,
+        depth_m: depthIn ? parseFloat(depthIn.value) || 2 : undefined
+      });
       refreshMap();
       const mc = document.getElementById('liveMeasures');
       if (mc) mc.innerHTML = buildMeasureHTML(f);
@@ -226,15 +219,11 @@ export function showPropsPanel(feat, lngLat) {
     const rebuildLine = () => {
       const f = state.features.find(f => f.properties.id === state.selectedIds[0]);
       if (!f) return;
-      if (wIn) f.properties.widthM = parseFloat(wIn.value) || f.properties.widthM;
-      if (lIn) f.properties.lanes = parseInt(lIn.value) || f.properties.lanes;
-      if (curvedCb) {
-        f.properties.curved = curvedCb.checked;
-        if (f.properties.raw_pts) {
-          f.geometry.coordinates = f.properties.curved && f.properties.raw_pts.length > 2 ? catmullRom(f.properties.raw_pts) : [...f.properties.raw_pts];
-          f.properties.length_m = Math.round(lineLength(f.geometry.coordinates));
-        }
-      }
+      rebuildLineGeometry(f, {
+        widthM: wIn ? parseFloat(wIn.value) || f.properties.widthM : undefined,
+        lanes: lIn ? parseInt(lIn.value) || f.properties.lanes : undefined,
+        curved: curvedCb ? curvedCb.checked : undefined
+      });
       refreshMap();
       const mc = document.getElementById('liveMeasures');
       if (mc) mc.innerHTML = buildMeasureHTML(f);
@@ -254,28 +243,17 @@ export function showPropsPanel(feat, lngLat) {
   if (p.type === 'radius') {
     const radRange = document.getElementById('prop-radius');
     const radLabel = document.getElementById('propRadLabel');
-    const rebuildRadius = () => {
+    const rebuildRad = () => {
       const f = state.features.find(f => f.properties.id === state.selectedIds[0]);
       if (!f) return;
-      f.properties.radius_m = parseFloat(radRange.value) || 400;
       const center = getFeatureCenter(f);
       if (!center) return;
-      const pts = [];
-      const r_m = f.properties.radius_m;
-      for (let i = 0; i <= 32; i++) {
-        const ang = (i / 32) * Math.PI * 2;
-        const dlat = (r_m * Math.cos(ang)) / 111320;
-        const dlng = (r_m * Math.sin(ang)) / (40075000 * Math.cos(center.lat * Math.PI / 180) / 360);
-        pts.push([center.lng + dlng, center.lat + dlat]);
-      }
-      f.geometry.coordinates = [pts];
-      f.properties.raw_pts = [...pts];
-      f.properties.area_m2 = Math.round(Math.PI * r_m * r_m);
+      rebuildRadiusGeometry(f, center, parseFloat(radRange.value) || 400);
       refreshMap();
       const mc = document.getElementById('liveMeasures');
       if (mc) mc.innerHTML = buildMeasureHTML(f);
     };
-    radRange?.addEventListener('input', () => { if (radLabel) radLabel.textContent = radRange.value; rebuildRadius(); });
+    radRange?.addEventListener('input', () => { if (radLabel) radLabel.textContent = radRange.value; rebuildRad(); });
   }
 
   document.getElementById('btnApplyProps')?.addEventListener('click', () => {
@@ -293,20 +271,16 @@ export function showPropsPanel(feat, lngLat) {
       if (document.getElementById('prop-floors')) f.properties.floors = parseInt(document.getElementById('prop-floors').value);
     }
     if (document.getElementById('prop-roadW')) {
-      const w = parseFloat(document.getElementById('prop-roadW').value) || 8;
-      f.properties.widthM = w;
-      f.properties.lanes = document.getElementById('prop-lanes') ? parseInt(document.getElementById('prop-lanes').value) : Math.max(1, Math.round(w / 3));
+      rebuildLineGeometry(f, {
+        widthM: parseFloat(document.getElementById('prop-roadW').value) || 8,
+        lanes: document.getElementById('prop-lanes') ? parseInt(document.getElementById('prop-lanes').value) : undefined
+      });
     }
     if (document.getElementById('prop-curved')) {
-      const curved = document.getElementById('prop-curved').checked;
-      f.properties.curved = curved;
-      if (f.properties.raw_pts) {
-        f.geometry.coordinates = curved && f.properties.raw_pts.length > 2 ? catmullRom(f.properties.raw_pts) : [...f.properties.raw_pts];
-        f.properties.length_m = Math.round(lineLength(f.geometry.coordinates));
-      }
+      rebuildLineGeometry(f, { curved: document.getElementById('prop-curved').checked });
     }
     if (document.getElementById('prop-poly-curved')) {
-      f.properties.curved = document.getElementById('prop-poly-curved').checked;
+      rebuildPolygonGeometry(f, { curved: document.getElementById('prop-poly-curved').checked });
     }
     const col = document.getElementById('prop-color').value;
     f.properties.fillColor = col; f.properties.color = col;

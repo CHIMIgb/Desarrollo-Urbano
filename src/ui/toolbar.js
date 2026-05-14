@@ -1,4 +1,6 @@
 import { state } from '../config/state.js';
+import { EventBus, Events } from '../config/events.js';
+import { undo, redo, emitToast } from '../config/store.js';
 import { clearDrawing } from '../tools/drawing.js';
 import { createNewProject, listUserProjects, loadProjectById } from './io.js';
 import { importOSMContext } from '../tools/osm.js';
@@ -83,19 +85,14 @@ export function initToolbarEvents() {
   });
   
   document.getElementById('btnUndo')?.addEventListener('click', () => {
-    if (state.history.length > 1) {
-      state.future.push(JSON.stringify(state.features));
-      const last = state.history.pop();
-      state.features = JSON.parse(state.history[state.history.length - 1]);
+    if (undo()) {
       import('../map/core.js').then(m => m.refreshMap());
       toast('Deshecho', 'info');
     }
   });
 
   document.getElementById('btnRedo')?.addEventListener('click', () => {
-    if (state.future.length > 0) {
-      state.history.push(JSON.stringify(state.features));
-      state.features = JSON.parse(state.future.pop());
+    if (redo()) {
       import('../map/core.js').then(m => m.refreshMap());
       toast('Rehecho', 'info');
     }
@@ -254,3 +251,14 @@ function updateLayersVisibility() {
   if (state.map.getLayer('layer-railways')) state.map.setLayoutProperty('layer-railways', 'visibility', railVis);
   if (state.map.getLayer('layer-railways-dash')) state.map.setLayoutProperty('layer-railways-dash', 'visibility', railVis);
 }
+
+// ── Suscripciones al EventBus ──────────────────────────────────
+// Estos listeners permiten que map/core.js emita eventos sin conocer este módulo.
+
+EventBus.on(Events.TOAST, ({ msg, type }) => toast(msg, type));
+
+EventBus.on(Events.STATS_UPDATE, () => {
+  updateStats();
+  // También actualizar el dashboard global de métricas
+  import('./stats.js').then(m => m.updateGlobalStats());
+});
