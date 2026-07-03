@@ -94,7 +94,7 @@ export function handleMapClick(e) {
     updateDrawPreview();
     if (state.drawPoints.length === 1) {
       const hint = document.getElementById('drawHint');
-      if (hint) hint.style.display = 'block';
+      if (hint) hint.classList.remove('hidden');
       const hintText = document.getElementById('drawHintText');
         ['road', 'railway', 'path', 'sidewalk'].includes(state.tool)
           ? 'Traza con clic Izquierdo · Clic DERECHO para terminar'
@@ -103,9 +103,9 @@ export function handleMapClick(e) {
       const lineContainer = document.getElementById('lineCurvedContainer');
       const polyContainer = document.getElementById('polyCurvedContainer');
       if (['road', 'railway', 'path', 'sidewalk'].includes(state.tool)) {
-        if (lineContainer) lineContainer.style.display = 'block';
+        if (lineContainer) lineContainer.classList.remove('hidden');
       } else if (['park', 'zone', 'terrain', 'custom_building', 'water'].includes(state.tool)) {
-        if (polyContainer) polyContainer.style.display = 'block';
+        if (polyContainer) polyContainer.classList.remove('hidden');
       }
     }
   }

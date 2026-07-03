@@ -9,8 +9,8 @@ export function toast(msg, type = 'info') {
   const container = document.getElementById('toastContainer');
   if (!container) return;
   const t = document.createElement('div');
-  t.className = `toast toast-${type}`;
-  t.textContent = msg;
+  t.className = `toast ${type}`;
+  t.innerHTML = `<div class="toast-dot"></div><span>${msg}</span>`;
   container.appendChild(t);
   setTimeout(() => { t.style.opacity = '1'; t.style.transform = 'translateY(0)'; }, 10);
   setTimeout(() => { t.style.opacity = '0'; t.style.transform = 'translateY(10px)'; setTimeout(() => t.remove(), 400); }, 3000);
@@ -25,7 +25,7 @@ export function setTool(tool) {
 
   ['treeOptionsBar', 'furnitureOptionsBar'].forEach(id => {
     const el = document.getElementById(id);
-    if (el) el.style.display = 'none';
+    if (el) el.classList.add('hidden');
   });
   
   const barMap = {
@@ -35,7 +35,7 @@ export function setTool(tool) {
   
   const targetBarId = barMap[tool];
   const targetBar = document.getElementById(targetBarId);
-  if (targetBar) targetBar.style.display = 'flex';
+  if (targetBar) targetBar.classList.remove('hidden');
   
   if (state.map) {
     state.map.getCanvas().style.cursor = (tool === 'select' || tool === 'move' || tool === 'delete') ? '' : 'crosshair';
@@ -131,7 +131,7 @@ export function initToolbarEvents() {
   document.getElementById('btnOpenProjects')?.addEventListener('click', async () => {
     const modal = document.getElementById('projectsModal');
     if (modal) {
-      modal.style.display = 'flex';
+      modal.classList.remove('hidden');
       const list = document.getElementById('projectsList');
       if (list) {
         list.innerHTML = '<p style="text-align:center; padding:20px;">Cargando...</p>';
@@ -144,6 +144,13 @@ export function initToolbarEvents() {
   document.getElementById('btnImportOSM')?.addEventListener('click', () => {
     importOSMContext();
   });
+
+  const btnCloseModal = document.getElementById('btnCloseProjectsModal');
+  if (btnCloseModal) {
+    btnCloseModal.addEventListener('click', () => {
+      document.getElementById('projectsModal').classList.add('hidden');
+    });
+  }
 }
 
 function renderProjectsList(projects) {
@@ -171,7 +178,7 @@ function renderProjectsList(projects) {
     
     item.querySelector('button').addEventListener('click', () => {
       loadProjectById(p.id);
-      document.getElementById('projectsModal').style.display = 'none';
+      document.getElementById('projectsModal').classList.add('hidden');
     });
     
     list.appendChild(item);

@@ -41,7 +41,7 @@ export function updateSelectionUI(lngLat) {
     showMultiPropsPanel();
   } else {
     const ps = document.getElementById('propsSection');
-    if (ps) ps.style.display = 'none';
+    if (ps) ps.classList.add('hidden');
     state.popup?.remove(); state.popup = null;
   }
   updateEditHandles();

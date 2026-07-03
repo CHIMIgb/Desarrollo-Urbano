@@ -115,7 +115,7 @@ export function updateLiveMeasure(lng, lat) {
   const pts = [...state.drawPoints, [lng, lat]];
   const el = document.getElementById('drawMeasure');
   if (!el) return;
-  if (pts.length < 2) { el.style.display = 'none'; return; }
+  if (pts.length < 2) { el.classList.add('hidden'); return; }
   const isPolygon = ['park', 'zone', 'terrain', 'custom_building', 'water'].includes(state.tool);
   let text = '';
   if (isPolygon && pts.length >= 3) {
@@ -124,7 +124,7 @@ export function updateLiveMeasure(lng, lat) {
   } else {
     text = `Longitud: ${fmtLen(lineLength(pts))}`;
   }
-  el.textContent = text; el.style.display = 'block';
+  el.textContent = text; el.classList.remove('hidden');
 }
 
 export function clearDrawing() {
@@ -132,10 +132,10 @@ export function clearDrawing() {
   if (state.map) {
     state.map.getSource('draw-preview')?.setData({ type: 'FeatureCollection', features: [] });
   }
-  document.getElementById('drawHint').style.display = 'none';
-  document.getElementById('drawMeasure').style.display = 'none';
+  document.getElementById('drawHint').classList.add('hidden');
+  document.getElementById('drawMeasure').classList.add('hidden');
   const lineContainer = document.getElementById('lineCurvedContainer');
   const polyContainer = document.getElementById('polyCurvedContainer');
-  if (lineContainer) lineContainer.style.display = 'none';
-  if (polyContainer) polyContainer.style.display = 'none';
+  if (lineContainer) lineContainer.classList.add('hidden');
+  if (polyContainer) polyContainer.classList.add('hidden');
 }

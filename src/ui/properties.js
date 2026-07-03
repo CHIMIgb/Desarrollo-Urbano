@@ -12,7 +12,7 @@ import { rebuildPolygonGeometry, rebuildRadiusGeometry } from '../models/zones.j
 export function showPropsPanel(feat, lngLat) {
   const p = feat.properties, cfg = TYPE_CONFIG[p.type] || {};
   const ps = document.getElementById('propsSection');
-  if (ps) ps.style.display = 'block';
+  if (ps) ps.classList.remove('hidden');
   const form = document.getElementById('propsForm');
   if (!form) return;
 
@@ -307,7 +307,7 @@ export function showPropsPanel(feat, lngLat) {
 
 export function showMultiPropsPanel() {
   const ps = document.getElementById('propsSection');
-  if (ps) ps.style.display = 'block';
+  if (ps) ps.classList.remove('hidden');
   const form = document.getElementById('propsForm');
   if (!form) return;
   form.innerHTML = `

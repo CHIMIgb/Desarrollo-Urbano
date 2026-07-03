@@ -11,8 +11,11 @@ import { handleMapClick, handleMapDblClick, handleMouseMove, handleMouseUp } fro
 import { initStatsEvents, updateGlobalStats } from './src/ui/stats.js';
 
 import { initAuth } from './src/ui/auth.js';
+import { injectIcons } from './src/ui/icons.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
+  // Inject icons
+  injectIcons();
   // Cargar configuración remota (OSM de un servidor .env)
   await loadPublicConfig();
 

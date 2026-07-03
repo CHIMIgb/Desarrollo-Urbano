@@ -19,20 +19,20 @@ export function initAuth() {
     checkSession(token);
   } else {
     // Si no hay token, mostramos el login inmediatamente
-    loginOverlay.style.display = 'flex';
+    loginOverlay.classList.remove('hidden');
   }
 
   // Intercambiar formularios
   btnShowRegister.addEventListener('click', (e) => {
     e.preventDefault();
-    loginForm.style.display = 'none';
-    registerForm.style.display = 'block'; // Or flex depending on css
+    loginForm.classList.add('hidden');
+    registerForm.classList.remove('hidden'); // Or flex depending on css
   });
 
   btnShowLogin.addEventListener('click', (e) => {
     e.preventDefault();
-    registerForm.style.display = 'none';
-    loginForm.style.display = 'block';
+    registerForm.classList.add('hidden');
+    loginForm.classList.remove('hidden');
   });
 
   // Evento Login
@@ -63,12 +63,12 @@ export function initAuth() {
         import('./io.js').then(m => m.loadSavedState());
       } else {
         loginError.textContent = data.error || 'Error al iniciar sesión';
-        loginError.style.display = 'block';
+        loginError.classList.remove('hidden');
       }
     } catch (err) {
       console.error(err);
       loginError.textContent = 'Error de conexión con el servidor';
-      loginError.style.display = 'block';
+      loginError.classList.remove('hidden');
     } finally {
       submitBtn.disabled = false;
       submitBtn.innerHTML = originalBtnText;
@@ -99,12 +99,12 @@ export function initAuth() {
         import('./io.js').then(m => m.loadSavedState());
       } else {
         registerError.textContent = data.error || 'Error al registrarse';
-        registerError.style.display = 'block';
+        registerError.classList.remove('hidden');
       }
     } catch (err) {
       console.error(err);
       registerError.textContent = 'Error de conexión con el servidor';
-      registerError.style.display = 'block';
+      registerError.classList.remove('hidden');
     }
   });
 
@@ -127,17 +127,17 @@ export function initAuth() {
         import('./io.js').then(m => m.loadSavedState());
       } else {
         localStorage.removeItem('urbanplan_token');
-        loginOverlay.style.display = 'flex';
+        loginOverlay.classList.remove('hidden');
       }
     } catch (err) {
       console.error('Error verificando sesión:', err);
-      loginOverlay.style.display = 'flex';
+      loginOverlay.classList.remove('hidden');
     }
   }
 
   function showApp(user) {
-    loginOverlay.style.display = 'none';
-    appContainer.style.display = 'block';
+    loginOverlay.classList.add('hidden');
+    appContainer.classList.remove('hidden');
     userNameLabel.textContent = user.full_name || user.username;
     userInitial.textContent = (user.full_name || user.username).charAt(0).toUpperCase();
     

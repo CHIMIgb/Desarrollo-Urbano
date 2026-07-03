@@ -1741,3 +1741,89 @@ body {
 @keyframes spin {
   to { transform: rotate(360deg); }
 }
+/* ============================================================ NEW UTILITIES & EXTRACTED CLASSES ============================================================ */
+
+.hidden { display: none !important; }
+
+.auth-footer-text {
+  text-align: center;
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-top: 16px;
+}
+
+.auth-footer-text a {
+  color: #a78bfa;
+  text-decoration: none;
+}
+
+.register-columns {
+  display: flex;
+  gap: 16px;
+}
+
+.flex-1 {
+  flex: 1;
+}
+
+.projects-modal-card {
+  max-width: 500px;
+  width: 90%;
+}
+
+.projects-list-container {
+  max-height: 300px;
+  overflow-y: auto;
+  margin: 16px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.projects-loading-text {
+  text-align: center;
+  color: var(--text-secondary);
+  padding: 20px;
+}
+
+.header-actions {
+  display: flex;
+  gap: 12px;
+}
+
+/* Extracted from index.html <style> */
+.project-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  margin-bottom: 8px;
+}
+
+.project-item:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.project-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.project-name-item {
+  font-weight: 600;
+  font-size: 14px;
+  color: #fff;
+}
+
+.project-date-item {
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+.btn-sm {
+  padding: 4px 8px;
+  font-size: 12px;
+}
