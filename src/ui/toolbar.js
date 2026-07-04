@@ -4,17 +4,10 @@ import { undo, redo, emitToast } from '../config/store.js';
 import { clearDrawing } from '../tools/drawing.js';
 import { createNewProject, listUserProjects, loadProjectById } from './io.js';
 import { importOSMContext } from '../tools/osm.js';
+import { notify } from './notifications.js';
 
-export function toast(msg, type = 'info') {
-  const container = document.getElementById('toastContainer');
-  if (!container) return;
-  const t = document.createElement('div');
-  t.className = `toast ${type}`;
-  t.innerHTML = `<div class="toast-dot"></div><span>${msg}</span>`;
-  container.appendChild(t);
-  setTimeout(() => { t.style.opacity = '1'; t.style.transform = 'translateY(0)'; }, 10);
-  setTimeout(() => { t.style.opacity = '0'; t.style.transform = 'translateY(10px)'; setTimeout(() => t.remove(), 400); }, 3000);
-}
+// Re-exportar para compatibilidad con módulos que importan { toast } de aquí
+export const toast = notify;
 
 // La función updateStats ha sido consolidada en stats.js (updateGlobalStats)
 export function setTool(tool) {

@@ -1,4 +1,5 @@
 import { state, TYPE_CONFIG } from '../config/state.js';
+import { addFeatures } from '../config/store.js';
 import { fmtLen, fmtArea, fmtVol } from '../utils/geo.js';
 import { pushHistory, getFeatureCenter } from '../tools/interaction.js';
 import { refreshMap } from '../map/core.js';
@@ -147,7 +148,7 @@ export function showPropsPanel(feat, lngLat) {
         const baseId = f.properties.id;
         state.features = state.features.filter(x => !(x.properties.id === baseId || x.properties.parent_id === baseId));
         const newParts = generateBuildingParts(baseId, f.properties.center_lng, f.properties.center_lat, w, l, h, rot, f.properties.type);
-        state.features.push(...newParts);
+        addFeatures(...newParts);
       }
 
       refreshMap();
@@ -171,7 +172,7 @@ export function showPropsPanel(feat, lngLat) {
       const oldId = f.properties.id;
       state.features = state.features.filter(x => !(x.properties.id === oldId || x.properties.parent_id === oldId));
       const newParts = generateFurnitureParts(oldId, f.properties.center_lng, f.properties.center_lat, rot, f.properties.furniture_type);
-      state.features.push(...newParts);
+      addFeatures(...newParts);
       refreshMap();
     };
     rotRange?.addEventListener('input', () => { if (rotLabel) rotLabel.textContent = rotRange.value + '°'; rebuildFurn(); });

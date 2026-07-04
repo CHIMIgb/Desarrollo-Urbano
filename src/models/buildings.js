@@ -1,4 +1,5 @@
 import { state, TYPE_CONFIG } from '../config/state.js';
+import { getNextId, addFeatures } from '../config/store.js';
 import { buildingPolygon, polygonArea } from '../utils/geo.js';
 import { pushHistory } from '../tools/interaction.js';
 import { refreshMap } from '../map/core.js';
@@ -34,7 +35,7 @@ export function generateBuildingParts(baseId, lng, lat, w, l, h, rot, type, cust
     const dy = dlngM * Math.sin(rad) + dlatM * Math.cos(rad);
     const dlat = dy / 111320;
     const dlng = dx / (40075000 * Math.cos(lat * Math.PI / 180) / 360);
-    const id = state.nextId++;
+    const id = getNextId();
     parts.push({
       type: 'Feature', id,
       properties: { id, parent_id: baseId, type: type, color: pCol, fillColor: pCol, base_height: pBase, height: pHeight },
@@ -87,10 +88,10 @@ export function placeBuilding(type, lng, lat) {
   const w = cfg.defW || 10;
   const l = cfg.defL || 10;
   const h = cfg.defaultH || 5;
-  const baseId = state.nextId++;
+  const baseId = getNextId();
   
   const allParts = generateBuildingParts(baseId, lng, lat, w, l, h, 0, type);
-  state.features.push(...allParts);
+  addFeatures(...allParts);
   
   pushHistory();
   refreshMap();

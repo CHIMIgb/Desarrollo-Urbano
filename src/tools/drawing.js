@@ -1,4 +1,5 @@
 import { state, TYPE_CONFIG } from '../config/state.js';
+import { getNextId, addFeatures } from '../config/store.js';
 import { lineLength, polygonArea, polygonPerimeter, catmullRom, catmullRomClosed, fmtArea, fmtLen } from '../utils/geo.js';
 import { pushHistory } from './interaction.js';
 import { refreshMap } from '../map/core.js';
@@ -16,7 +17,7 @@ export function finishLine() {
   if (type === 'path') widthM = 2.5;
   if (type === 'sidewalk') widthM = 2.0;
   if (type === 'railway') widthM = 4.0;
-  const id = state.nextId++;
+  const id = getNextId();
   const feat = {
     type: 'Feature', id,
     properties: {
@@ -26,7 +27,7 @@ export function finishLine() {
     geometry: { type: 'LineString', coordinates: (document.getElementById('lineCurved')?.checked && pts.length > 2) ? catmullRom(pts) : pts }
   };
   pushHistory();
-  state.features.push(feat);
+  addFeatures(feat);
   clearDrawing(); refreshMap();
   toast(`${cfg.label} trazada — ${fmtLen(len)}`, 'success');
   selectFeature(id);
@@ -36,7 +37,7 @@ export function finishPolygon(type) {
   const pts = [...state.drawPoints, state.drawPoints[0]];
   const cfg = TYPE_CONFIG[type];
   const area = polygonArea(pts);
-  const id = state.nextId++;
+  const id = getNextId();
 
   let feat;
   if (type === 'custom_building') {
@@ -64,7 +65,7 @@ export function finishPolygon(type) {
     }
   }
 
-  state.features.push(feat);
+  addFeatures(feat);
   pushHistory();
   clearDrawing(); refreshMap();
   toast(`${cfg.label} — ${fmtArea(area)}`, 'success');
@@ -72,7 +73,7 @@ export function finishPolygon(type) {
 }
 
 export function finishRadius(lng, lat) {
-  const id = state.nextId++;
+  const id = getNextId();
   const cfg = TYPE_CONFIG['radius'];
   const r_m = 400; 
   const pts = [];
@@ -82,7 +83,7 @@ export function finishRadius(lng, lat) {
     const dlng = (r_m * Math.sin(ang)) / (40075000 * Math.cos(lat * Math.PI / 180) / 360);
     pts.push([lng + dlng, lat + dlat]);
   }
-  state.features.push({
+  addFeatures({
     type: 'Feature', id,
     properties: { id, type: 'radius', name: `Radio ${id}`, color: cfg.color, fillColor: cfg.fillColor, raw_pts: [...pts], radius_m: r_m, area_m2: Math.round(Math.PI * r_m * r_m) },
     geometry: { type: 'Polygon', coordinates: [pts] }

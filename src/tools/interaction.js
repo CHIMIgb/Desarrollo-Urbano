@@ -6,7 +6,7 @@ import { updateLiveMeasure, updateDrawPreview, finishLine, finishPolygon, finish
 import { placeBuilding } from '../models/buildings.js';
 import { finishTree } from '../models/trees.js';
 import { finishFurniture } from '../models/furniture.js';
-import { catmullRom, catmullRomClosed, lineLength, polygonArea, polygonPerimeter } from '../utils/geo.js';
+import { catmullRom, catmullRomClosed, lineLength, polygonArea, polygonPerimeter, getFeatureCenter } from '../utils/geo.js';
 import { buildMeasureHTML } from '../ui/properties.js';
 
 // Re-exportar pushHistory desde el Store para que todos los módulos
@@ -72,9 +72,12 @@ export function handleMapClick(e) {
   if (['house', 'building'].includes(state.tool)) {
     placeBuilding(state.tool, lng, lat); return;
   } else if (state.tool === 'tree') {
-    finishTree(lng, lat); return;
+    const treeType = document.getElementById('treeType')?.value;
+    finishTree(lng, lat, treeType); return;
   } else if (state.tool === 'furniture') {
-    finishFurniture(lng, lat); return;
+    const furnitureType = document.getElementById('furnitureType')?.value;
+    const furnitureRot = document.getElementById('furnitureRot')?.value;
+    finishFurniture(lng, lat, furnitureType, furnitureRot); return;
   } else if (state.tool === 'radius') {
     finishRadius(lng, lat); return;
   } else {
@@ -132,10 +135,6 @@ export function translateFeature(id, dlng, dlat) {
   });
 }
 
-export function getFeatureCenter(feat) {
-  const g = feat.geometry;
-  if (g.type === 'Point') return { lng: g.coordinates[0], lat: g.coordinates[1] };
-  if (g.type === 'LineString') { const m = Math.floor(g.coordinates.length / 2); return { lng: g.coordinates[m][0], lat: g.coordinates[m][1] }; }
-  if (g.type === 'Polygon') { const c = g.coordinates[0]; return { lng: c.reduce((s, p) => s + p[0], 0) / c.length, lat: c.reduce((s, p) => s + p[1], 0) / c.length }; }
-  return null;
-}
+// Re-exportar getFeatureCenter desde geo.js para compatibilidad
+// con módulos que lo importan desde aquí (ej: properties.js)
+export { getFeatureCenter };

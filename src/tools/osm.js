@@ -1,4 +1,5 @@
 import { state, TYPE_CONFIG, publicConfig } from '../config/state.js';
+import { getNextId, addFeatures } from '../config/store.js';
 import { refreshMap } from '../map/core.js';
 import { toast } from '../ui/toolbar.js';
 import { pushHistory } from './interaction.js';
@@ -94,7 +95,7 @@ export async function importOSMContext(retryCount = 0) {
 
       // 1. EDIFICIOS (Polígonos 3D y Partes Complejas)
       if ((props.building || props['building:part']) && (geomType === 'Polygon' || geomType === 'MultiPolygon')) {
-        const id = state.nextId++;
+        const id = getNextId();
         // Estimar altura basados en pisos ('building:levels') si existen
         const levels = parseInt(props['building:levels'], 10) || Math.floor(Math.random() * 3) + 1;
         const h = levels * 3.5;
@@ -104,7 +105,7 @@ export async function importOSMContext(retryCount = 0) {
         
         const cfg = TYPE_CONFIG[buildingType];
         
-        state.features.push({
+        addFeatures({
           type: 'Feature',
           id: id,
           properties: {
@@ -121,7 +122,7 @@ export async function importOSMContext(retryCount = 0) {
       
       // 2. VIALIDADES (Líneas)
       else if (props.highway && (geomType === 'LineString' || geomType === 'MultiLineString')) {
-        const id = state.nextId++;
+        const id = getNextId();
         let pathType = 'road';
         // Ajustar el tipo según el highway tag
         if (['path', 'footway', 'pedestrian', 'steps'].includes(props.highway)) {
@@ -130,7 +131,7 @@ export async function importOSMContext(retryCount = 0) {
         
         const cfg = TYPE_CONFIG[pathType];
         
-        state.features.push({
+        addFeatures({
           type: 'Feature',
           id: id,
           properties: {
