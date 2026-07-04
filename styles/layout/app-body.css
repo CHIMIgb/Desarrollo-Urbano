@@ -1,0 +1,6 @@
+/* ============================================================ APP BODY */
+.app-body {
+  display: flex;
+  height: calc(100vh - var(--header-h));
+  overflow: hidden;
+}
