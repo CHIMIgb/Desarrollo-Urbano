@@ -4,7 +4,7 @@ import { undo, redo, emitToast } from '../config/store.js';
 import { clearDrawing } from '../tools/drawing.js';
 import { createNewProject, listUserProjects, loadProjectById } from './io.js';
 import { importOSMContext } from '../tools/osm.js';
-import { notify } from './notifications.js';
+import { notify, confirmDialog } from './notifications.js';
 
 // Re-exportar para compatibilidad con módulos que importan { toast } de aquí
 export const toast = notify;
@@ -115,8 +115,12 @@ export function initToolbarEvents() {
     }
   });
 
-  document.getElementById('btnNew')?.addEventListener('click', () => {
-    if (confirm('¿Estás seguro de que quieres crear un nuevo proyecto? Se perderán los cambios no guardados en la nube.')) {
+  document.getElementById('btnNew')?.addEventListener('click', async () => {
+    const confirmed = await confirmDialog(
+      '¿Estás seguro de que quieres crear un nuevo proyecto?',
+      'Se perderán los cambios no guardados en la nube.'
+    );
+    if (confirmed) {
       createNewProject();
     }
   });

@@ -128,7 +128,11 @@ export function updateGlobalStats() {
 
   const breakdownContainer = document.getElementById('stats-breakdown');
   if (breakdownContainer) {
-    breakdownContainer.style.display = data.lots.length > 0 ? 'block' : 'none';
+    if (data.lots.length > 0) {
+      breakdownContainer.classList.remove('hidden');
+    } else {
+      breakdownContainer.classList.add('hidden');
+    }
     renderLotBreakdown(lotsMetricsUI);
   }
 

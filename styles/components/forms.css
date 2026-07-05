@@ -12,6 +12,11 @@
   z-index: 9999;
 }
 
+.modal-overlay {
+  background: transparent;
+  backdrop-filter: none;
+}
+
 .login-card {
   background: rgba(30, 41, 59, 0.7);
   backdrop-filter: blur(12px);
