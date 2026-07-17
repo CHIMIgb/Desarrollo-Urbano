@@ -1,4 +1,8 @@
+/* ============================================================
+   TYPOGRAPHY — Base font settings
+   ============================================================ */
 body {
   font-family: 'Inter', sans-serif;
-  font-size: 13px;
+  font-size: 13.5px;
+  line-height: 1.5;
 }

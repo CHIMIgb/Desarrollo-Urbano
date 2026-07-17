@@ -1,4 +1,4 @@
-/* BUTTONS */
+/* ============================================================ BUTTONS */
 .btn {
   display: flex;
   align-items: center;
@@ -10,7 +10,7 @@
   font-family: inherit;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.15s;
+  transition: background var(--transition-fast), color var(--transition-fast), border-color var(--transition-fast), box-shadow var(--transition-fast);
   white-space: nowrap;
   outline: none;
 }
@@ -22,7 +22,7 @@
 }
 
 .btn-ghost:hover {
-  background: var(--bg-700);
+  background: var(--surface-hover);
   color: var(--text-primary);
 }
 
@@ -44,18 +44,16 @@
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, var(--accent), #7c3aed);
+  background: var(--accent);
   color: white;
   border: none;
-  box-shadow: 0 0 12px rgba(99, 102, 241, 0.3);
 }
 
 .btn-primary:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 0 20px rgba(99, 102, 241, 0.5);
+  background: var(--accent-hover);
+  box-shadow: 0 2px 8px rgba(91, 106, 191, 0.25);
 }
 
 .btn-primary:active {
-  transform: none;
+  transform: scale(0.97);
 }
-

@@ -1,2 +1,6 @@
 .env
 node_modules/
+.agents/
+opencode.json
+skills-lock.json
+rediseño-interfaz-plan.md

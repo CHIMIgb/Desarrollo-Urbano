@@ -40,13 +40,13 @@
   padding: 6px 8px;
   border-radius: var(--radius);
   cursor: pointer;
-  transition: background 0.15s;
+  transition: background var(--transition-fast);
   font-size: 12px;
   color: var(--text-secondary);
 }
 
 .layer-item:hover {
-  background: var(--bg-700);
+  background: var(--surface-hover);
   color: var(--text-primary);
 }
 
@@ -56,12 +56,12 @@
   width: 28px;
   height: 16px;
   background: var(--bg-500);
-  border-radius: 10px;
+  border-radius: var(--radius-full);
   position: relative;
   cursor: pointer;
   outline: none;
   border: 1px solid var(--border);
-  transition: all 0.2s ease;
+  transition: all var(--transition-base);
   flex-shrink: 0;
   margin: 0;
 }
@@ -75,7 +75,7 @@
   height: 12px;
   background: var(--text-secondary);
   border-radius: 50%;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all var(--transition-base);
 }
 
 .layer-item input[type=checkbox]:checked {
@@ -84,7 +84,7 @@
 }
 
 .layer-item input[type=checkbox]:checked::after {
-  background: #fff;
+  background: var(--text-primary);
   transform: translateX(12px);
 }
 
@@ -119,19 +119,20 @@
 .form-field textarea {
   background: var(--bg-700);
   border: 1px solid var(--border);
-  border-radius: var(--radius);
+  border-radius: var(--radius-sm);
   padding: 6px 8px;
   color: var(--text-primary);
   font-size: 12px;
   font-family: inherit;
   outline: none;
-  transition: border-color 0.15s;
+  transition: border-color var(--transition-fast);
   width: 100%;
 }
 
 .form-field input:focus,
 .form-field select:focus {
   border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-glow);
 }
 
 .form-field input[type=color] {
@@ -174,7 +175,7 @@
 .stat-val {
   font-size: 20px;
   font-weight: 700;
-  color: var(--accent-hover);
+  color: var(--text-primary);
   line-height: 1;
 }
 
@@ -203,7 +204,6 @@
 
 .control-row input[type=range] {
   flex: 1;
-  accent-color: var(--accent);
   cursor: pointer;
 }
 
