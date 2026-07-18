@@ -57,3 +57,13 @@
 .btn-primary:active {
   transform: scale(0.97);
 }
+
+.btn-primary.btn-danger {
+  background: var(--red);
+  border-color: transparent;
+}
+
+.btn-primary.btn-danger:hover {
+  background: #c05555;
+  box-shadow: 0 2px 8px rgba(212, 106, 106, 0.25);
+}

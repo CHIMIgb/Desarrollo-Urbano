@@ -1,5 +1,6 @@
-/* ============================================================ NEW UTILITIES & EXTRACTED CLASSES
-============================================================ */
+/* ============================================================
+   UTILITIES — Shared helper classes
+   ============================================================ */
 
 .hidden { display: none !important; }
 
@@ -11,8 +12,13 @@
 }
 
 .auth-footer-text a {
-  color: #a78bfa;
+  color: var(--purple);
   text-decoration: none;
+  transition: color var(--transition-fast);
+}
+
+.auth-footer-text a:hover {
+  color: var(--accent-hover);
 }
 
 .register-columns {
@@ -49,19 +55,20 @@
   gap: 12px;
 }
 
-/* Extracted from index.html <style> */
+/* Project items */
 .project-item {
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding: 12px;
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: 8px;
+  background: var(--surface-hover);
+  border-radius: var(--radius);
   margin-bottom: 8px;
+  transition: background var(--transition-fast);
 }
 
 .project-item:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--surface-active);
 }
 
 .project-info {
@@ -73,7 +80,7 @@
 .project-name-item {
   font-weight: 600;
   font-size: 14px;
-  color: #fff;
+  color: var(--text-primary);
 }
 
 .project-date-item {
@@ -85,3 +92,10 @@
   padding: 4px 8px;
   font-size: 12px;
 }
+
+/* ── Radius utilities ── */
+.rounded-sm { border-radius: var(--radius-sm); }
+.rounded { border-radius: var(--radius); }
+.rounded-lg { border-radius: var(--radius-lg); }
+.rounded-xl { border-radius: var(--radius-xl); }
+.rounded-full { border-radius: var(--radius-full); }

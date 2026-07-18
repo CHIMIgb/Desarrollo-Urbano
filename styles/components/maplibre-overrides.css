@@ -1,4 +1,6 @@
-/* ============================================================ MAPLIBRE OVERRIDES */
+/* ============================================================
+   MAPLIBRE OVERRIDES — Control styling overrides
+   ============================================================ */
 .maplibregl-ctrl-group {
   background: var(--bg-800) !important;
   border: 1px solid var(--border) !important;
@@ -11,6 +13,7 @@
   background: transparent !important;
   color: var(--text-secondary) !important;
   border-bottom: 1px solid var(--border) !important;
+  transition: all var(--transition-fast);
 }
 
 .maplibregl-ctrl-group button:hover {
@@ -23,7 +26,7 @@
 }
 
 .maplibregl-ctrl-attrib {
-  background: rgba(10, 11, 14, 0.7) !important;
+  background: var(--glass-bg) !important;
   color: var(--text-muted) !important;
   font-size: 9px !important;
 }
