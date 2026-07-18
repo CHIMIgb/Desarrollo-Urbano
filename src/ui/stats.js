@@ -138,15 +138,19 @@ export function updateGlobalStats() {
 
   // Actualizar también los contadores simples de UI (antes en toolbar.js updateStats)
   const cnt = { house: 0, building: 0, road: 0, park: 0, zone: 0, terrain: 0, path: 0, sidewalk: 0 };
-  state.features.forEach(f => { cnt[f.properties.type] = (cnt[f.properties.type] || 0) + 1; });
+  state.features.forEach(f => { 
+    if (!f.properties.parent_id) {
+      cnt[f.properties.type] = (cnt[f.properties.type] || 0) + 1; 
+    }
+  });
   const sh = document.getElementById('stat-houses');
   const sb = document.getElementById('stat-buildings');
   const sr = document.getElementById('stat-roads');
   const sp = document.getElementById('stat-parks');
   if (sh) sh.textContent = cnt.house;
-  if (sb) sb.textContent = cnt.building;
+  if (sb) sb.textContent = cnt.building + (cnt.custom_building || 0);
   if (sr) sr.textContent = cnt.road;
-  if (sp) sp.textContent = cnt.park + cnt.zone + cnt.terrain + cnt.path + cnt.sidewalk;
+  if (sp) sp.textContent = cnt.park;
 }
 
 /**

@@ -41,6 +41,8 @@ export async function importOSMContext(retryCount = 0) {
       way["building:part"](${s},${w},${n},${e});
       relation["building:part"](${s},${w},${n},${e});
       way["highway"](${s},${w},${n},${e});
+      way["leisure"="park"](${s},${w},${n},${e});
+      relation["leisure"="park"](${s},${w},${n},${e});
     );
     out body;
     >;
@@ -140,6 +142,25 @@ export async function importOSMContext(retryCount = 0) {
             osm_id: osmId,
             lanes: parseInt(props.lanes, 10) || 2,
             widthM: parseFloat(props.width) || (pathType === 'path' ? 2 : 7),
+            raw_pts: []
+          },
+          geometry: feature.geometry
+        });
+        addedCount++;
+      }
+      
+      // 3. PARQUES (Polígonos)
+      else if (props.leisure === 'park' && (geomType === 'Polygon' || geomType === 'MultiPolygon')) {
+        const id = getNextId();
+        const cfg = TYPE_CONFIG['park'];
+        
+        addFeatures({
+          type: 'Feature',
+          id: id,
+          properties: {
+            id, type: 'park', name: props.name || `${cfg.label} OSM`,
+            color: cfg.color, fillColor: cfg.fillColor,
+            osm_id: osmId,
             raw_pts: []
           },
           geometry: feature.geometry
