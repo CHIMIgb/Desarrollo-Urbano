@@ -206,7 +206,7 @@
 .btn-logout {
   background: none;
   border: none;
-  color: var(--text-secondary);
+  color: var(--red);
   font-size: 11px;
   padding: 0;
   text-align: left;

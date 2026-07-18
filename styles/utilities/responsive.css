@@ -1,3 +1,6 @@
+/* ============================================================
+   RESPONSIVE — Mobile blocker overlay
+   ============================================================ */
 .mobile-blocker {
   display: none;
   position: fixed;
@@ -13,14 +16,15 @@
 }
 
 .blocker-card {
-  background: rgba(30, 41, 59, 0.7);
+  background: var(--bg-700);
   backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--glass-border);
   padding: 40px;
-  border-radius: 24px;
+  border-radius: var(--radius-xl);
   width: 100%;
   max-width: 480px;
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+  box-shadow: var(--shadow);
   text-align: center;
 }
 

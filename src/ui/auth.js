@@ -138,9 +138,19 @@ export function initAuth() {
   function showApp(user) {
     loginOverlay.classList.add('hidden');
     appContainer.classList.remove('hidden');
-    userNameLabel.textContent = user.full_name || user.username;
-    userInitial.textContent = (user.full_name || user.username).charAt(0).toUpperCase();
+    const rawName = user.full_name || user.username;
     
+    const maxLen = 12;
+    userNameLabel.textContent = rawName.length > maxLen ? rawName.substring(0, maxLen) + '...' : rawName;
+    
+    const parts = rawName.trim().split(/\s+/);
+    let initials = '';
+    if (parts.length >= 2) {
+      initials = parts[0].charAt(0) + parts[1].charAt(0);
+    } else {
+      initials = rawName.substring(0, 2);
+    }
+    userInitial.textContent = initials.toUpperCase();
     // Si el mapa ya estaba inicializado o necesita recarga, este es el punto
     if (state.map) {
         state.map.resize();

@@ -33,7 +33,6 @@
   padding: 8px 4px;
   background: transparent;
   border: 1px solid transparent;
-  border-left: 2px solid transparent;
   border-radius: var(--radius);
   color: var(--text-muted);
   font-size: 9px;
@@ -48,26 +47,22 @@
   background: var(--surface-hover);
   color: var(--text-secondary);
   border-color: var(--border);
-  border-left-color: transparent;
 }
 
 .tool-btn.active {
   background: var(--surface-active);
   color: var(--accent-hover);
   border-color: var(--border);
-  border-left-color: var(--accent);
 }
 
 .tool-btn-danger:hover {
   background: rgba(212, 106, 106, 0.08);
   color: var(--red);
   border-color: rgba(212, 106, 106, 0.2);
-  border-left-color: transparent;
 }
 
 .tool-btn-danger.active {
   background: rgba(212, 106, 106, 0.1);
   color: var(--red);
   border-color: rgba(212, 106, 106, 0.3);
-  border-left-color: var(--red);
 }
