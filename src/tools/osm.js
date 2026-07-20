@@ -3,6 +3,8 @@ import { getNextId, addFeatures } from '../config/store.js';
 import { refreshMap } from '../map/core.js';
 import { toast } from '../ui/toolbar.js';
 import { pushHistory } from './interaction.js';
+import { generateTreeParts } from '../models/trees.js';
+import { generateFurnitureParts } from '../models/furniture.js';
 
 /**
  * Espejos públicos de Overpass para evitar bloqueos por IP y Timeouts.
@@ -43,6 +45,15 @@ export async function importOSMContext(retryCount = 0) {
       way["highway"](${s},${w},${n},${e});
       way["leisure"="park"](${s},${w},${n},${e});
       relation["leisure"="park"](${s},${w},${n},${e});
+      // way["natural"="water"](${s},${w},${n},${e});
+      // relation["natural"="water"](${s},${w},${n},${e});
+      // way["waterway"](${s},${w},${n},${e});
+      way["railway"](${s},${w},${n},${e});
+      way["landuse"](${s},${w},${n},${e});
+      relation["landuse"](${s},${w},${n},${e});
+      node["natural"="tree"](${s},${w},${n},${e});
+      node["amenity"~"bench|waste_basket|street_lamp"](${s},${w},${n},${e});
+      node["highway"="street_lamp"](${s},${w},${n},${e});
     );
     out body;
     >;
@@ -79,6 +90,7 @@ export async function importOSMContext(retryCount = 0) {
     const geojsonData = window.osmtogeojson(data);
     
     let addedCount = 0;
+    let treeCount = 0;
     
     // Iniciar transacción en el historial
     pushHistory();
@@ -129,6 +141,7 @@ export async function importOSMContext(retryCount = 0) {
         // Ajustar el tipo según el highway tag
         if (['path', 'footway', 'pedestrian', 'steps'].includes(props.highway)) {
           pathType = 'path';
+          if (props.footway === 'sidewalk') pathType = 'sidewalk';
         }
         
         const cfg = TYPE_CONFIG[pathType];
@@ -165,6 +178,75 @@ export async function importOSMContext(retryCount = 0) {
           },
           geometry: feature.geometry
         });
+        addedCount++;
+      }
+      
+      // 4. AGUA
+      else if ((props.natural === 'water' || props.waterway) && (geomType === 'Polygon' || geomType === 'MultiPolygon' || geomType === 'LineString' || geomType === 'MultiLineString')) {
+        const id = getNextId();
+        const cfg = TYPE_CONFIG['water'];
+        addFeatures({
+          type: 'Feature', id,
+          properties: { id, type: 'water', name: props.name || `${cfg.label} OSM`, color: cfg.color, fillColor: cfg.fillColor, osm_id: osmId, raw_pts: [] },
+          geometry: feature.geometry
+        });
+        addedCount++;
+      }
+      
+      // 5. ZONAS (Uso de Suelo)
+      else if (props.landuse && (geomType === 'Polygon' || geomType === 'MultiPolygon')) {
+        const id = getNextId();
+        const cfg = TYPE_CONFIG['zone'];
+        addFeatures({
+          type: 'Feature', id,
+          properties: { id, type: 'zone', name: props.name || `${props.landuse} OSM`, color: cfg.color, fillColor: cfg.fillColor, osm_id: osmId, raw_pts: [] },
+          geometry: feature.geometry
+        });
+        addedCount++;
+      }
+      
+      // 6. VIAS FERREAS
+      else if (props.railway && (geomType === 'LineString' || geomType === 'MultiLineString')) {
+        const id = getNextId();
+        const cfg = TYPE_CONFIG['railway'];
+        addFeatures({
+          type: 'Feature', id,
+          properties: { id, type: 'railway', name: props.name || `${cfg.label} OSM`, color: cfg.color, fillColor: cfg.fillColor, osm_id: osmId, raw_pts: [] },
+          geometry: feature.geometry
+        });
+        addedCount++;
+      }
+      
+      // 7. ARBOLES (con límite)
+      else if (props.natural === 'tree' && geomType === 'Point') {
+        if (treeCount < 300) {
+          const lng = feature.geometry.coordinates[0];
+          const lat = feature.geometry.coordinates[1];
+          const id = getNextId();
+          const tTypes = ['pino', 'abeto', 'roble', 'ovalado'];
+          const randomType = tTypes[Math.floor(Math.random() * tTypes.length)];
+          const parts = generateTreeParts(id, lng, lat, randomType);
+          
+          parts[0].properties.osm_id = osmId;
+          addFeatures(...parts);
+          addedCount++;
+          treeCount++;
+        }
+      }
+      
+      // 8. MOBILIARIO
+      else if ((props.amenity || props.highway === 'street_lamp') && geomType === 'Point') {
+        let fType = 'banca';
+        if (props.amenity === 'waste_basket') fType = 'papelera';
+        if (props.amenity === 'street_lamp' || props.highway === 'street_lamp') fType = 'farol';
+        
+        const lng = feature.geometry.coordinates[0];
+        const lat = feature.geometry.coordinates[1];
+        const id = getNextId();
+        const parts = generateFurnitureParts(id, lng, lat, 0, fType);
+        
+        parts[0].properties.osm_id = osmId;
+        addFeatures(...parts);
         addedCount++;
       }
     });

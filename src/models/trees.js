@@ -16,13 +16,11 @@ export function buildTreePolygon(lng, lat, radiusM) {
   return [...pts, pts[0]];
 }
 
-export function finishTree(lng, lat, treeType) {
+export function generateTreeParts(trunkId, lng, lat, treeType) {
   treeType = treeType || 'pino';
   let totalH = 8; 
-
   totalH = totalH * (0.85 + Math.random() * 0.3);
 
-  const trunkId = getNextId();
   const cfg = TYPE_CONFIG['tree'];
   const parts = [];
 
@@ -37,6 +35,7 @@ export function finishTree(lng, lat, treeType) {
       geometry: { type: 'Polygon', coordinates: [buildTreePolygon(lng, lat, rM)] }
     });
   };
+  
   const addOffPart = (dlngM, dlatM, rM, base, h, colC, colF) => {
     const dlat = dlatM / 111320;
     const dlng = dlngM / (40075000 * Math.cos(lat * Math.PI / 180) / 360);
@@ -93,6 +92,12 @@ export function finishTree(lng, lat, treeType) {
     addOffPart(-totalH * 0.06, totalH * 0.05, totalH * 0.02, totalH * 0.6, totalH * 0.8, tc, tf);
   }
 
+  return parts;
+}
+
+export function finishTree(lng, lat, treeType) {
+  const trunkId = getNextId();
+  const parts = generateTreeParts(trunkId, lng, lat, treeType);
   addFeatures(...parts);
   pushHistory(); refreshMap();
   selectFeature(trunkId);
