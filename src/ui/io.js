@@ -38,7 +38,7 @@ export function initIOEvents() {
       });
     } catch (e) { console.warn('Error registrando auditoria de exportacion', e); }
 
-    toast('Proyecto exportado y registrado', 'success');
+    toast('Exportado y registrado en bitácora', 'success');
   });
 
   // IMPORTAR CON AUDITORIA
@@ -71,9 +71,9 @@ export function initIOEvents() {
             })
           });
 
-          toast('Proyecto importado con exito', 'success');
-        } else toast('Archivo invalido', 'error');
-      } catch (err) { toast('Error al procesar el archivo', 'error'); }
+          toast('Proyecto importado correctamente', 'success');
+        } else toast('Formato de archivo no reconocido', 'error');
+      } catch (err) { toast('No se pudo leer el archivo', 'error'); }
     };
     reader.readAsText(file);
     e.target.value = '';
@@ -86,7 +86,7 @@ export function initIOEvents() {
     
     btnSave.disabled = true;
     btnSave.innerHTML = '<span class="spinner-container"><span class="spinner"></span><span>Guardando...</span></span>';
-    toast('Guardando proyecto...', 'info');
+    toast('Sincronizando con la nube...', 'info');
 
     // Capturar vista actual del mapa
     let mapView = null;
@@ -123,12 +123,12 @@ export function initIOEvents() {
       const data = await response.json();
       if (response.ok) {
         state.currentProjectId = data.projectId;
-        toast('Proyecto guardado en la nube', 'success');
+        toast('Proyecto sincronizado', 'success');
       } else {
-        toast('Error al guardar: ' + data.error, 'error');
+        toast('No se pudo guardar: ' + data.error, 'error');
       }
     } catch (err) {
-      toast('Error de conexion al guardar', 'error');
+      toast('Sin conexión al servidor', 'error');
     } finally {
       btnSave.disabled = false;
       btnSave.innerHTML = originalBtnHTML;
@@ -140,7 +140,7 @@ export function initIOEvents() {
 export async function loadSavedState() {
   const token = localStorage.getItem('urbanplan_token');
   if (!token) return;
-  const dismissToast = toast('Cargando entorno 3D...', 'loading', 0);
+  const dismissToast = toast('Inicializando entorno geoespacial...', 'loading', 0);
   try {
     const response = await fetch('/api/projects/latest', {
       headers: { 'Authorization': token }
@@ -178,25 +178,25 @@ export async function listUserProjects() {
 export async function loadProjectById(id) {
   const token = localStorage.getItem('urbanplan_token');
   if (!token) return;
-  const dismissToast = toast('Cargando proyecto...', 'loading', 0);
+  const dismissToast = toast('Cargando datos del proyecto...', 'loading', 0);
   try {
     const response = await fetch(`/api/projects/${id}`, {
       headers: { 'Authorization': token }
     });
     if (!response.ok) {
       dismissToast();
-      toast('Error al cargar proyecto', 'error');
+      toast('No se pudo cargar el proyecto', 'error');
       return;
     }
     const data = await response.json();
     dismissToast();
     if (data.project) {
       applyProjectData(data.project);
-      toast('Proyecto cargado', 'success');
+      toast('Proyecto cargado correctamente', 'success');
     }
   } catch (e) { 
     dismissToast();
-    toast('Error de conexion', 'error'); 
+    toast('Sin conexión al servidor', 'error'); 
   }
 }
 

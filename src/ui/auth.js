@@ -44,7 +44,7 @@ export function initAuth() {
     const originalBtnText = submitBtn.innerHTML;
 
     submitBtn.disabled = true;
-    submitBtn.innerHTML = '<span class="spinner-container"><span class="spinner"></span><span>Accediendo...</span></span>';
+    submitBtn.innerHTML = '<span class="spinner-container"><span class="spinner"></span><span>Verificando credenciales...</span></span>';
 
     try {
       const response = await fetch('/api/auth/login', {
@@ -62,12 +62,12 @@ export function initAuth() {
         // Cargar proyecto desde el servidor tras login
         import('./io.js').then(m => m.loadSavedState());
       } else {
-        loginError.textContent = data.error || 'Error al iniciar sesión';
+        loginError.textContent = data.error || 'Credenciales incorrectas';
         loginError.classList.remove('hidden');
       }
     } catch (err) {
       console.error(err);
-      loginError.textContent = 'Error de conexión con el servidor';
+      loginError.textContent = 'No se pudo contactar al servidor';
       loginError.classList.remove('hidden');
     } finally {
       submitBtn.disabled = false;
@@ -98,12 +98,12 @@ export function initAuth() {
         showApp(data.user);
         import('./io.js').then(m => m.loadSavedState());
       } else {
-        registerError.textContent = data.error || 'Error al registrarse';
+        registerError.textContent = data.error || 'No se pudo crear la cuenta';
         registerError.classList.remove('hidden');
       }
     } catch (err) {
       console.error(err);
-      registerError.textContent = 'Error de conexión con el servidor';
+      registerError.textContent = 'No se pudo contactar al servidor';
       registerError.classList.remove('hidden');
     }
   });

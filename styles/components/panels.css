@@ -2,6 +2,10 @@
 .props-panel {
   width: var(--panel-w);
   background: var(--bg-800);
+  background-image:
+    linear-gradient(var(--grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+  background-size: 20px 20px;
   border-left: 1px solid var(--border);
   display: flex;
   flex-direction: column;
@@ -11,7 +15,7 @@
 
 .panel-section {
   padding: 14px 12px;
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px dashed var(--border);
 }
 
 .panel-title {

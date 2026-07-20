@@ -16,6 +16,7 @@
 }
 
 .tool-label {
+  font-family: var(--font-display);
   font-size: 9px;
   font-weight: 600;
   color: var(--text-muted);
@@ -53,16 +54,17 @@
   background: var(--surface-active);
   color: var(--accent-hover);
   border-color: var(--border);
+  border-left: 2px solid var(--indigo);
 }
 
 .tool-btn-danger:hover {
-  background: rgba(212, 106, 106, 0.08);
+  background: var(--red-dim-8);
   color: var(--red);
-  border-color: rgba(212, 106, 106, 0.2);
+  border-color: var(--red-dim-20);
 }
 
 .tool-btn-danger.active {
-  background: rgba(212, 106, 106, 0.1);
+  background: var(--red-dim-10);
   color: var(--red);
-  border-color: rgba(212, 106, 106, 0.3);
+  border-color: var(--red-dim-30);
 }

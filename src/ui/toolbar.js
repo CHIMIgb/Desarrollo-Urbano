@@ -68,14 +68,14 @@ export function initToolbarEvents() {
   document.getElementById('btnUndo')?.addEventListener('click', () => {
     if (undo()) {
       import('../map/core.js').then(m => m.refreshMap());
-      toast('Deshecho', 'info');
+      toast('Acción revertida', 'info');
     }
   });
 
   document.getElementById('btnRedo')?.addEventListener('click', () => {
     if (redo()) {
       import('../map/core.js').then(m => m.refreshMap());
-      toast('Rehecho', 'info');
+      toast('Acción re-aplicada', 'info');
     }
   });
 
@@ -86,7 +86,7 @@ export function initToolbarEvents() {
       pitch: is3D ? 0 : 65,
       duration: 1000
     });
-    toast(is3D ? 'Vista 2D' : 'Vista 3D', 'info');
+    toast(is3D ? 'Proyección 2D activada' : 'Proyección 3D activada', 'info');
   });
 
   document.getElementById('tool-satellite')?.addEventListener('click', () => {
@@ -94,7 +94,7 @@ export function initToolbarEvents() {
     if (state.map) {
       import('../map/core.js').then(m => state.map.setStyle(m.buildStyle(), { diff: false }));
     }
-    toast(state.isSatellite ? 'Vista Satélite' : 'Vista Mapa', 'info');
+    toast(state.isSatellite ? 'Capa satelital activa' : 'Capa cartográfica activa', 'info');
   });
 
   document.getElementById('tool-terrain-toggle')?.addEventListener('click', () => {
@@ -105,20 +105,20 @@ export function initToolbarEvents() {
       import('../map/core.js').then(m => m.addTerrainSource());
       state.terrainEnabled = true;
       document.getElementById('tool-terrain-toggle')?.classList.add('active');
-      toast('Relieve 3D activado', 'info');
+      toast('Modelo de elevación activado', 'info');
     } else {
       // Desactivar relieve
       state.map.setTerrain(null);
       state.terrainEnabled = false;
       document.getElementById('tool-terrain-toggle')?.classList.remove('active');
-      toast('Relieve 3D desactivado', 'info');
+      toast('Modelo de elevación desactivado', 'info');
     }
   });
 
   document.getElementById('btnNew')?.addEventListener('click', async () => {
     const confirmed = await confirmDialog(
-      '¿Estás seguro de que quieres crear un nuevo proyecto?',
-      'Se perderán los cambios no guardados en la nube.'
+      'Crear nuevo proyecto urbanístico',
+      'Se descartarán los cambios no sincronizados.'
     );
     if (confirmed) {
       createNewProject();
@@ -131,7 +131,7 @@ export function initToolbarEvents() {
       modal.classList.remove('hidden');
       const list = document.getElementById('projectsList');
       if (list) {
-        list.innerHTML = '<p style="text-align:center; padding:20px;">Cargando...</p>';
+        list.innerHTML = '<p style="text-align:center; padding:20px;">Cargando proyectos...</p>';
         const projects = await listUserProjects();
         renderProjectsList(projects);
       }
@@ -155,7 +155,7 @@ function renderProjectsList(projects) {
   if (!list) return;
   
   if (projects.length === 0) {
-    list.innerHTML = '<p style="text-align:center; padding:20px; color:var(--text-secondary);">No tienes proyectos guardados.</p>';
+    list.innerHTML = '<p style="text-align:center; padding:20px; color:var(--text-secondary);">Sin proyectos en la nube. Crea uno nuevo.</p>';
     return;
   }
 

@@ -295,15 +295,15 @@ function bindActionButtons() {
     const dist = parseFloat(distIn?.value);
     const angle = parseFloat(angIn?.value);
 
-    if (isNaN(dist) || dist <= 0) { toast('Ingresa una distancia válida (> 0)', 'error'); return; }
-    if (isNaN(angle)) { toast('Ingresa un ángulo válido', 'error'); return; }
+    if (isNaN(dist) || dist <= 0) { toast('Distancia inválida (mínimo 0.1)', 'error'); return; }
+    if (isNaN(angle)) { toast('Ángulo requerido', 'error'); return; }
 
     const ok = moveVertexByPolar(state.selectedIds[0], precisionState.selectedVertexIdx, dist, angle);
     if (ok) {
-      toast(`V${precisionState.selectedVertexIdx + 1} movido ${dist}m a ${angle}°`, 'success');
+      toast(`V${precisionState.selectedVertexIdx + 1} desplazado ${dist}m @ ${angle}°`, 'success');
       updatePanelContent();
     } else {
-      toast('Error al mover vértice', 'error');
+      toast('No se pudo desplazar el vértice', 'error');
     }
   });
 
@@ -319,15 +319,15 @@ function bindActionButtons() {
     const lat = parseFloat(latIn?.value);
     const lng = parseFloat(lngIn?.value);
 
-    if (isNaN(lat) || lat < -90 || lat > 90) { toast('Latitud inválida (-90 a 90)', 'error'); return; }
-    if (isNaN(lng) || lng < -180 || lng > 180) { toast('Longitud inválida (-180 a 180)', 'error'); return; }
+    if (isNaN(lat) || lat < -90 || lat > 90) { toast('Latitud fuera de rango (-90 a 90)', 'error'); return; }
+    if (isNaN(lng) || lng < -180 || lng > 180) { toast('Longitud fuera de rango (-180 a 180)', 'error'); return; }
 
     const ok = moveVertexToCoord(state.selectedIds[0], precisionState.selectedVertexIdx, lng, lat);
     if (ok) {
-      toast(`V${precisionState.selectedVertexIdx + 1} movido a coordenada exacta`, 'success');
+      toast(`V${precisionState.selectedVertexIdx + 1} ubicado en coordenada exacta`, 'success');
       updatePanelContent();
     } else {
-      toast('Error al mover vértice', 'error');
+      toast('No se pudo reposicionar el vértice', 'error');
     }
   });
 
@@ -340,15 +340,15 @@ function bindActionButtons() {
     const dist = parseFloat(distIn?.value);
     const angle = parseFloat(angIn?.value);
 
-    if (isNaN(dist) || dist <= 0) { toast('Ingresa una distancia válida (> 0)', 'error'); return; }
-    if (isNaN(angle)) { toast('Ingresa un ángulo válido', 'error'); return; }
+    if (isNaN(dist) || dist <= 0) { toast('Distancia inválida (mínimo 0.1)', 'error'); return; }
+    if (isNaN(angle)) { toast('Ángulo requerido', 'error'); return; }
 
     const ok = moveFeatureByPolar(state.selectedIds[0], dist, angle);
     if (ok) {
-      toast(`Elemento desplazado ${dist}m a ${angle}°`, 'success');
+      toast(`Elemento desplazado ${dist}m @ ${angle}°`, 'success');
       updatePanelContent();
     } else {
-      toast('Error al desplazar elemento', 'error');
+      toast('No se pudo desplazar el elemento', 'error');
     }
   });
 
@@ -361,15 +361,15 @@ function bindActionButtons() {
     const lat = parseFloat(latIn?.value);
     const lng = parseFloat(lngIn?.value);
 
-    if (isNaN(lat) || lat < -90 || lat > 90) { toast('Latitud inválida (-90 a 90)', 'error'); return; }
-    if (isNaN(lng) || lng < -180 || lng > 180) { toast('Longitud inválida (-180 a 180)', 'error'); return; }
+    if (isNaN(lat) || lat < -90 || lat > 90) { toast('Latitud fuera de rango (-90 a 90)', 'error'); return; }
+    if (isNaN(lng) || lng < -180 || lng > 180) { toast('Longitud fuera de rango (-180 a 180)', 'error'); return; }
 
     const ok = moveFeatureToCoord(state.selectedIds[0], lng, lat);
     if (ok) {
-      toast('Elemento movido a coordenada exacta', 'success');
+      toast('Elemento ubicado en coordenada exacta', 'success');
       updatePanelContent();
     } else {
-      toast('Error al mover elemento', 'error');
+      toast('No se pudo reposicionar el elemento', 'error');
     }
   });
 

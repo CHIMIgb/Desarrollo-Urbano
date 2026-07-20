@@ -95,6 +95,6 @@ export function placeBuilding(type, lng, lat) {
   
   pushHistory();
   refreshMap();
-  toast(`${cfg.label} colocado`, 'success');
+  toast(`${cfg.label} colocado en el terreno`, 'success');
   selectFeature(baseId, { lng, lat });
 }

@@ -1,8 +1,41 @@
 /* ============================================================
-   TYPOGRAPHY — Base font settings
+   TYPOGRAPHY — Font families and role assignments
+   Space Grotesk = display/headings (technical, architectural)
+   Inter = body/UI (clean, readable)
+   JetBrains Mono = data/coordinates (precision)
    ============================================================ */
+
+/* ── Font family tokens ── */
+:root {
+  --font-display: 'Space Grotesk', sans-serif;
+  --font-body: 'Inter', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+}
+
 body {
-  font-family: 'Inter', sans-serif;
+  font-family: var(--font-body);
   font-size: 13.5px;
   line-height: 1.5;
+}
+
+/* ── Display font (headings, logo, panel titles) ── */
+.logo-text,
+.panel-title,
+.tool-label,
+.stats-title,
+.breakdown-label,
+.stat-lbl,
+.measure-title {
+  font-family: var(--font-display);
+}
+
+/* ── Mono font (data values, coordinates, technical readouts) ── */
+.stat-val,
+.measure-val,
+.coord-display,
+.lot-sub-val,
+.popup-prop-val,
+#searchInput,
+.form-field input[type="number"] {
+  font-family: var(--font-mono);
 }

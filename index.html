@@ -9,7 +9,7 @@
   <meta name="description"
     content="Prototipo de modelado 3D de terreno urbano con datos satelitales. Editor de carreteras, casas y edificios sobre terreno real." />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
   <link href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" rel="stylesheet" />
   <!-- Librería para análisis espacial (Retiros) -->
   <script src="https://unpkg.com/@turf/turf@6/turf.min.js"></script>
@@ -92,7 +92,7 @@
           <i data-icon="logo"></i>
           <span class="logo-text">UrbanPlan <span class="logo-tag">3D</span></span>
         </div>
-        <div class="project-name" id="projectName" contenteditable="true" spellcheck="false">Proyecto Sin Título</div>
+        <div class="project-name" id="projectName" contenteditable="true" spellcheck="false">Nuevo proyecto urbano</div>
       </div>
       <div class="header-actions">
         <label class="btn btn-secondary" title="Cargar proyecto">
@@ -311,11 +311,11 @@
             <label class="layer-item"><input type="checkbox" checked data-layer="house" /><span class="layer-dot"
                 style="background:var(--amber)"></span>Casas</label>
             <label class="layer-item"><input type="checkbox" checked data-layer="building" /><span class="layer-dot"
-                style="background:var(--accent)"></span>Edificios</label>
+                style="background:var(--indigo)"></span>Edificios</label>
             <label class="layer-item"><input type="checkbox" checked data-layer="custom_building" /><span
                 class="layer-dot" style="background:var(--purple)"></span>Siluetas 3D</label>
             <label class="layer-item"><input type="checkbox" checked data-layer="water" /><span class="layer-dot"
-                style="background:#5b9bd5"></span>Agua</label>
+                style="background:var(--blue)"></span>Agua</label>
             <label class="layer-item"><input type="checkbox" checked data-layer="furniture" /><span class="layer-dot"
                 style="background:var(--text-muted)"></span>Mobiliario</label>
             <label class="layer-item"><input type="checkbox" checked data-layer="tree" /><span class="layer-dot"
@@ -323,19 +323,19 @@
             <label class="layer-item"><input type="checkbox" checked data-layer="road" /><span class="layer-dot"
                 style="background:var(--text-secondary)"></span>Carreteras</label>
             <label class="layer-item"><input type="checkbox" checked data-layer="path" /><span class="layer-dot"
-                style="background:#a8a29e"></span>Caminos</label>
+                style="background:var(--stone)"></span>Caminos</label>
             <label class="layer-item"><input type="checkbox" checked data-layer="sidewalk" /><span class="layer-dot"
-                style="background:#b0b8c4"></span>Banquetas</label>
+                style="background:var(--slate)"></span>Banquetas</label>
             <label class="layer-item"><input type="checkbox" checked data-layer="railway" /><span class="layer-dot"
                 style="background:var(--bg-500)"></span>Vías Férreas</label>
             <label class="layer-item"><input type="checkbox" checked data-layer="park" /><span class="layer-dot"
-                style="background:#6abf8a"></span>Parques</label>
+                style="background:var(--green-light)"></span>Parques</label>
             <label class="layer-item"><input type="checkbox" checked data-layer="zone" /><span class="layer-dot"
-                style="background:#c97a9b"></span>Zonas</label>
+                style="background:var(--pink)"></span>Zonas</label>
             <label class="layer-item"><input type="checkbox" checked data-layer="terrain" /><span class="layer-dot"
                 style="background:var(--amber)"></span>Terrenos</label>
             <label class="layer-item"><input type="checkbox" checked data-layer="radius" /><span class="layer-dot"
-                style="background:#a855c0"></span>Isócronas</label>
+                style="background:var(--violet)"></span>Isócronas</label>
           </div>
         </div>
 
@@ -476,14 +476,14 @@
 
   <!-- CONFIRM MODAL -->
   <div id="confirmModal" class="login-overlay modal-overlay hidden">
-    <div class="login-card projects-modal-card" style="max-width: 400px;">
+    <div class="login-card projects-modal-card confirm-modal-card">
       <div class="login-header">
-        <h3 id="confirmModalTitle">¿Estás seguro?</h3>
-        <p id="confirmModalMessage">Se perderán los cambios no guardados.</p>
+        <h3 id="confirmModalTitle">Confirmar acción</h3>
+        <p id="confirmModalMessage">Se perderán los cambios no sincronizados.</p>
       </div>
-      <div style="display: flex; gap: 12px; margin-top: 24px;">
-        <button id="btnConfirmCancel" class="btn btn-secondary" style="flex: 1;">Cancelar</button>
-        <button id="btnConfirmAccept" class="btn btn-primary btn-danger" style="flex: 1;">Aceptar</button>
+      <div class="confirm-actions">
+        <button id="btnConfirmCancel" class="btn btn-secondary btn-full">Cancelar</button>
+        <button id="btnConfirmAccept" class="btn btn-primary btn-danger btn-full">Aceptar</button>
       </div>
     </div>
   </div>

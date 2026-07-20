@@ -26,11 +26,11 @@
 }
 
 .toast.success {
-  border-color: rgba(92, 184, 122, 0.25);
+  border-color: var(--green-dim-25);
 }
 
 .toast.error {
-  border-color: rgba(212, 106, 106, 0.25);
+  border-color: var(--red-dim-25);
 }
 
 .toast-dot {

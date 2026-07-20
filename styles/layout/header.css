@@ -40,6 +40,7 @@
 }
 
 .logo-text {
+  font-family: var(--font-display);
   font-weight: 700;
   font-size: 15px;
   color: var(--text-primary);
@@ -47,8 +48,8 @@
 }
 
 .logo-tag {
-  background: var(--accent);
-  color: white;
+  background: var(--indigo);
+  color: var(--text-on-accent);
   font-size: 9px;
   font-weight: 700;
   padding: 1px 5px;
@@ -182,14 +183,14 @@
 .user-avatar {
   width: 32px;
   height: 32px;
-  background: var(--accent);
+  background: var(--indigo);
   border-radius: var(--radius);
   display: flex;
   align-items: center;
   justify-content: center;
   font-weight: 700;
   font-size: 14px;
-  color: var(--text-primary);
+  color: var(--text-on-accent);
 }
 
 .user-info {

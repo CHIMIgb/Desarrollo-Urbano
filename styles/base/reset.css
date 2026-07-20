@@ -13,7 +13,7 @@ html,
 body {
   height: 100%;
   overflow: hidden;
-  font-family: 'Inter', sans-serif;
+  font-family: var(--font-body);
   background: var(--bg-900);
   color: var(--text-primary);
   font-size: 13.5px;
@@ -22,18 +22,23 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* ── SCROLLBAR ── */
+/* ── SCROLLBAR (technical ruler style) ── */
 ::-webkit-scrollbar {
-  width: 4px;
+  width: 3px;
 }
 
 ::-webkit-scrollbar-track {
-  background: transparent;
+  background: var(--bg-800);
+  border-left: 1px solid var(--border);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--bg-500);
-  border-radius: var(--radius-full);
+  background: var(--accent);
+  border-radius: var(--radius-xs);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--accent-hover);
 }
 
 /* ── FOCUS VISIBLE ── */

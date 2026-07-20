@@ -45,13 +45,13 @@
 
 .btn-primary {
   background: var(--accent);
-  color: white;
+  color: var(--text-on-accent);
   border: none;
 }
 
 .btn-primary:hover {
   background: var(--accent-hover);
-  box-shadow: 0 2px 8px rgba(91, 106, 191, 0.25);
+  box-shadow: 0 2px 8px var(--indigo-dim-25);
 }
 
 .btn-primary:active {
@@ -64,6 +64,6 @@
 }
 
 .btn-primary.btn-danger:hover {
-  background: #c05555;
-  box-shadow: 0 2px 8px rgba(212, 106, 106, 0.25);
+  background: var(--red-dark);
+  box-shadow: 0 2px 8px var(--red-dim-25);
 }
