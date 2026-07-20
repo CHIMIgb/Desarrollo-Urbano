@@ -1,4 +1,5 @@
 import { state, TYPE_CONFIG } from '../config/state.js';
+import { addFeatures } from '../config/store.js';
 import { fmtLen, fmtArea, fmtVol } from '../utils/geo.js';
 import { pushHistory, getFeatureCenter } from '../tools/interaction.js';
 import { refreshMap } from '../map/core.js';
@@ -12,7 +13,7 @@ import { rebuildPolygonGeometry, rebuildRadiusGeometry } from '../models/zones.j
 export function showPropsPanel(feat, lngLat) {
   const p = feat.properties, cfg = TYPE_CONFIG[p.type] || {};
   const ps = document.getElementById('propsSection');
-  if (ps) ps.style.display = 'block';
+  if (ps) ps.classList.remove('hidden');
   const form = document.getElementById('propsForm');
   if (!form) return;
 
@@ -72,6 +73,11 @@ export function showPropsPanel(feat, lngLat) {
   if (['park', 'zone', 'terrain', 'custom_building', 'water'].includes(p.type)) {
     if (p.type === 'water') {
       fields += `<div class="form-field"><label>Profundidad (m)</label><input type="number" id="prop-water-depth" value="${p.depth_m || 2}" min="0.5" max="500" step="0.5"/></div>`;
+    }
+    if (['terrain', 'zone'].includes(p.type)) {
+      fields += `<div class="form-field"><label>Altura Máx. (m)</label><input type="number" id="prop-max-height" value="${p.maxHeight || ''}" placeholder="Sin límite" min="1" max="500" step="0.5"/></div>`;
+      fields += `<div class="form-field"><label>CAS Mínimo (%)</label><input type="number" id="prop-min-cas" value="${p.minCAS || ''}" placeholder="Ej. 20" min="0" max="100" step="1"/></div>`;
+      fields += `<div class="form-field"><label>Retiro Mín (m)</label><input type="number" id="prop-min-setback" value="${p.minSetback || ''}" placeholder="Ej. 3" min="0" max="50" step="0.5"/></div>`;
     }
     fields += `
       <div class="form-field opt-toggle" style="margin-top:6px;">
@@ -147,7 +153,7 @@ export function showPropsPanel(feat, lngLat) {
         const baseId = f.properties.id;
         state.features = state.features.filter(x => !(x.properties.id === baseId || x.properties.parent_id === baseId));
         const newParts = generateBuildingParts(baseId, f.properties.center_lng, f.properties.center_lat, w, l, h, rot, f.properties.type);
-        state.features.push(...newParts);
+        addFeatures(...newParts);
       }
 
       refreshMap();
@@ -171,7 +177,7 @@ export function showPropsPanel(feat, lngLat) {
       const oldId = f.properties.id;
       state.features = state.features.filter(x => !(x.properties.id === oldId || x.properties.parent_id === oldId));
       const newParts = generateFurnitureParts(oldId, f.properties.center_lng, f.properties.center_lat, rot, f.properties.furniture_type);
-      state.features.push(...newParts);
+      addFeatures(...newParts);
       refreshMap();
     };
     rotRange?.addEventListener('input', () => { if (rotLabel) rotLabel.textContent = rotRange.value + '°'; rebuildFurn(); });
@@ -282,6 +288,15 @@ export function showPropsPanel(feat, lngLat) {
     if (document.getElementById('prop-poly-curved')) {
       rebuildPolygonGeometry(f, { curved: document.getElementById('prop-poly-curved').checked });
     }
+    if (document.getElementById('prop-max-height')) {
+      f.properties.maxHeight = parseFloat(document.getElementById('prop-max-height').value) || null;
+    }
+    if (document.getElementById('prop-min-cas')) {
+      f.properties.minCAS = parseFloat(document.getElementById('prop-min-cas').value) || null;
+    }
+    if (document.getElementById('prop-min-setback')) {
+      f.properties.minSetback = parseFloat(document.getElementById('prop-min-setback').value) || null;
+    }
     const col = document.getElementById('prop-color').value;
     f.properties.fillColor = col; f.properties.color = col;
     refreshMap(); toast('Propiedades actualizadas', 'success');
@@ -307,7 +322,7 @@ export function showPropsPanel(feat, lngLat) {
 
 export function showMultiPropsPanel() {
   const ps = document.getElementById('propsSection');
-  if (ps) ps.style.display = 'block';
+  if (ps) ps.classList.remove('hidden');
   const form = document.getElementById('propsForm');
   if (!form) return;
   form.innerHTML = `

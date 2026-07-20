@@ -1,4 +1,5 @@
 import { state, TYPE_CONFIG } from '../config/state.js';
+import { getNextId, addFeatures } from '../config/store.js';
 import { pushHistory } from '../tools/interaction.js';
 import { refreshMap } from '../map/core.js';
 import { toast } from '../ui/toolbar.js';
@@ -15,13 +16,11 @@ export function buildTreePolygon(lng, lat, radiusM) {
   return [...pts, pts[0]];
 }
 
-export function finishTree(lng, lat) {
-  const treeType = document.getElementById('treeType')?.value || 'pino';
+export function generateTreeParts(trunkId, lng, lat, treeType) {
+  treeType = treeType || 'pino';
   let totalH = 8; 
-
   totalH = totalH * (0.85 + Math.random() * 0.3);
 
-  const trunkId = state.nextId++;
   const cfg = TYPE_CONFIG['tree'];
   const parts = [];
 
@@ -29,17 +28,18 @@ export function finishTree(lng, lat) {
   const cc = cfg.color; const cf = cfg.fillColor; 
 
   const addPart = (rM, base, h, colC, colF) => {
-    const id = state.nextId++;
+    const id = getNextId();
     parts.push({
       type: 'Feature', id,
       properties: { id, parent_id: trunkId, type: 'tree', color: colC, fillColor: colF, base_height: base, height: Math.round(h * 10) / 10 },
       geometry: { type: 'Polygon', coordinates: [buildTreePolygon(lng, lat, rM)] }
     });
   };
+  
   const addOffPart = (dlngM, dlatM, rM, base, h, colC, colF) => {
     const dlat = dlatM / 111320;
     const dlng = dlngM / (40075000 * Math.cos(lat * Math.PI / 180) / 360);
-    const id = state.nextId++;
+    const id = getNextId();
     parts.push({
       type: 'Feature', id,
       properties: { id, parent_id: trunkId, type: 'tree', color: colC, fillColor: colF, base_height: base, height: Math.round(h * 10) / 10 },
@@ -92,7 +92,13 @@ export function finishTree(lng, lat) {
     addOffPart(-totalH * 0.06, totalH * 0.05, totalH * 0.02, totalH * 0.6, totalH * 0.8, tc, tf);
   }
 
-  state.features.push(...parts);
+  return parts;
+}
+
+export function finishTree(lng, lat, treeType) {
+  const trunkId = getNextId();
+  const parts = generateTreeParts(trunkId, lng, lat, treeType);
+  addFeatures(...parts);
   pushHistory(); refreshMap();
   selectFeature(trunkId);
 }

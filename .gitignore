@@ -1,4 +1,11 @@
 .env
 node_modules/
-
 .agents/
+opencode.json
+skills-lock.json
+rediseño-interfaz-plan.md
+
+# Archivos desvinculados del repositorio
+Urban_Planning_Documentacion_Tecnica.docx
+high_priority_refactor_plan.md
+urban_planning_saas_roadmap.docx

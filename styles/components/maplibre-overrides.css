@@ -1,0 +1,36 @@
+/* ============================================================
+   MAPLIBRE OVERRIDES — Control styling overrides
+   ============================================================ */
+.maplibregl-ctrl-group {
+  background: var(--bg-800) !important;
+  border: 1px solid var(--border) !important;
+  box-shadow: var(--shadow) !important;
+  border-radius: var(--radius) !important;
+  overflow: hidden;
+}
+
+.maplibregl-ctrl-group button {
+  background: transparent !important;
+  color: var(--text-secondary) !important;
+  border-bottom: 1px solid var(--border) !important;
+  transition: all var(--transition-fast);
+}
+
+.maplibregl-ctrl-group button:hover {
+  background: var(--bg-700) !important;
+  color: var(--text-primary) !important;
+}
+
+.maplibregl-ctrl-group button:last-child {
+  border-bottom: none !important;
+}
+
+.maplibregl-ctrl-attrib {
+  background: var(--glass-bg) !important;
+  color: var(--text-muted) !important;
+  font-size: 9px !important;
+}
+
+.maplibregl-ctrl-attrib a {
+  color: var(--text-muted) !important;
+}

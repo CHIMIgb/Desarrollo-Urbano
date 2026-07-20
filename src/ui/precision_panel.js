@@ -77,7 +77,7 @@ export function initPrecisionPanel() {
   bindActionButtons();
 
   // Estado inicial: oculto
-  container.style.display = 'none';
+  container.classList.add('hidden');
 }
 
 // ── Visibilidad del Panel ─────────────────────────────────────
@@ -110,14 +110,14 @@ function updatePanelVisibility() {
 function openPanel() {
   const container = document.getElementById('precisionPanel');
   if (!container) return;
-  container.style.display = 'flex';
+  container.classList.remove('hidden');
   precisionState.isOpen = true;
 }
 
 function closePanel() {
   const container = document.getElementById('precisionPanel');
   if (!container) return;
-  container.style.display = 'none';
+  container.classList.add('hidden');
   precisionState.isOpen = false;
   setVertexSelection(null);
 }

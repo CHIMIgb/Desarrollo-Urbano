@@ -1,4 +1,5 @@
 import { state, TYPE_CONFIG } from '../config/state.js';
+import { getNextId, addFeatures } from '../config/store.js';
 import { buildingPolygon } from '../utils/geo.js';
 import { buildTreePolygon } from './trees.js';
 import { pushHistory } from '../tools/interaction.js';
@@ -10,7 +11,7 @@ export function generateFurnitureParts(baseId, lng, lat, rot, fType) {
   const parts = [];
 
   const addCircle = (rM, base, h, col) => {
-    const id = state.nextId++;
+    const id = getNextId();
     parts.push({
       type: 'Feature', id,
       properties: { id, parent_id: baseId, type: 'furniture', color: col, fillColor: col, base_height: base, height: h },
@@ -24,7 +25,7 @@ export function generateFurnitureParts(baseId, lng, lat, rot, fType) {
     const dy = dlngM * Math.sin(rad) + dlatM * Math.cos(rad);
     const dlat = dy / 111320;
     const dlng = dx / (40075000 * Math.cos(lat * Math.PI / 180) / 360);
-    const id = state.nextId++;
+    const id = getNextId();
     parts.push({
       type: 'Feature', id,
       properties: { id, parent_id: baseId, type: 'furniture', color: col, fillColor: col, base_height: base, height: h },
@@ -140,12 +141,12 @@ export function generateFurnitureParts(baseId, lng, lat, rot, fType) {
   return parts;
 }
 
-export function finishFurniture(lng, lat) {
-  const fType = document.getElementById('furnitureType')?.value || 'semaforo';
-  const rot = parseFloat(document.getElementById('furnitureRot')?.value || 0);
-  const baseId = state.nextId++;
+export function finishFurniture(lng, lat, furnitureType, rotation) {
+  const fType = furnitureType || 'semaforo';
+  const rot = parseFloat(rotation || 0);
+  const baseId = getNextId();
   const parts = generateFurnitureParts(baseId, lng, lat, rot, fType);
-  state.features.push(...parts);
+  addFeatures(...parts);
   pushHistory(); refreshMap();
   selectFeature(baseId);
 }
