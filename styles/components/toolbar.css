@@ -1,0 +1,68 @@
+/* ============================================================ TOOLBAR */
+.toolbar {
+  width: var(--toolbar-w);
+  background: var(--bg-800);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px 6px;
+  overflow-y: auto;
+  flex-shrink: 0;
+}
+
+.tool-group {
+  margin-bottom: 6px;
+}
+
+.tool-label {
+  font-size: 9px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  padding: 4px 6px 6px;
+}
+
+.tool-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  width: 100%;
+  padding: 8px 4px;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  color: var(--text-muted);
+  font-size: 9px;
+  font-family: inherit;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  position: relative;
+}
+
+.tool-btn:hover {
+  background: var(--surface-hover);
+  color: var(--text-secondary);
+  border-color: var(--border);
+}
+
+.tool-btn.active {
+  background: var(--surface-active);
+  color: var(--accent-hover);
+  border-color: var(--border);
+}
+
+.tool-btn-danger:hover {
+  background: rgba(212, 106, 106, 0.08);
+  color: var(--red);
+  border-color: rgba(212, 106, 106, 0.2);
+}
+
+.tool-btn-danger.active {
+  background: rgba(212, 106, 106, 0.1);
+  color: var(--red);
+  border-color: rgba(212, 106, 106, 0.3);
+}

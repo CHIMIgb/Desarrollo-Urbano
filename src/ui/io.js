@@ -3,6 +3,7 @@ import { pushHistory } from '../tools/interaction.js';
 import { refreshMap } from '../map/core.js';
 import { toast } from './toolbar.js';
 import { calculateCurrentMetrics } from './stats.js';
+import { getFeatureCenter } from '../utils/geo.js';
 
 export function initIOEvents() {
   // EXPORTAR CON AUDITORIA
@@ -139,16 +140,22 @@ export function initIOEvents() {
 export async function loadSavedState() {
   const token = localStorage.getItem('urbanplan_token');
   if (!token) return;
-
+  const dismissToast = toast('Cargando entorno 3D...', 'loading', 0);
   try {
-    const response = await fetch('/api/projects/load', {
+    const response = await fetch('/api/projects/latest', {
       headers: { 'Authorization': token }
     });
-    if (!response.ok) return;
-
+    if (!response.ok) {
+      dismissToast();
+      return;
+    }
     const data = await response.json();
+    dismissToast();
     if (data.project) applyProjectData(data.project);
-  } catch (e) { console.error('Error loading initial state', e); }
+  } catch (e) {
+    dismissToast();
+    console.error('Error loading initial state', e);
+  }
 }
 
 // LISTAR PROYECTOS
@@ -168,24 +175,29 @@ export async function listUserProjects() {
   }
 }
 
-// CARGAR POR ID
 export async function loadProjectById(id) {
   const token = localStorage.getItem('urbanplan_token');
   if (!token) return;
+  const dismissToast = toast('Cargando proyecto...', 'loading', 0);
   try {
     const response = await fetch(`/api/projects/${id}`, {
       headers: { 'Authorization': token }
     });
     if (!response.ok) {
+      dismissToast();
       toast('Error al cargar proyecto', 'error');
       return;
     }
     const data = await response.json();
+    dismissToast();
     if (data.project) {
       applyProjectData(data.project);
       toast('Proyecto cargado', 'success');
     }
-  } catch (e) { toast('Error de conexion', 'error'); }
+  } catch (e) { 
+    dismissToast();
+    toast('Error de conexion', 'error'); 
+  }
 }
 
 // NUEVO PROYECTO
@@ -227,8 +239,24 @@ function applyProjectData(project) {
         essential: true
       });
     }
+  } else if (state.features.length > 0 && state.map) {
+    // Si no hay vista guardada, volar al centro de la primera feature
+    const firstF = state.features[0];
+    const center = firstF.properties.center_lng != null
+      ? { lng: firstF.properties.center_lng, lat: firstF.properties.center_lat }
+      : getFeatureCenter(firstF);
+      
+    if (center) {
+      state.map.flyTo({
+        center,
+        zoom: 16,
+        pitch: 60,
+        bearing: 0,
+        duration: 1500,
+        essential: true
+      });
+    }
   }
 
   refreshMap();
-  
 }

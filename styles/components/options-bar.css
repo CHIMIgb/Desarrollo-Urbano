@@ -1,0 +1,132 @@
+/* ============================================================ OPTIONS BAR */
+.options-bar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 7px 14px;
+  background: rgba(18, 21, 28, 0.92);
+  backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--border);
+  font-size: 12px;
+  color: var(--text-secondary);
+  flex-wrap: wrap;
+}
+
+.opt-label {
+  font-weight: 700;
+  font-size: 11px;
+  color: var(--text-secondary);
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.opt-divider {
+  width: 1px;
+  height: 18px;
+  background: var(--border);
+  flex-shrink: 0;
+}
+
+.opt-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.opt-item span {
+  color: var(--text-muted);
+  font-size: 11px;
+}
+
+.opt-item input[type=number] {
+  width: 62px;
+  background: var(--bg-700);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 3px 6px;
+  color: var(--text-primary);
+  font-family: inherit;
+  font-size: 12px;
+  outline: none;
+  transition: border-color var(--transition-fast);
+}
+
+.opt-item input[type=number]:focus {
+  border-color: var(--accent);
+}
+
+.opt-item select {
+  background: var(--bg-700);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 3px 6px;
+  color: var(--text-primary);
+  font-family: inherit;
+  font-size: 12px;
+  outline: none;
+  cursor: pointer;
+  transition: border-color var(--transition-fast);
+}
+
+.opt-item select option {
+  background: var(--bg-800);
+}
+
+.opt-item input[type=range] {
+  cursor: pointer;
+}
+
+/* Toggle switch */
+.opt-toggle {
+  cursor: pointer;
+  gap: 8px;
+}
+
+.opt-toggle input[type=checkbox] {
+  display: none;
+}
+
+.toggle-track {
+  width: 32px;
+  height: 18px;
+  background: var(--bg-600);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-full);
+  position: relative;
+  transition: background var(--transition-base), border-color var(--transition-base);
+  flex-shrink: 0;
+}
+
+.toggle-thumb {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 12px;
+  height: 12px;
+  background: var(--text-muted);
+  border-radius: 50%;
+  transition: left var(--transition-base), background var(--transition-base);
+}
+
+.opt-toggle input:checked+.toggle-track {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+.opt-toggle input:checked+.toggle-track .toggle-thumb {
+  left: 16px;
+  background: var(--text-primary);
+}
+
+/* Map shifts down when options bar visible */
+.options-bar[style*="display:none"]+#map,
+.options-bar[style="display:none"]~#map {
+  top: 0;
+}

@@ -1,0 +1,60 @@
+/* ============================================================
+   DESIGN TOKENS — "Midnight Professional" Palette
+   Dark mode base. All UI colors derive from these tokens.
+   ============================================================ */
+:root {
+  /* ── Backgrounds (darkest → lightest) ── */
+  --bg-900: #0c0d11;
+  --bg-800: #13151a;
+  --bg-700: #1a1d24;
+  --bg-600: #21252e;
+  --bg-500: #282d38;
+
+  /* ── Borders ── */
+  --border: rgba(255, 255, 255, 0.06);
+  --border-hover: rgba(255, 255, 255, 0.12);
+
+  /* ── Text ── */
+  --text-primary: #e8ecf1;
+  --text-secondary: #8b95a5;
+  --text-muted: #5a6577;
+
+  /* ── Accent (brand) ── */
+  --accent: #5b6abf;
+  --accent-hover: #7c8ad4;
+  --accent-glow: rgba(91, 106, 191, 0.15);
+
+  /* ── Semantic colors ── */
+  --green: #5cb87a;
+  --amber: #d4943a;
+  --red: #d46a6a;
+  --purple: #9b8ad4;
+
+  /* ── Glassmorphism ── */
+  --glass-bg: rgba(18, 21, 28, 0.75);
+  --glass-border: rgba(255, 255, 255, 0.06);
+
+  /* ── Surface interaction states ── */
+  --surface-hover: rgba(255, 255, 255, 0.04);
+  --surface-active: rgba(255, 255, 255, 0.06);
+
+  /* ── Border radius ── */
+  --radius-sm: 6px;
+  --radius: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 20px;
+  --radius-full: 9999px;
+
+  /* ── Transitions ── */
+  --transition-fast: 0.15s ease;
+  --transition-base: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-smooth: 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+
+  /* ── Elevation ── */
+  --shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
+
+  /* ── Layout dimensions ── */
+  --header-h: 52px;
+  --toolbar-w: 90px;
+  --panel-w: 300px;
+}
