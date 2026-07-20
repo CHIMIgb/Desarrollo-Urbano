@@ -11,6 +11,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
   <link href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" rel="stylesheet" />
+  <!-- Librería para análisis espacial (Retiros) -->
+  <script src="https://unpkg.com/@turf/turf@6/turf.min.js"></script>
   <link rel="stylesheet" href="styles/main.css" />
 </head>
 
@@ -446,6 +448,12 @@
             </div>
             <div class="stat-bar-bg">
               <div class="stat-bar-fill" id="bar-green" style="width: 0%"></div>
+            </div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-info">
+              <span class="stat-label">Altura (Máx)</span>
+              <span class="stat-val" id="val-height">0 m</span>
             </div>
           </div>
           <div class="stat-item">

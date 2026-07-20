@@ -362,7 +362,12 @@
   color: var(--red);
 }
 
-.stat-val.exceeded {
+.stat-val.exceeded,
+.stat-val.violation {
+  color: var(--red);
+}
+
+.lot-sub-stat.violation .lot-sub-val {
   color: var(--red);
 }
 

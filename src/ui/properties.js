@@ -74,6 +74,11 @@ export function showPropsPanel(feat, lngLat) {
     if (p.type === 'water') {
       fields += `<div class="form-field"><label>Profundidad (m)</label><input type="number" id="prop-water-depth" value="${p.depth_m || 2}" min="0.5" max="500" step="0.5"/></div>`;
     }
+    if (['terrain', 'zone'].includes(p.type)) {
+      fields += `<div class="form-field"><label>Altura Máx. (m)</label><input type="number" id="prop-max-height" value="${p.maxHeight || ''}" placeholder="Sin límite" min="1" max="500" step="0.5"/></div>`;
+      fields += `<div class="form-field"><label>CAS Mínimo (%)</label><input type="number" id="prop-min-cas" value="${p.minCAS || ''}" placeholder="Ej. 20" min="0" max="100" step="1"/></div>`;
+      fields += `<div class="form-field"><label>Retiro Mín (m)</label><input type="number" id="prop-min-setback" value="${p.minSetback || ''}" placeholder="Ej. 3" min="0" max="50" step="0.5"/></div>`;
+    }
     fields += `
       <div class="form-field opt-toggle" style="margin-top:6px;">
         <label style="display:flex;align-items:center;gap:8px;">
@@ -282,6 +287,15 @@ export function showPropsPanel(feat, lngLat) {
     }
     if (document.getElementById('prop-poly-curved')) {
       rebuildPolygonGeometry(f, { curved: document.getElementById('prop-poly-curved').checked });
+    }
+    if (document.getElementById('prop-max-height')) {
+      f.properties.maxHeight = parseFloat(document.getElementById('prop-max-height').value) || null;
+    }
+    if (document.getElementById('prop-min-cas')) {
+      f.properties.minCAS = parseFloat(document.getElementById('prop-min-cas').value) || null;
+    }
+    if (document.getElementById('prop-min-setback')) {
+      f.properties.minSetback = parseFloat(document.getElementById('prop-min-setback').value) || null;
     }
     const col = document.getElementById('prop-color').value;
     f.properties.fillColor = col; f.properties.color = col;
