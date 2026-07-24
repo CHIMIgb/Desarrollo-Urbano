@@ -19,6 +19,10 @@ const poolConfig = process.env.DATABASE_URL
 
 const pool = new Pool(poolConfig);
 
+pool.on('connect', (client) => {
+  client.query('SET search_path TO public');
+});
+
 module.exports = {
   query: (text, params) => pool.query(text, params),
 };
