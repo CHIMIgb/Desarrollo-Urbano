@@ -18,7 +18,12 @@ const getOsmEndpoints = () => publicConfig.OSM_OVERPASS_ENDPOINTS;
 export async function importOSMContext(retryCount = 0) {
   if (!state.map) return;
   const endpoints = getOsmEndpoints();
-  const endpoint = endpoints[retryCount % endpoints.length];
+  let endpoint = endpoints[retryCount % endpoints.length];
+
+  // Si estamos en producción (Vercel), usar el proxy para evitar el bloqueo CORS 406
+  if (window.location.hostname.includes('vercel.app')) {
+    endpoint = '/osm-proxy';
+  }
 
   const zoom = state.map.getZoom();
   // Validar nivel de zoom para no saturar al servidor OSM gratuito
@@ -67,10 +72,7 @@ export async function importOSMContext(retryCount = 0) {
   try {
     const response = await fetch(endpoint, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded'
-      },
-      body: `data=${encodeURIComponent(query)}`
+      body: query
     });
 
     if (response.status === 429 || response.status === 504) {
