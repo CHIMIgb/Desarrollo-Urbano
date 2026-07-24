@@ -67,7 +67,10 @@ export async function importOSMContext(retryCount = 0) {
   try {
     const response = await fetch(endpoint, {
       method: 'POST',
-      body: query
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded'
+      },
+      body: `data=${encodeURIComponent(query)}`
     });
 
     if (response.status === 429 || response.status === 504) {
