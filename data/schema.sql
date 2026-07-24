@@ -47,3 +47,13 @@ CREATE TABLE IF NOT EXISTS audit_logs (
 -- Usuario de prueba (contraseña: 'admin123' - el hash deberá ser generado por bcrypt en el backend)
 -- Por ahora insertamos uno manual para pruebas iniciales si es necesario, 
 -- pero lo ideal es usar el endpoint de registro o un script de seed.
+
+-- ==========================================
+-- MIGRACIONES HISTÓRICAS (Opcional si la DB ya existe)
+-- ==========================================
+ALTER TABLE projects
+  ADD COLUMN IF NOT EXISTS map_center_lng DOUBLE PRECISION DEFAULT -99.1332,
+  ADD COLUMN IF NOT EXISTS map_center_lat DOUBLE PRECISION DEFAULT 19.4326,
+  ADD COLUMN IF NOT EXISTS map_zoom       DOUBLE PRECISION DEFAULT 13,
+  ADD COLUMN IF NOT EXISTS map_pitch      DOUBLE PRECISION DEFAULT 65,
+  ADD COLUMN IF NOT EXISTS map_bearing    DOUBLE PRECISION DEFAULT -20;
