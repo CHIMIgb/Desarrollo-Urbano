@@ -34,31 +34,57 @@ app.get('/api/config', (req, res) => {
   });
 });
 
-// Proxy para Overpass API para evitar problemas de CORS y User-Agent en navegadores
-app.post('/api/osm', async (req, res) => {
+// Proxy para Overpass API usando HTTPS nativo para máxima compatibilidad
+app.post('/api/osm', (req, res) => {
   try {
     const query = req.body.data || req.body;
-    const queryStr = typeof query === 'object' ? query.data : query;
+    let queryStr = typeof query === 'object' ? query.data : query;
     
-    // Usamos node-fetch (nativo en Node 18+)
-    const response = await fetch('https://overpass-api.de/api/interpreter', {
+    if (!queryStr || typeof queryStr !== 'string') {
+      return res.status(400).json({ error: 'Falta la consulta (query) en la petición' });
+    }
+
+    const https = require('https');
+    const postData = `data=${encodeURIComponent(queryStr)}`;
+
+    const options = {
+      hostname: 'overpass-api.de',
+      path: '/api/interpreter',
       method: 'POST',
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
-        'User-Agent': 'UrbanPlan3D-App/1.0 (Vercel Node.js Proxy)'
-      },
-      body: `data=${encodeURIComponent(queryStr)}`
+        'Content-Length': Buffer.byteLength(postData),
+        'User-Agent': 'UrbanPlan3D-App/1.0 (Node.js Proxy)'
+      }
+    };
+
+    const proxyReq = https.request(options, (proxyRes) => {
+      let data = '';
+      proxyRes.on('data', chunk => data += chunk);
+      proxyRes.on('end', () => {
+        if (proxyRes.statusCode !== 200) {
+          return res.status(proxyRes.statusCode).json({ error: `Overpass API error: ${proxyRes.statusCode}`, details: data.substring(0, 500) });
+        }
+        try {
+          const jsonData = JSON.parse(data);
+          res.json(jsonData);
+        } catch (e) {
+          res.status(502).json({ error: 'Respuesta inválida de OSM', details: data.substring(0, 500) });
+        }
+      });
     });
-    
-    if (!response.ok) {
-      return res.status(response.status).json({ error: `Overpass API error: ${response.status}` });
-    }
-    
-    const data = await response.json();
-    res.json(data);
+
+    proxyReq.on('error', (e) => {
+      console.error('OSM Proxy Network Error:', e);
+      res.status(500).json({ error: 'Error de red conectando a OSM', details: e.message });
+    });
+
+    proxyReq.write(postData);
+    proxyReq.end();
+
   } catch (err) {
     console.error('OSM Proxy Error:', err);
-    res.status(500).json({ error: 'Error connecting to OSM Overpass API' });
+    res.status(500).json({ error: 'Error interno conectando a OSM', details: err.message });
   }
 });
 
