@@ -17,8 +17,8 @@ const getOsmEndpoints = () => publicConfig.OSM_OVERPASS_ENDPOINTS;
  */
 export async function importOSMContext(retryCount = 0) {
   if (!state.map) return;
-  // Siempre usar el proxy de Node.js para evitar bloqueos CORS y User-Agent en el navegador
-  let endpoint = '/api/osm';
+  const endpoints = getOsmEndpoints();
+  let endpoint = endpoints[retryCount % endpoints.length];
 
   const zoom = state.map.getZoom();
   // Validar nivel de zoom para no saturar al servidor OSM gratuito
@@ -45,9 +45,6 @@ export async function importOSMContext(retryCount = 0) {
       way["highway"](${s},${w},${n},${e});
       way["leisure"="park"](${s},${w},${n},${e});
       relation["leisure"="park"](${s},${w},${n},${e});
-      // way["natural"="water"](${s},${w},${n},${e});
-      // relation["natural"="water"](${s},${w},${n},${e});
-      // way["waterway"](${s},${w},${n},${e});
       way["railway"](${s},${w},${n},${e});
       way["landuse"](${s},${w},${n},${e});
       relation["landuse"](${s},${w},${n},${e});
@@ -67,19 +64,15 @@ export async function importOSMContext(retryCount = 0) {
   try {
     const response = await fetch(endpoint, {
       method: 'POST',
-      body: query
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded'
+      },
+      body: `data=${encodeURIComponent(query)}`
     });
 
-    if (response.status === 429 || response.status === 504) {
-      if (retryCount < 2) {
-        toast('Servidor saturado, reintentando con otro espejo...', 'warning');
-        await new Promise(r => setTimeout(r, 2000));
-        return importOSMContext(retryCount + 1);
-      }
-      throw new Error(`Server saturated (${response.status})`);
+    if (!response.ok) {
+      throw new Error(`Server returned ${response.status}`);
     }
-
-    if (!response.ok) throw new Error('Network response was not ok');
     
     const data = await response.json();
     
@@ -260,9 +253,11 @@ export async function importOSMContext(retryCount = 0) {
 
   } catch (err) {
     console.error('Error importando OSM:', err);
-    if (retryCount >= 2) {
-      toast('Los servidores de OSM están muy ocupados. Intenta en una zona más pequeña o más tarde.', 'error');
+    if (retryCount < endpoints.length - 1) {
+      toast(`Servidor ocupado. Probando espejo alternativo (${retryCount + 2})...`, 'warning');
+      return importOSMContext(retryCount + 1);
     }
+    toast('Los servidores de OSM están muy ocupados. Intenta en una zona más pequeña o más tarde.', 'error');
   } finally {
     if (btn) btn.style.opacity = '1';
   }
