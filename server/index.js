@@ -34,6 +34,35 @@ app.get('/api/config', (req, res) => {
   });
 });
 
+// Proxy para Overpass API para evitar problemas de CORS y User-Agent en navegadores
+app.post('/api/osm', async (req, res) => {
+  try {
+    const query = req.body.data || req.body;
+    const queryStr = typeof query === 'object' ? query.data : query;
+    
+    // Usamos node-fetch (nativo en Node 18+)
+    const response = await fetch('https://overpass-api.de/api/interpreter', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'User-Agent': 'UrbanPlan3D-App/1.0 (Vercel Node.js Proxy)'
+      },
+      body: `data=${encodeURIComponent(queryStr)}`
+    });
+    
+    if (!response.ok) {
+      return res.status(response.status).json({ error: `Overpass API error: ${response.status}` });
+    }
+    
+    const data = await response.json();
+    res.json(data);
+  } catch (err) {
+    console.error('OSM Proxy Error:', err);
+    res.status(500).json({ error: 'Error connecting to OSM Overpass API' });
+  }
+});
+
+
 // Seguridad: Bloquear acceso a archivos sensibles del backend
 app.use((req, res, next) => {
   const forbidden = ['/server', '/data', '/package', '/.env', '/README'];

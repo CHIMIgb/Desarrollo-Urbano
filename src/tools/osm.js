@@ -17,13 +17,8 @@ const getOsmEndpoints = () => publicConfig.OSM_OVERPASS_ENDPOINTS;
  */
 export async function importOSMContext(retryCount = 0) {
   if (!state.map) return;
-  const endpoints = getOsmEndpoints();
-  let endpoint = endpoints[retryCount % endpoints.length];
-
-  // Si estamos en producción (Vercel), usar el proxy para evitar el bloqueo CORS 406
-  if (window.location.hostname.includes('vercel.app')) {
-    endpoint = '/osm-proxy';
-  }
+  // Siempre usar el proxy de Node.js para evitar bloqueos CORS y User-Agent en el navegador
+  let endpoint = '/api/osm';
 
   const zoom = state.map.getZoom();
   // Validar nivel de zoom para no saturar al servidor OSM gratuito
