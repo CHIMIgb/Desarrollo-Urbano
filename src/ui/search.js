@@ -35,6 +35,11 @@ async function doSearch(q) {
       headers: { 'Accept-Language': 'es' } 
     });
     const data = await res.json();
+    if (data.length === 0) {
+      searchResults.innerHTML = '<div class="empty-text">Sin resultados para "' + escapeHTML(q) + '"</div>';
+      searchResults.classList.add('open');
+      return;
+    }
     searchResults.innerHTML = data.map(r => `
       <div class="search-result-item" data-lng="${r.lon}" data-lat="${r.lat}">
         <strong>${escapeHTML(r.display_name.split(',')[0])}</strong>

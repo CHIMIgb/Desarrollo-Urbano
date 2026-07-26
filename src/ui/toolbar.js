@@ -268,3 +268,59 @@ EventBus.on(Events.STATS_UPDATE, () => {
   // Ahora stats.js es la única fuente de verdad para todas las estadísticas (incluyendo los contadores simples)
   import('./stats.js').then(m => m.updateGlobalStats());
 });
+
+// ── Dirty State + Undo/Redo Disabled ──────────────────────────
+let _isDirty = false;
+const _originalTitle = document.title;
+
+export function markDirty() {
+  if (_isDirty) return;
+  _isDirty = true;
+  document.title = '• ' + _originalTitle;
+  document.getElementById('projectName')?.classList.add('dirty');
+}
+
+export function markClean() {
+  _isDirty = false;
+  document.title = _originalTitle;
+  document.getElementById('projectName')?.classList.remove('dirty');
+}
+
+export function isDirty() { return _isDirty; }
+
+function updateUndoRedoState() {
+  const btnUndo = document.getElementById('btnUndo');
+  const btnRedo = document.getElementById('btnRedo');
+  if (btnUndo) {
+    const canUndo = state.history.length > 1;
+    btnUndo.disabled = !canUndo;
+    btnUndo.classList.toggle('disabled', !canUndo);
+  }
+  if (btnRedo) {
+    const canRedo = state.future.length > 0;
+    btnRedo.disabled = !canRedo;
+    btnRedo.classList.toggle('disabled', !canRedo);
+  }
+}
+
+// Marcar dirty cuando cambian las features
+EventBus.on(Events.FEATURES_UPDATED, () => {
+  markDirty();
+  updateUndoRedoState();
+});
+
+// Actualizar undo/redo al inicio
+EventBus.on(Events.MAP_READY, () => {
+  updateUndoRedoState();
+});
+
+// beforeunload — advertir si hay cambios sin guardar
+window.addEventListener('beforeunload', (e) => {
+  if (_isDirty) {
+    e.preventDefault();
+    e.returnValue = '';
+  }
+});
+
+// Exponer para que io.js pueda limpiar el dirty state
+export { markClean as _markClean };

@@ -67,3 +67,16 @@
   background: var(--red-dark);
   box-shadow: 0 2px 8px var(--red-dim-25);
 }
+
+/* Disabled states */
+.btn:disabled,
+.btn.disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.btn.loading {
+  pointer-events: none;
+  opacity: 0.8;
+}

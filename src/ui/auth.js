@@ -27,12 +27,14 @@ export function initAuth() {
   // Intercambiar formularios
   btnShowRegister.addEventListener('click', (e) => {
     e.preventDefault();
+    loginError.classList.add('hidden');
     loginForm.classList.add('hidden');
-    registerForm.classList.remove('hidden'); // Or flex depending on css
+    registerForm.classList.remove('hidden');
   });
 
   btnShowLogin.addEventListener('click', (e) => {
     e.preventDefault();
+    registerError.classList.add('hidden');
     registerForm.classList.add('hidden');
     loginForm.classList.remove('hidden');
   });
@@ -84,6 +86,12 @@ export function initAuth() {
     const full_name = document.getElementById('regName').value;
     const email = document.getElementById('regEmail').value;
     const password = document.getElementById('regPass').value;
+    const submitBtn = registerForm.querySelector('button[type="submit"]');
+    const originalBtnText = submitBtn.innerHTML;
+
+    submitBtn.disabled = true;
+    submitBtn.classList.add('loading');
+    submitBtn.innerHTML = '<span class="spinner-container"><span class="spinner"></span><span>Creando cuenta...</span></span>';
 
     try {
       const response = await fetch('/api/auth/register', {
@@ -104,9 +112,12 @@ export function initAuth() {
         registerError.classList.remove('hidden');
       }
     } catch (err) {
-      console.error(err);
       registerError.textContent = 'No se pudo contactar al servidor';
       registerError.classList.remove('hidden');
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.classList.remove('loading');
+      submitBtn.innerHTML = originalBtnText;
     }
   });
 

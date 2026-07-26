@@ -2,6 +2,7 @@ import { state } from '../config/state.js';
 import { pushHistory } from '../tools/interaction.js';
 import { refreshMap } from '../map/core.js';
 import { toast } from './toolbar.js';
+import { markClean } from './toolbar.js';
 import { calculateCurrentMetrics } from './stats.js';
 import { getFeatureCenter } from '../utils/geo.js';
 
@@ -85,8 +86,8 @@ export function initIOEvents() {
     const originalBtnHTML = btnSave.innerHTML;
     
     btnSave.disabled = true;
+    btnSave.classList.add('loading');
     btnSave.innerHTML = '<span class="spinner-container"><span class="spinner"></span><span>Guardando...</span></span>';
-    toast('Sincronizando con la nube...', 'info');
 
     // Capturar vista actual del mapa
     let mapView = null;
@@ -108,8 +109,6 @@ export function initIOEvents() {
       mapView,
       metrics: calculateCurrentMetrics()
     };
-    
-    console.log('[DEBUG] Enviando datos de guardado:', saveData);
 
     try {
       const response = await fetch('/api/projects/save', {
@@ -123,14 +122,16 @@ export function initIOEvents() {
       const data = await response.json();
       if (response.ok) {
         state.currentProjectId = data.projectId;
+        markClean();
         toast('Proyecto sincronizado', 'success');
       } else {
-        toast('No se pudo guardar: ' + data.error, 'error');
+        toast('No se pudo guardar el proyecto', 'error');
       }
     } catch (err) {
       toast('Sin conexión al servidor', 'error');
     } finally {
       btnSave.disabled = false;
+      btnSave.classList.remove('loading');
       btnSave.innerHTML = originalBtnHTML;
     }
   });

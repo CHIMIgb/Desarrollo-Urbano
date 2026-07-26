@@ -83,6 +83,21 @@
   border-color: var(--border-hover);
 }
 
+.project-name.dirty {
+  border-color: var(--amber);
+}
+
+.project-name.dirty::after {
+  content: '';
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  background: var(--amber);
+  border-radius: 50%;
+  margin-left: 6px;
+  vertical-align: middle;
+}
+
 /* SEARCH */
 .search-box {
   position: relative;
