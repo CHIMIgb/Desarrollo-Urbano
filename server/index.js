@@ -34,6 +34,12 @@ app.get('/api/config', (req, res) => {
   });
 });
 
+// Servir archivos estaticos del frontend
+// En produccion: dist/ (build de Vite). En desarrollo: raiz del proyecto.
+const isProd = process.env.NODE_ENV === 'production';
+const staticDir = isProd ? path.join(__dirname, '../dist') : path.join(__dirname, '../');
+app.use(express.static(staticDir));
+
 // Seguridad: Bloquear acceso a archivos sensibles del backend
 app.use((req, res, next) => {
   const forbidden = ['/server', '/data', '/package', '/.env', '/README'];
@@ -43,17 +49,13 @@ app.use((req, res, next) => {
   next();
 });
 
-// Servir archivos estaticos del frontend (la raiz del proyecto)
-app.use(express.static(path.join(__dirname, '../')));
-
 // Catch-all: Envia index.html para cualquier otra ruta (SPA) o devuelve 404 para API
 app.use((req, res) => {
   if (req.url.startsWith('/api/')) {
     console.warn(`[404 WARNING] API Endpoint no encontrado: ${req.method} ${req.url}`);
     return res.status(404).json({ error: `API endpoint not found: ${req.url}` });
   }
-  // Si no es API y no se encontro archivo estatico, enviamos el index por si es una ruta SPA
-  res.sendFile(path.join(__dirname, '../index.html'));
+  res.sendFile(path.join(staticDir, 'index.html'));
 });
 
 // Catch-all de errores Express (Manejador Global unificado)

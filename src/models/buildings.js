@@ -63,7 +63,7 @@ export function generateBuildingParts(baseId, lng, lat, w, l, h, rot, type, cust
   };
 
   if (type === 'custom_building') {
-    // Logic for custom building windows skipped for now to match app.js
+     addWindowsRect();
   } else if (type === 'house') {
     const roofCol = '#451a03';
     const steps = 8;
@@ -75,9 +75,6 @@ export function generateBuildingParts(baseId, lng, lat, w, l, h, rot, type, cust
   } else if (type === 'building') {
     addPartBox(0, 0, w * 0.3, l * 0.3, h, h + 3, '#94a3b8');
     addWindowsRect();
-  } else if (type === 'custom_building') {
-     // If customized coords existed, windows would be added here
-     addWindowsRect();
   }
 
   return parts;

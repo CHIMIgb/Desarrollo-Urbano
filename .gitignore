@@ -1,9 +1,9 @@
 .env
 node_modules/
+dist/
 .agents/
 opencode.json
 skills-lock.json
-rediseño-interfaz-plan.md
 
 # Archivos desvinculados del repositorio
 Urban_Planning_Documentacion_Tecnica.docx

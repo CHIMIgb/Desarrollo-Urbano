@@ -118,7 +118,7 @@ export function updateLiveMeasure(lng, lat) {
   if (!el) return;
   if (pts.length < 2) { el.classList.add('hidden'); return; }
   const isPolygon = ['park', 'zone', 'terrain', 'custom_building', 'water'].includes(state.tool);
-  let text = '';
+  let text;
   if (isPolygon && pts.length >= 3) {
     const closed = [...pts, pts[0]];
     text = `Área: ${fmtArea(polygonArea(closed))} · Perímetro: ${fmtLen(polygonPerimeter(closed))}`;

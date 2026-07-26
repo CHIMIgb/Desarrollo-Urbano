@@ -158,7 +158,7 @@ export function initAuth() {
     userNameLabel.textContent = rawName.length > maxLen ? rawName.substring(0, maxLen) + '...' : rawName;
     
     const parts = rawName.trim().split(/\s+/);
-    let initials = '';
+    let initials;
     if (parts.length >= 2) {
       initials = parts[0].charAt(0) + parts[1].charAt(0);
     } else {

@@ -1,6 +1,15 @@
 /* =============================================================
    URBAN PLANNING 3D — ES Modules Entry Point
    ============================================================= */
+
+// Import external dependencies from npm (previously loaded via CDN)
+import * as turf from '@turf/turf';
+
+// Expose turf as global for backward compatibility with existing modules
+window.turf = turf;
+
+// maplibre-gl is loaded via CDN (UMD) and available as global `maplibregl`
+
 import { initMap } from './src/map/core.js';
 import { initToolbarEvents } from './src/ui/toolbar.js';
 import { initSearchEvents } from './src/ui/search.js';

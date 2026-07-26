@@ -3,6 +3,7 @@ import { getNextId, addFeatures } from '../config/store.js';
 import { refreshMap } from '../map/core.js';
 import { toast } from '../ui/toolbar.js';
 import { pushHistory } from './interaction.js';
+import osmtogeojson from 'osmtogeojson';
 import { generateTreeParts } from '../models/trees.js';
 import { generateFurnitureParts } from '../models/furniture.js';
 
@@ -83,11 +84,8 @@ export async function importOSMContext(retryCount = 0) {
     
     const data = await response.json();
     
-    // El milagro del parseador OSM a GeoJSON de la librería que incluimos
-    if (!window.osmtogeojson) {
-      throw new Error('OSM/GeoJSON parser not loaded');
-    }
-    const geojsonData = window.osmtogeojson(data);
+    // El milagro del parseador OSM a GeoJSON
+    const geojsonData = osmtogeojson(data);
     
     let addedCount = 0;
     let treeCount = 0;
