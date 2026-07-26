@@ -13,7 +13,7 @@
 }
 
 .auth-footer-text a {
-  color: var(--purple);
+  color: var(--accent);
   text-decoration: none;
   transition: color var(--transition-fast);
 }

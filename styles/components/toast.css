@@ -48,7 +48,7 @@
 
 .toast.info {
   border-color: var(--accent-glow);
-  background: linear-gradient(135deg, var(--bg-700) 0%, var(--indigo-dim-20) 100%);
+  background: linear-gradient(135deg, var(--bg-700) 0%, var(--accent-dim-20) 100%);
 }
 
 .toast-dot {

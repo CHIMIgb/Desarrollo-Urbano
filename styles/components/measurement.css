@@ -350,9 +350,9 @@
 }
 
 .lot-card.selected {
-  border-color: var(--indigo);
-  background: var(--indigo-dim);
-  box-shadow: 0 0 0 1px var(--indigo-dim-20), 0 2px 8px rgba(91, 106, 191, 0.15);
+  border-color: var(--accent);
+  background: var(--accent-dim);
+  box-shadow: 0 0 0 1px var(--accent-dim-20), 0 2px 8px rgba(74, 158, 158, 0.15);
 }
 
 .lot-card-header {
@@ -441,8 +441,8 @@
 
 /* ── Back to global button ── */
 .btn-back-global {
-  background: var(--indigo-dim);
-  border: 1px solid var(--indigo-dim-25);
+  background: var(--accent-dim);
+  border: 1px solid var(--accent-dim-25);
   color: var(--accent-hover);
   border-radius: var(--radius-sm);
   padding: 4px 10px;
@@ -461,8 +461,8 @@
 }
 
 .btn-back-global:hover {
-  background: var(--indigo-dim-20);
-  border-color: var(--indigo);
+  background: var(--accent-dim-20);
+  border-color: var(--accent);
   color: var(--text-primary);
   transform: translateX(-2px);
 }

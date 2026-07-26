@@ -24,12 +24,9 @@
   --accent: #4a9e9e;
   --accent-hover: #6bbaba;
   --accent-glow: rgba(74, 158, 158, 0.15);
-
-  /* ── Secondary accent (indigo — buildings, layers) ── */
-  --indigo: #5b6abf;
-  --indigo-dim: rgba(91, 106, 191, 0.12);
-  --indigo-dim-20: rgba(91, 106, 191, 0.2);
-  --indigo-dim-25: rgba(91, 106, 191, 0.25);
+  --accent-dim: rgba(74, 158, 158, 0.12);
+  --accent-dim-20: rgba(74, 158, 158, 0.2);
+  --accent-dim-25: rgba(74, 158, 158, 0.25);
 
   /* ── Semantic colors ── */
   --green: #5cb87a;

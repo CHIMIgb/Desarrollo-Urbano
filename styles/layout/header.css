@@ -36,7 +36,7 @@
 }
 
 .logo-tag {
-  background: var(--indigo);
+  background: var(--accent);
   color: var(--text-on-accent);
   font-size: 9px;
   font-weight: 700;
@@ -224,7 +224,7 @@
 .user-avatar {
   width: 30px;
   height: 30px;
-  background: var(--indigo);
+  background: var(--accent);
   border-radius: var(--radius);
   display: flex;
   align-items: center;
