@@ -108,18 +108,21 @@ export function initToolbarEvents() {
 
   document.getElementById('tool-terrain-toggle')?.addEventListener('click', () => {
     if (!state.map) return;
+    const terrainExSlider = document.getElementById('terrainExaggeration');
     // state.terrainEnabled: undefined/true = activo, false = inactivo
     if (state.terrainEnabled === false) {
       // Activar relieve
       import('../map/core.js').then(m => m.addTerrainSource());
       state.terrainEnabled = true;
       document.getElementById('tool-terrain-toggle')?.classList.add('active');
+      if (terrainExSlider) terrainExSlider.disabled = false;
       toast('Modelo de elevación activado', 'info');
     } else {
       // Desactivar relieve
       state.map.setTerrain(null);
       state.terrainEnabled = false;
       document.getElementById('tool-terrain-toggle')?.classList.remove('active');
+      if (terrainExSlider) terrainExSlider.disabled = true;
       toast('Modelo de elevación desactivado', 'info');
     }
   });

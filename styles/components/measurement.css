@@ -125,7 +125,7 @@
 .stats-dashboard {
   position: absolute;
   bottom: 25px;
-  left: var(--toolbar-w);
+  left: calc(var(--toolbar-w) + 16px);
   width: 300px;
   max-height: calc(100vh - 120px);
   background: var(--glass-bg);
