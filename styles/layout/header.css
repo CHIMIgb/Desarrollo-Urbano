@@ -12,25 +12,12 @@
   flex-shrink: 0;
 }
 
+/* ── Left: Logo + Project name ── */
 .header-left {
   display: flex;
   align-items: center;
-  gap: 16px;
-  min-width: 260px;
-}
-
-.header-center {
-  flex: 1;
-  display: flex;
-  justify-content: center;
-}
-
-.header-right {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  min-width: 260px;
-  justify-content: flex-end;
+  gap: 12px;
+  flex-shrink: 0;
 }
 
 .logo {
@@ -45,6 +32,7 @@
   font-size: 15px;
   color: var(--text-primary);
   letter-spacing: -0.3px;
+  white-space: nowrap;
 }
 
 .logo-tag {
@@ -55,6 +43,8 @@
   padding: 1px 5px;
   border-radius: var(--radius-sm);
   letter-spacing: 0.5px;
+  vertical-align: middle;
+  margin-left: 2px;
 }
 
 .project-name {
@@ -98,15 +88,23 @@
   vertical-align: middle;
 }
 
-/* SEARCH */
+/* ── Center: Search ── */
+.header-center {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  min-width: 0;
+}
+
 .search-box {
   position: relative;
-  width: 320px;
+  width: 100%;
+  max-width: 340px;
 }
 
 .search-icon {
   position: absolute;
-  left: 14px;
+  left: 12px;
   top: 50%;
   transform: translateY(-50%);
   color: var(--text-muted);
@@ -118,9 +116,9 @@
   background: var(--bg-700);
   border: 1px solid var(--border);
   border-radius: var(--radius-full);
-  padding: 9px 16px 9px 38px;
+  padding: 8px 14px 8px 34px;
   color: var(--text-primary);
-  font-size: 13px;
+  font-size: 12px;
   font-family: inherit;
   outline: none;
   transition: all var(--transition-base);
@@ -180,32 +178,51 @@
   display: block;
 }
 
-.divider-v {
-  width: 1px;
-  height: 20px;
-  background: var(--border);
-  margin: 0 4px;
+/* ── Right: Actions ── */
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
 }
 
-/* User Profile in Header */
+.header-right .btn {
+  padding: 6px 8px;
+}
+
+.header-right .btn-primary {
+  padding: 6px 12px;
+}
+
+.divider-v {
+  width: 1px;
+  height: 18px;
+  background: var(--border);
+  margin: 0 4px;
+  flex-shrink: 0;
+}
+
+/* ── User Profile ── */
 .user-profile {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding-left: 8px;
+  gap: 8px;
+  padding-left: 6px;
+  margin-left: 4px;
 }
 
 .user-avatar {
-  width: 32px;
-  height: 32px;
+  width: 30px;
+  height: 30px;
   background: var(--indigo);
   border-radius: var(--radius);
   display: flex;
   align-items: center;
   justify-content: center;
   font-weight: 700;
-  font-size: 14px;
+  font-size: 12px;
   color: var(--text-on-accent);
+  flex-shrink: 0;
 }
 
 .user-info {
@@ -214,23 +231,37 @@
 }
 
 .user-name {
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 600;
   color: var(--text-primary);
+  line-height: 1.2;
 }
 
 .btn-logout {
   background: none;
   border: none;
   color: var(--red);
-  font-size: 11px;
+  font-size: 10px;
   padding: 0;
   text-align: left;
   cursor: pointer;
   transition: color var(--transition-fast);
+  line-height: 1.2;
 }
 
 .btn-logout:hover {
   color: var(--red);
   text-decoration: underline;
+}
+
+/* ── Header Import/Export (moved to header-right area) ── */
+.header-actions {
+  display: flex;
+  gap: 6px;
+  margin-right: 8px;
+}
+
+.header-actions .btn {
+  padding: 6px 10px;
+  font-size: 11px;
 }

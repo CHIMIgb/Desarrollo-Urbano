@@ -1,4 +1,6 @@
-/* ============================================================ PROPS PANEL */
+/* ============================================================
+   PROPS PANEL — Right sidebar
+   ============================================================ */
 .props-panel {
   width: var(--panel-w);
   background: var(--bg-800);
@@ -10,43 +12,81 @@
   display: flex;
   flex-direction: column;
   overflow-y: auto;
+  overflow-x: hidden;
   flex-shrink: 0;
+  scroll-behavior: smooth;
 }
 
+/* ── Panel scrollbar ── */
+.props-panel::-webkit-scrollbar {
+  width: 3px;
+}
+
+.props-panel::-webkit-scrollbar-track {
+  background: var(--bg-800);
+}
+
+.props-panel::-webkit-scrollbar-thumb {
+  background: var(--accent);
+  border-radius: var(--radius-xs);
+}
+
+/* ── Panel Sections ── */
 .panel-section {
   padding: 14px 12px;
   border-bottom: 1px dashed var(--border);
+  animation: panelSectionIn 0.2s ease;
+}
+
+@keyframes panelSectionIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.panel-section:last-child {
+  border-bottom: none;
 }
 
 .panel-title {
   display: flex;
   align-items: center;
-  gap: 7px;
+  gap: 6px;
+  font-family: var(--font-display);
   font-size: 10px;
   font-weight: 600;
   color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.8px;
   margin-bottom: 10px;
+  user-select: none;
 }
 
-/* LAYERS */
+/* ============================================================
+   LAYERS LIST
+   ============================================================ */
 .layers-list {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 2px;
 }
 
 .layer-item {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 6px 8px;
+  padding: 5px 6px;
   border-radius: var(--radius);
   cursor: pointer;
   transition: background var(--transition-fast);
-  font-size: 12px;
+  font-size: 11px;
   color: var(--text-secondary);
+  user-select: none;
 }
 
 .layer-item:hover {
@@ -54,6 +94,7 @@
   color: var(--text-primary);
 }
 
+/* ── Toggle switch ── */
 .layer-item input[type=checkbox] {
   appearance: none;
   -webkit-appearance: none;
@@ -104,7 +145,9 @@
   flex-shrink: 0;
 }
 
-/* PROPERTIES FORM */
+/* ============================================================
+   PROPERTIES FORM
+   ============================================================ */
 .props-form {
   display: flex;
   flex-direction: column;
@@ -134,7 +177,7 @@
   font-size: 12px;
   font-family: inherit;
   outline: none;
-  transition: border-color var(--transition-fast);
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
   width: 100%;
 }
 
@@ -166,7 +209,9 @@
   padding: 6px 8px;
 }
 
-/* STATS */
+/* ============================================================
+   STATS GRID (inside panel)
+   ============================================================ */
 .stats-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -181,11 +226,12 @@
   text-align: center;
 }
 
-.stat-val {
-  font-size: 20px;
+.stat-card .stat-val {
+  font-size: 18px;
   font-weight: 700;
   color: var(--text-primary);
   line-height: 1;
+  font-family: var(--font-mono);
 }
 
 .stat-lbl {
@@ -194,9 +240,12 @@
   margin-top: 3px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
+  font-family: var(--font-display);
 }
 
-/* TERRAIN CONTROLS */
+/* ============================================================
+   TERRAIN CONTROLS
+   ============================================================ */
 .terrain-controls {
   display: flex;
   flex-direction: column;
@@ -222,4 +271,5 @@
   color: var(--accent-hover);
   font-weight: 600;
   font-size: 11px;
+  font-family: var(--font-mono);
 }

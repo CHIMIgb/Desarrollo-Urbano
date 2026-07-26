@@ -1,4 +1,6 @@
-/* ============================================================ PRECISION PANEL */
+/* ============================================================
+   PRECISION PANEL — Engineering-grade editing
+   ============================================================ */
 .precision-panel {
   position: relative;
   width: 100%;
@@ -12,14 +14,14 @@
   font-family: var(--font-body);
   display: flex;
   flex-direction: column;
-  animation: precFadeIn 0.25s ease;
+  animation: precFadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   margin-bottom: 12px;
 }
 
 @keyframes precFadeIn {
   from {
     opacity: 0;
-    transform: translateY(-8px) scale(0.97);
+    transform: translateY(-6px) scale(0.98);
   }
 
   to {
@@ -33,16 +35,16 @@
 }
 
 .precision-panel.collapsed {
-  max-height: 44px;
+  max-height: 40px;
 }
 
 .precision-panel.collapsed .prec-toggle {
   transform: rotate(180deg);
 }
 
-/* Header */
+/* ── Header ── */
 .prec-header {
-  padding: 12px 14px;
+  padding: 10px 12px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -56,9 +58,10 @@
 .prec-title {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 7px;
+  font-family: var(--font-display);
   font-weight: 700;
-  font-size: 12px;
+  font-size: 11px;
   color: var(--accent-hover);
   letter-spacing: 0.3px;
 }
@@ -74,7 +77,7 @@
   transition: transform var(--transition-fast);
 }
 
-/* Body */
+/* ── Body ── */
 .prec-body {
   padding: 0;
   overflow-y: auto;
@@ -82,9 +85,18 @@
   flex: 1;
 }
 
-/* Section */
+.prec-body::-webkit-scrollbar {
+  width: 3px;
+}
+
+.prec-body::-webkit-scrollbar-thumb {
+  background: var(--accent);
+  border-radius: var(--radius-xs);
+}
+
+/* ── Section ── */
 .prec-section {
-  padding: 10px 14px;
+  padding: 10px 12px;
   border-bottom: 1px solid var(--border);
 }
 
@@ -93,6 +105,7 @@
 }
 
 .prec-section-label {
+  font-family: var(--font-display);
   font-size: 9px;
   font-weight: 600;
   color: var(--text-muted);
@@ -104,7 +117,7 @@
   gap: 5px;
 }
 
-/* Vertex Select */
+/* ── Vertex Select ── */
 .prec-select {
   width: 100%;
   background: var(--bg-700);
@@ -113,11 +126,11 @@
   padding: 6px 8px;
   color: var(--text-primary);
   font-size: 11px;
-  font-family: inherit;
+  font-family: var(--font-mono);
   outline: none;
   cursor: pointer;
   margin-bottom: 8px;
-  transition: border-color var(--transition-fast);
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
 }
 
 .prec-select:focus {
@@ -129,7 +142,7 @@
   background: var(--bg-700);
 }
 
-/* Vertex Info */
+/* ── Vertex Info ── */
 .prec-vertex-info {
   margin-top: 4px;
 }
@@ -137,7 +150,7 @@
 .prec-info-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 6px;
+  gap: 5px;
 }
 
 .prec-info-item {
@@ -157,6 +170,7 @@
   font-size: 9px;
   color: var(--text-muted);
   font-weight: 500;
+  font-family: var(--font-display);
 }
 
 .prec-info-value {
@@ -176,7 +190,7 @@
   color: var(--accent-hover);
 }
 
-/* Input rows */
+/* ── Input rows ── */
 .prec-input-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -191,6 +205,7 @@
 }
 
 .prec-input-group label {
+  font-family: var(--font-display);
   font-size: 9px;
   color: var(--text-muted);
   font-weight: 500;
@@ -232,13 +247,14 @@
 .prec-input-unit span {
   position: absolute;
   right: 7px;
+  font-family: var(--font-mono);
   font-size: 10px;
   color: var(--text-muted);
   pointer-events: none;
   font-weight: 600;
 }
 
-/* Compass hint */
+/* ── Compass hint ── */
 .prec-compass-hint {
   font-size: 9px;
   color: var(--text-secondary);
@@ -247,7 +263,7 @@
   line-height: 1.3;
 }
 
-/* Buttons */
+/* ── Buttons ── */
 .prec-btn {
   width: 100%;
   justify-content: center;
@@ -256,18 +272,18 @@
   gap: 6px;
 }
 
-/* Feature center text */
+/* ── Feature center text ── */
 .prec-feature-center {
+  font-family: var(--font-mono);
   font-size: 10px;
   color: var(--text-secondary);
-  font-family: var(--font-mono);
   margin-bottom: 8px;
   background: var(--surface-hover);
   padding: 5px 8px;
   border-radius: var(--radius-sm);
 }
 
-/* Dividers */
+/* ── Dividers ── */
 .prec-divider {
   height: 1px;
   background: linear-gradient(90deg, transparent, var(--accent-glow), transparent);
@@ -280,7 +296,7 @@
   margin: 10px 0;
 }
 
-/* Hint text */
+/* ── Hint text ── */
 .prec-hint {
   font-size: 10px;
   color: var(--text-secondary);
@@ -289,7 +305,7 @@
   font-style: italic;
 }
 
-/* Hide Chrome number input spinners for precision */
+/* ── Hide Chrome number input spinners ── */
 .prec-input-group input[type=number]::-webkit-inner-spin-button,
 .prec-input-group input[type=number]::-webkit-outer-spin-button {
   -webkit-appearance: none;
@@ -301,7 +317,9 @@
   appearance: textfield;
 }
 
-/* --- SPINNER --- */
+/* ============================================================
+   SPINNER — Loading indicator
+   ============================================================ */
 .spinner-container {
   display: flex;
   align-items: center;
@@ -310,12 +328,12 @@
 }
 
 .spinner {
-  width: 16px;
-  height: 16px;
+  width: 14px;
+  height: 14px;
   border: 2px solid var(--border);
   border-radius: 50%;
   border-top-color: var(--text-secondary);
-  animation: spin 1s linear infinite;
+  animation: spin 0.8s linear infinite;
   display: inline-block;
 }
 

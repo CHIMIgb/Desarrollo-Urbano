@@ -34,6 +34,7 @@
   font-weight: 700;
   color: var(--green);
   line-height: 1.1;
+  font-family: var(--font-mono);
 }
 
 .measure-unit {
@@ -57,9 +58,10 @@
   font-weight: 600;
   pointer-events: none;
   z-index: 10;
+  font-family: var(--font-mono);
 }
 
-/* Object popup */
+/* ── Object popup ── */
 .maplibregl-popup-content {
   background: var(--bg-700) !important;
   color: var(--text-primary) !important;
@@ -108,15 +110,19 @@
 .popup-prop-val {
   color: var(--text-primary);
   font-weight: 500;
+  font-family: var(--font-mono);
+  font-size: 11px;
 }
 
-/* --- Dashboard de Métricas Urbanas --- */
+/* ============================================================
+   STATS DASHBOARD — Floating panel over map
+   ============================================================ */
 .stats-dashboard {
   position: absolute;
   bottom: 25px;
   left: 100px;
   width: 300px;
-  max-height: calc(100vh - 100px);
+  max-height: calc(100vh - 120px);
   background: var(--glass-bg);
   background-image:
     linear-gradient(var(--grid-line) 1px, transparent 1px),
@@ -140,8 +146,9 @@
   height: 48px;
 }
 
+/* ── Dashboard Header ── */
 .stats-header {
-  padding: 14px 16px;
+  padding: 12px 14px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -149,15 +156,18 @@
   cursor: pointer;
   flex-shrink: 0;
   border-bottom: 1px solid var(--border);
+  user-select: none;
 }
 
 .stats-title {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   font-weight: 700;
-  font-size: 14px;
+  font-size: 12px;
   color: var(--accent);
+  font-family: var(--font-display);
+  letter-spacing: 0.3px;
 }
 
 .stats-toggle {
@@ -175,27 +185,30 @@
   transform: rotate(180deg);
 }
 
+/* ── Dashboard Body ── */
 .stats-body {
   padding: 0;
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  height: 100%;
+  flex: 1;
+  min-height: 0;
 }
 
 .stats-summary-fixed {
-  padding: 16px;
+  padding: 14px;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 12px;
   flex-shrink: 0;
   background: var(--surface-hover);
 }
 
 .stats-scroll-area {
-  padding: 0 16px 16px 16px;
+  padding: 0 14px 14px 14px;
   overflow-y: auto;
   flex: 1;
+  min-height: 0;
 }
 
 /* Scrollbar para la zona inferior */
@@ -212,10 +225,11 @@
   border-radius: var(--radius-xs);
 }
 
+/* ── Stat items ── */
 .stat-item {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
 }
 
 .stat-info {
@@ -225,23 +239,25 @@
 }
 
 .stat-label {
-  font-size: 11px;
+  font-size: 10px;
   text-transform: uppercase;
   letter-spacing: 0.8px;
   color: var(--text-secondary);
   font-weight: 600;
+  font-family: var(--font-display);
 }
 
 .stat-val {
-  font-size: 15px;
-  font-weight: 800;
+  font-size: 14px;
+  font-weight: 700;
   color: var(--text-primary);
+  font-family: var(--font-mono);
 }
 
 .stat-bar-bg {
-  height: 5px;
+  height: 4px;
   background: var(--bg-500);
-  border-radius: 3px;
+  border-radius: 2px;
   overflow: hidden;
 }
 
@@ -250,47 +266,53 @@
   background: var(--accent);
   width: 0%;
   transition: width var(--transition-slow);
+  border-radius: 2px;
 }
 
+/* ── Dashboard Footer ── */
 .stats-footer {
-  padding: 10px 16px;
-  font-size: 10px;
-  color: var(--text-secondary);
+  padding: 8px 14px;
+  font-size: 9px;
+  color: var(--text-muted);
   font-style: italic;
   border-top: 1px solid var(--border);
   background: var(--surface-active);
   flex-shrink: 0;
+  letter-spacing: 0.3px;
 }
 
-/* --- Desglose Multi-Lote --- */
+/* ============================================================
+   LOT BREAKDOWN — Per-terrain details
+   ============================================================ */
 .stats-breakdown {
   margin-top: 0;
-  padding-top: 15px;
+  padding-top: 14px;
   border-top: 1px dashed var(--border);
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
 }
 
 .breakdown-label {
-  font-size: 11px;
-  font-weight: 800;
+  font-size: 10px;
+  font-weight: 700;
   text-transform: uppercase;
   color: var(--accent);
   letter-spacing: 1.2px;
+  font-family: var(--font-display);
 }
 
 .lot-list {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
 }
 
 .lot-card {
   background: var(--surface-hover);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: 12px;
+  padding: 10px;
   cursor: pointer;
   transition: background var(--transition-fast), border-color var(--transition-fast);
 }
@@ -309,11 +331,11 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
 }
 
 .lot-name {
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 700;
   color: var(--text-primary);
   margin-bottom: 0;
@@ -324,14 +346,14 @@
   background: var(--surface-hover);
   border: 1px solid var(--border);
   color: var(--text-muted);
-  width: 24px;
-  height: 24px;
+  width: 22px;
+  height: 22px;
   border-radius: var(--radius-sm);
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: all var(--transition-base);
+  transition: all var(--transition-fast);
 }
 
 .btn-locate-lot:hover {
@@ -348,13 +370,13 @@
 .lot-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 6px 12px;
+  gap: 4px 10px;
 }
 
 .lot-sub-stat {
   display: flex;
   justify-content: space-between;
-  font-size: 11px;
+  font-size: 10px;
 }
 
 .lot-sub-label {
@@ -364,6 +386,8 @@
 .lot-sub-val {
   font-weight: 700;
   color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: 10px;
 }
 
 .lot-sub-val.alert {
@@ -387,6 +411,7 @@
   opacity: 0.15;
 }
 
+/* ── Back to global button ── */
 .btn-back-global {
   background: var(--indigo-dim);
   border: 1px solid var(--indigo-dim-25);
@@ -403,7 +428,8 @@
   gap: 6px;
   transition: all var(--transition-fast);
   margin-left: auto;
-  margin-right: 12px;
+  margin-right: 8px;
+  font-family: var(--font-display);
 }
 
 .btn-back-global:hover {

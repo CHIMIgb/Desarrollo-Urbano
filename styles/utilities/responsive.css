@@ -1,5 +1,5 @@
 /* ============================================================
-   RESPONSIVE — Mobile blocker overlay
+   RESPONSIVE — Mobile blocker + responsive adjustments
    ============================================================ */
 .mobile-blocker {
   display: none;
@@ -24,35 +24,59 @@
   border-radius: var(--radius-xl);
   width: 100%;
   max-width: 480px;
-  box-shadow: var(--shadow);
+  box-shadow: var(--shadow-lg);
   text-align: center;
+  animation: cardIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .blocker-card svg {
-  margin-bottom: 24px;
+  margin-bottom: 20px;
   color: var(--accent);
 }
 
 .blocker-card h2 {
-  font-size: 24px;
+  font-family: var(--font-display);
+  font-size: 22px;
   font-weight: 700;
-  margin-bottom: 16px;
+  margin-bottom: 12px;
   color: var(--text-primary);
+  letter-spacing: -0.3px;
 }
 
 .blocker-card p {
   color: var(--text-secondary);
-  font-size: 15px;
+  font-size: 14px;
   line-height: 1.6;
 }
 
-/* Mostrar el blocker y ocultar la app en pantallas pequeñas */
+/* ── Hide app on small screens ── */
 @media (max-width: 1024px) {
   .mobile-blocker {
     display: flex;
   }
-  
-  .login-overlay, .app-body, .app-header {
+
+  .login-overlay,
+  .app-body,
+  .app-header {
     display: none !important;
+  }
+
+  .stats-dashboard {
+    display: none !important;
+  }
+}
+
+/* ── Compact header on medium screens ── */
+@media (max-width: 1280px) {
+  .header-actions .btn span {
+    display: none;
+  }
+
+  .search-box {
+    max-width: 240px;
+  }
+
+  .project-name {
+    max-width: 120px;
   }
 }

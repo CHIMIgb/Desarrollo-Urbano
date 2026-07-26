@@ -94,17 +94,6 @@
         </div>
         <div class="project-name" id="projectName" contenteditable="true" spellcheck="false" role="textbox" aria-label="Nombre del proyecto">Nuevo proyecto urbano</div>
       </div>
-      <div class="header-actions">
-        <label class="btn btn-secondary" title="Cargar proyecto">
-          <input type="file" id="fileImport" accept=".json" class="hidden" />
-          <i data-icon="import"></i>
-          Importar
-        </label>
-        <button class="btn btn-primary" id="btnExport" title="Guardar proyecto">
-          <i data-icon="export"></i>
-          Exportar
-        </button>
-      </div>
       <div class="header-center">
         <div class="search-box">
           <i data-icon="search" class="search-icon"></i>
@@ -127,6 +116,17 @@
           <i data-icon="folder"></i>
         </button>
         <div class="divider-v"></div>
+        <div class="header-actions">
+          <label class="btn btn-secondary" title="Importar proyecto">
+            <input type="file" id="fileImport" accept=".json" class="hidden" />
+            <i data-icon="import"></i>
+            Importar
+          </label>
+          <button class="btn btn-secondary" id="btnExport" title="Exportar proyecto">
+            <i data-icon="export"></i>
+            Exportar
+          </button>
+        </div>
         <button class="btn btn-primary" id="btnSave">
           <i data-icon="save"></i>
           Guardar

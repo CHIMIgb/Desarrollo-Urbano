@@ -22,19 +22,20 @@
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border: 1px solid var(--glass-border);
-  padding: 8px 16px;
+  padding: 7px 14px;
   border-radius: var(--radius-full);
-  font-size: 12px;
+  font-size: 11px;
   color: var(--text-secondary);
   pointer-events: none;
   z-index: 10;
-  animation: fadeInUp 0.3s ease;
+  animation: fadeInUp 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  white-space: nowrap;
 }
 
 @keyframes fadeInUp {
   from {
     opacity: 0;
-    transform: translateX(-50%) translateY(8px);
+    transform: translateX(-50%) translateY(6px);
   }
   to {
     opacity: 1;
@@ -52,13 +53,14 @@
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border: 1px solid var(--glass-border);
-  padding: 4px 10px;
+  padding: 3px 8px;
   border-radius: var(--radius-sm);
   font-size: 10px;
   color: var(--text-secondary);
   font-family: var(--font-mono);
   pointer-events: none;
   z-index: 10;
+  letter-spacing: 0.3px;
 }
 
 /* ── Map cursor modes ── */

@@ -1,4 +1,6 @@
-/* ============================================================ TOAST */
+/* ============================================================
+   TOAST — Notification toasts
+   ============================================================ */
 .toast-container {
   position: fixed;
   bottom: 20px;
@@ -7,22 +9,26 @@
   flex-direction: column;
   gap: 8px;
   z-index: 9999;
+  pointer-events: none;
 }
 
 .toast {
   background: var(--bg-700);
   backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
-  padding: 10px 16px;
+  padding: 10px 14px;
   font-size: 12px;
   color: var(--text-primary);
   box-shadow: var(--shadow);
   display: flex;
   align-items: center;
   gap: 8px;
-  animation: toastIn 0.3s var(--transition-smooth);
-  min-width: 220px;
+  animation: toastIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  min-width: 200px;
+  max-width: 360px;
+  pointer-events: auto;
 }
 
 .toast.success {
@@ -31,6 +37,10 @@
 
 .toast.error {
   border-color: var(--red-dim-25);
+}
+
+.toast.info {
+  border-color: var(--accent-glow);
 }
 
 .toast-dot {
