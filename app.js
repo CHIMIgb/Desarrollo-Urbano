@@ -21,8 +21,11 @@ import { initStatsEvents, updateGlobalStats } from './src/ui/stats.js';
 
 import { initAuth } from './src/ui/auth.js';
 import { injectIcons } from './src/ui/icons.js';
+import { initGlobalErrors } from './src/utils/globalErrors.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
+  // Global error handler
+  initGlobalErrors();
   // Inject icons
   injectIcons();
   // Cargar configuración remota (OSM de un servidor .env)

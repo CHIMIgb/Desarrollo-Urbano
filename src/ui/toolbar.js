@@ -11,6 +11,9 @@ import { trapFocus, releaseFocus } from '../utils/focusTrap.js';
 // Re-exportar para compatibilidad con módulos que importan { toast } de aquí
 export const toast = notify;
 
+// Exponer toast globalmente para globalErrors.js
+window.__toastFromToolbar = notify;
+
 // La función updateStats ha sido consolidada en stats.js (updateGlobalStats)
 export function setTool(tool) {
   state.tool = tool; 

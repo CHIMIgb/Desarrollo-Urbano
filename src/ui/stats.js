@@ -96,7 +96,7 @@ export function calculateCurrentMetrics() {
                   if (minDistance < lot.min_setback) {
                     lot.setback_violations++;
                   }
-                } catch (e) { console.warn("Turf setback check error", e); }
+                } catch (e) { console.warn('[Stats] Error verificando setback', e); }
               }
             } else if (['park', 'water'].includes(type)) {
               lot.green_area += area;

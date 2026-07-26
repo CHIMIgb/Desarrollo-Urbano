@@ -48,7 +48,7 @@ async function doAutosave() {
       body: JSON.stringify(saveData)
     });
     if (res.ok) { markClean(); _lastSavedAt = Date.now(); updateSaveIndicator(); }
-  } catch (e) { /* silenciar errores de autosave */ }
+  } catch (e) { console.warn('[Autosave] Error guardando automáticamente', e); }
 }
 
 // Actualizar indicador cada 15s
@@ -88,7 +88,7 @@ export function initIOEvents() {
           details: { filename: a.download, featureCount: state.features.length }
         })
       });
-    } catch (e) { console.warn('Error registrando auditoria de exportacion', e); }
+    } catch (e) { console.warn('[Export] Error registrando auditoría', e); }
 
     toast('Exportado y registrado en bitácora', 'success');
   });
@@ -208,7 +208,8 @@ export async function loadSavedState() {
     if (data.project) applyProjectData(data.project);
   } catch (e) {
     dismissToast();
-    console.error('Error loading initial state', e);
+    console.error('[IO] Error cargando estado inicial', e);
+    toast('Error al cargar el proyecto', 'error');
   }
 }
 
@@ -224,7 +225,8 @@ export async function listUserProjects() {
     const data = await response.json();
     return data.projects || [];
   } catch (e) {
-    console.error('Error listing projects', e);
+    console.error('[IO] Error listando proyectos', e);
+    toast('Error al cargar proyectos', 'error');
     return [];
   }
 }

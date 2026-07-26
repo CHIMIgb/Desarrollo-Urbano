@@ -51,6 +51,11 @@
   background: linear-gradient(135deg, var(--bg-700) 0%, var(--accent-dim-20) 100%);
 }
 
+.toast.warning {
+  border-color: rgba(251, 191, 36, 0.25);
+  background: linear-gradient(135deg, var(--bg-700) 0%, rgba(251, 191, 36, 0.12) 100%);
+}
+
 .toast-dot {
   width: 6px;
   height: 6px;
@@ -72,6 +77,11 @@
 .toast.info .toast-dot {
   background: var(--accent);
   box-shadow: 0 0 6px var(--accent);
+}
+
+.toast.warning .toast-dot {
+  background: #fbbf24;
+  box-shadow: 0 0 6px #fbbf24;
 }
 
 @keyframes dotPulse {

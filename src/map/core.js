@@ -156,7 +156,7 @@ export function addTerrainSource() {
       'space-color': 'rgb(5,8,20)',
       'star-intensity': 0.5
     });
-  } catch (e) { }
+  } catch (e) { console.warn('[Map] Error configurando niebla', e); }
 }
 
 export function buildGeoJSON() {

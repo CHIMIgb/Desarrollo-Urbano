@@ -1,23 +1,21 @@
-// Middleware global para manejo de errores
-const errorHandler = (err, req, res, next) => {
-  console.error('[ERROR GLOBAL]', err);
+const logger = require('../logger');
 
-  // Si es un error personalizado con status (lanzado desde un controlador)
-  if (err.statusCode) {
-    return res.status(err.statusCode).json({
-      success: false,
-      error: err.message
-    });
+const errorHandler = (err, req, res, next) => {
+  const statusCode = err.statusCode || 500;
+  const isClient = statusCode < 500;
+
+  if (isClient) {
+    logger.warn({ err, statusCode, url: req.url }, err.message);
+  } else {
+    logger.error({ err, statusCode, url: req.url }, err.message);
   }
 
-  // Error genérico del servidor
-  res.status(500).json({
+  res.status(statusCode).json({
     success: false,
-    error: err.message || 'Error interno del servidor'
+    error: isClient ? err.message : 'Error interno del servidor'
   });
 };
 
-// Clase utilitaria para errores HTTP
 class HttpError extends Error {
   constructor(statusCode, message) {
     super(message);

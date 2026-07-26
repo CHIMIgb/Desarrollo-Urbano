@@ -1,27 +1,66 @@
 const express = require('express');
 const cors = require('cors');
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
+const pinoHttp = require('pino-http');
 const path = require('path');
 const authRouter = require('./routes/auth');
 const projectsRouter = require('./routes/projects');
 const { errorHandler } = require('./middleware/errorMiddleware');
+const logger = require('./logger');
 require('dotenv').config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Middleware
-app.use(cors());
+// ── Helmet — HTTP security headers ─────────────────────────────
+app.use(helmet({
+  contentSecurityPolicy: false,
+  crossOriginEmbedderPolicy: false
+}));
+
+// ── CORS ───────────────────────────────────────────────────────
+const allowedOrigins = process.env.CORS_ORIGINS
+  ? process.env.CORS_ORIGINS.split(',').map(s => s.trim())
+  : ['http://localhost:3000', 'http://localhost:5173'];
+
+app.use(cors({
+  origin: allowedOrigins,
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true
+}));
+
+// ── Rate limiting global ────────────────────────────────────────
+const globalLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 100,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { success: false, error: 'Demasiadas peticiones, intenta más tarde' }
+});
+app.use('/api/', globalLimiter);
+
+// ── Rate limiting auth (más restrictivo) ────────────────────────
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { success: false, error: 'Demasiados intentos de autenticación, espera 15 minutos' }
+});
+app.use('/api/auth/login', authLimiter);
+app.use('/api/auth/register', authLimiter);
+
+// ── Body parsing ────────────────────────────────────────────────
 const maxLimit = process.env.MAX_PAYLOAD_SIZE || '100mb';
 app.use(express.json({ limit: maxLimit }));
 app.use(express.urlencoded({ limit: maxLimit, extended: true }));
 
-// Logger simple para depuracion
-app.use((req, res, next) => {
-  console.log(`[API LOG] ${req.method} ${req.url}`);
-  next();
-});
+// ── pino-http request logging ───────────────────────────────────
+app.use(pinoHttp({ logger, autoLogging: isProd }));
 
-// Rutas de API
+// ── Rutas de API ────────────────────────────────────────────────
 app.use('/api/auth', authRouter);
 app.use('/api/projects', projectsRouter);
 
@@ -34,35 +73,34 @@ app.get('/api/config', (req, res) => {
   });
 });
 
-// Servir archivos estaticos del frontend
-// En produccion: dist/ (build de Vite). En desarrollo: raiz del proyecto.
+// ── Static files ────────────────────────────────────────────────
 const isProd = process.env.NODE_ENV === 'production';
 const staticDir = isProd ? path.join(__dirname, '../dist') : path.join(__dirname, '../');
 app.use(express.static(staticDir));
 
-// Seguridad: Bloquear acceso a archivos sensibles del backend
+// ── Security: block access to backend files ─────────────────────
 app.use((req, res, next) => {
   const forbidden = ['/server', '/data', '/package', '/.env', '/README'];
   if (forbidden.some(f => req.path.startsWith(f))) {
-    return res.status(403).json({ error: 'Acceso denegado a archivos internos' });
+    return res.status(403).json({ success: false, error: 'Acceso denegado' });
   }
   next();
 });
 
-// Catch-all: Envia index.html para cualquier otra ruta (SPA) o devuelve 404 para API
+// ── Catch-all ───────────────────────────────────────────────────
 app.use((req, res) => {
   if (req.url.startsWith('/api/')) {
-    console.warn(`[404 WARNING] API Endpoint no encontrado: ${req.method} ${req.url}`);
-    return res.status(404).json({ error: `API endpoint not found: ${req.url}` });
+    logger.warn({ method: req.method, url: req.url }, 'API endpoint no encontrado');
+    return res.status(404).json({ success: false, error: `Endpoint no encontrado: ${req.url}` });
   }
   res.sendFile(path.join(staticDir, 'index.html'));
 });
 
-// Catch-all de errores Express (Manejador Global unificado)
+// ── Abort handler ───────────────────────────────────────────────
 app.use((err, req, res, next) => {
   if (err.type === 'request.aborted') {
-    console.warn(`[WARN] Cliente aborto la peticion HTTP prematuramente en ${req.url}`);
-    return res.status(400).end();
+    logger.warn({ url: req.url }, 'Cliente abortó petición');
+    return res.status(400).json({ success: false, error: 'Petición abortada' });
   }
   next(err);
 });
@@ -70,5 +108,5 @@ app.use((err, req, res, next) => {
 app.use(errorHandler);
 
 app.listen(PORT, () => {
-  console.log(`Servidor UrbanPlan 3D corriendo en http://localhost:${PORT}`);
+  logger.info({ port: PORT, env: process.env.NODE_ENV || 'development' }, 'Servidor UrbanPlan 3D iniciado');
 });
