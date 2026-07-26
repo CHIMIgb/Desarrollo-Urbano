@@ -196,7 +196,7 @@ export async function loadSavedState() {
   if (!token) return;
   const dismissToast = toast('Inicializando entorno geoespacial...', 'loading', 0);
   try {
-    const response = await fetch('/api/projects/latest', {
+    const response = await fetch('/api/projects/load', {
       headers: { 'Authorization': token }
     });
     if (!response.ok) {
