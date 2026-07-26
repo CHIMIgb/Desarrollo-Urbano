@@ -12,6 +12,7 @@ require('dotenv').config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+const isProd = process.env.NODE_ENV === 'production';
 
 // ── Helmet — HTTP security headers ─────────────────────────────
 app.use(helmet({
@@ -74,7 +75,6 @@ app.get('/api/config', (req, res) => {
 });
 
 // ── Static files ────────────────────────────────────────────────
-const isProd = process.env.NODE_ENV === 'production';
 const staticDir = isProd ? path.join(__dirname, '../dist') : path.join(__dirname, '../');
 app.use(express.static(staticDir));
 
