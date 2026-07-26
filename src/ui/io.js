@@ -1,10 +1,61 @@
 import { state } from '../config/state.js';
+import { EventBus, Events } from '../config/events.js';
 import { pushHistory } from '../tools/interaction.js';
 import { refreshMap } from '../map/core.js';
 import { toast } from './toolbar.js';
-import { markClean } from './toolbar.js';
+import { markClean, markDirty, isDirty } from './toolbar.js';
 import { calculateCurrentMetrics } from './stats.js';
 import { getFeatureCenter } from '../utils/geo.js';
+
+// ── Autosave ──────────────────────────────────────────────────
+let _lastSavedAt = null;
+let _autosaveTimer = null;
+const AUTOSAVE_DELAY = 30000; // 30 segundos después del último cambio
+
+function updateSaveIndicator() {
+  const el = document.getElementById('saveStatus');
+  if (!el || !_lastSavedAt) { if (el) el.textContent = ''; return; }
+  const diff = Math.floor((Date.now() - _lastSavedAt) / 1000);
+  if (diff < 10) el.textContent = 'Guardado';
+  else if (diff < 60) el.textContent = `Guardado hace ${diff}s`;
+  else el.textContent = `Guardado hace ${Math.floor(diff / 60)} min`;
+}
+
+function scheduleAutosave() {
+  if (_autosaveTimer) clearTimeout(_autosaveTimer);
+  _autosaveTimer = setTimeout(() => { if (isDirty()) doAutosave(); }, AUTOSAVE_DELAY);
+}
+
+async function doAutosave() {
+  if (!state.currentProjectId || !isDirty()) return;
+  let mapView = null;
+  if (state.map) {
+    const c = state.map.getCenter();
+    mapView = { center: [c.lng, c.lat], zoom: state.map.getZoom(), pitch: state.map.getPitch(), bearing: state.map.getBearing() };
+  }
+  const saveData = {
+    name: document.getElementById('projectName')?.textContent || 'Proyecto',
+    features: state.features,
+    nextId: state.nextId,
+    projectId: state.currentProjectId,
+    mapView,
+    metrics: calculateCurrentMetrics()
+  };
+  try {
+    const res = await fetch('/api/projects/save', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': localStorage.getItem('urbanplan_token') },
+      body: JSON.stringify(saveData)
+    });
+    if (res.ok) { markClean(); _lastSavedAt = Date.now(); updateSaveIndicator(); }
+  } catch (e) { /* silenciar errores de autosave */ }
+}
+
+// Actualizar indicador cada 15s
+setInterval(updateSaveIndicator, 15000);
+
+// Suscribirse a cambios para programar autosave
+EventBus.on(Events.FEATURES_UPDATED, scheduleAutosave);
 
 export function initIOEvents() {
   // EXPORTAR CON AUDITORIA
@@ -123,6 +174,8 @@ export function initIOEvents() {
       if (response.ok) {
         state.currentProjectId = data.projectId;
         markClean();
+        _lastSavedAt = Date.now();
+        updateSaveIndicator();
         toast('Proyecto sincronizado', 'success');
       } else {
         toast('No se pudo guardar el proyecto', 'error');

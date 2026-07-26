@@ -124,6 +124,39 @@ export function initToolbarEvents() {
     }
   });
 
+  // Panel derecho colapsable
+  document.getElementById('panelToggleBtn')?.addEventListener('click', () => {
+    const panel = document.getElementById('propsPanel');
+    if (!panel) return;
+    const isCollapsed = panel.classList.toggle('collapsed');
+    const btn = document.getElementById('panelToggleBtn');
+    if (btn) {
+      btn.title = isCollapsed ? 'Expandir panel' : 'Colapsar panel';
+      btn.setAttribute('aria-label', isCollapsed ? 'Expandir panel de propiedades' : 'Colapsar panel de propiedades');
+    }
+    // Redimensionar mapa después de la transición
+    setTimeout(() => { state.map?.resize(); }, 350);
+  });
+
+  // Zoom-to-fit: ajustar vista a todas las features
+  document.getElementById('tool-fit-all')?.addEventListener('click', () => {
+    if (!state.map || state.features.length === 0) {
+      toast('No hay elementos en el proyecto', 'info');
+      return;
+    }
+    const coords = [];
+    state.features.forEach(f => {
+      const g = f.geometry;
+      if (g.type === 'Point') coords.push(g.coordinates);
+      else if (g.type === 'LineString') coords.push(...g.coordinates);
+      else if (g.type === 'Polygon') coords.push(...g.coordinates[0]);
+    });
+    if (coords.length === 0) return;
+    const bounds = coords.reduce((b, c) => b.extend(c), new maplibregl.LngLatBounds(coords[0], coords[0]));
+    state.map.fitBounds(bounds, { padding: 60, duration: 800, maxZoom: 18 });
+    toast('Vista ajustada al proyecto', 'info');
+  });
+
   document.getElementById('btnNew')?.addEventListener('click', async () => {
     const confirmed = await confirmDialog(
       'Crear nuevo proyecto urbanístico',

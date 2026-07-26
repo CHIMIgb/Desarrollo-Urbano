@@ -131,6 +131,7 @@
           <i data-icon="save"></i>
           Guardar
         </button>
+        <span class="save-status" id="saveStatus"></span>
         <div class="divider-v"></div>
         <div class="user-profile" id="userProfile">
           <div class="user-avatar" id="userInitial">U</div>
@@ -247,6 +248,10 @@
             <i data-icon="terrainToggle"></i>
             <span>Relieve</span>
           </button>
+          <button class="tool-btn" id="tool-fit-all" title="Ajustar vista a todo el proyecto" aria-pressed="false">
+            <i data-icon="select"></i>
+            <span>Ajustar</span>
+          </button>
         </div>
       </aside>
 
@@ -298,6 +303,10 @@
 
       <!-- RIGHT PANEL -->
       <aside class="props-panel" id="propsPanel" role="complementary" aria-label="Panel de propiedades">
+        <!-- Panel toggle (for collapsing) -->
+        <button class="panel-toggle-btn" id="panelToggleBtn" title="Colapsar panel" aria-label="Colapsar panel de propiedades">
+          <i data-icon="select"></i>
+        </button>
         <!-- Layers Tab -->
         <div class="panel-section">
           <div class="panel-title">

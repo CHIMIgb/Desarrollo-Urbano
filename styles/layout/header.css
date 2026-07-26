@@ -83,9 +83,19 @@
   width: 6px;
   height: 6px;
   background: var(--amber);
-  border-radius: 50%;
-  margin-left: 6px;
+  border-radius: var(--radius-full);
+  margin-left: var(--space-1);
   vertical-align: middle;
+}
+
+/* ── Save status indicator ── */
+.save-status {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text-muted);
+  white-space: nowrap;
+  min-width: 0;
+  transition: color var(--transition-fast);
 }
 
 /* ── Center: Search ── */

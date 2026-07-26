@@ -33,6 +33,63 @@
   border-radius: var(--radius-xs);
 }
 
+/* ── Panel collapse toggle ── */
+.panel-toggle-btn {
+  position: absolute;
+  top: 50%;
+  left: -14px;
+  transform: translateY(-50%);
+  width: 14px;
+  height: 36px;
+  background: var(--bg-700);
+  border: 1px solid var(--border);
+  border-right: none;
+  border-radius: var(--radius-sm) 0 0 var(--radius-sm);
+  color: var(--text-muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 20;
+  transition: all var(--transition-fast);
+  padding: 0;
+}
+
+.panel-toggle-btn:hover {
+  background: var(--surface-hover);
+  color: var(--text-primary);
+  left: -16px;
+  width: 16px;
+}
+
+.panel-toggle-btn i {
+  width: 8px;
+  height: 8px;
+  transition: transform var(--transition-fast);
+}
+
+.props-panel.collapsed .panel-toggle-btn i {
+  transform: rotate(180deg);
+}
+
+/* ── Collapsed state ── */
+.props-panel.collapsed {
+  width: 0;
+  min-width: 0;
+  border-left: none;
+  overflow: hidden;
+}
+
+.props-panel.collapsed > *:not(.panel-toggle-btn) {
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.props-panel:not(.collapsed) > *:not(.panel-toggle-btn) {
+  opacity: 1;
+  transition: opacity 0.2s ease 0.1s;
+}
+
 /* ── Panel Sections ── */
 .panel-section {
   padding: 14px 12px;

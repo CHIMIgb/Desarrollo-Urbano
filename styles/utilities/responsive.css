@@ -80,3 +80,18 @@
     max-width: 120px;
   }
 }
+
+/* ── Wide screens — more breathing room ── */
+@media (min-width: 1600px) {
+  .search-box {
+    max-width: 400px;
+  }
+
+  .project-name {
+    max-width: 220px;
+  }
+
+  .stats-dashboard {
+    width: 320px;
+  }
+}
