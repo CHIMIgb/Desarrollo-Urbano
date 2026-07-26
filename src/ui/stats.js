@@ -7,6 +7,14 @@ import { escapeHTML } from '../utils/sanitize.js';
  * Se encarga de analizar todas las entidades del mapa y extraer ratios normativos (Global e Individual).
  */
 
+/** Activa la animacion de pulse en un elemento de stat */
+function pulseStat(el) {
+  if (!el) return;
+  el.classList.remove('pulse');
+  void el.offsetWidth; // force reflow
+  el.classList.add('pulse');
+}
+
 /**
  * Calcula todas las metricas urbanas actuales (Globales e Individuales) 
  * basandose en el estado actual de las features. No modifica el DOM.
@@ -203,10 +211,10 @@ export function updateGlobalStats() {
   const sb = document.getElementById('stat-buildings');
   const sr = document.getElementById('stat-roads');
   const sp = document.getElementById('stat-parks');
-  if (sh) sh.textContent = cnt.house;
-  if (sb) sb.textContent = cnt.building + (cnt.custom_building || 0);
-  if (sr) sr.textContent = cnt.road;
-  if (sp) sp.textContent = cnt.park;
+  if (sh) { sh.textContent = cnt.house; pulseStat(sh); }
+  if (sb) { sb.textContent = cnt.building + (cnt.custom_building || 0); pulseStat(sb); }
+  if (sr) { sr.textContent = cnt.road; pulseStat(sr); }
+  if (sp) { sp.textContent = cnt.park; pulseStat(sp); }
 }
 
 /**
@@ -319,22 +327,25 @@ function updateSummaryUI(metrics) {
     const cus = (metrics.totalBuiltArea / metrics.baseArea);
     const greenP = (metrics.greenArea / metrics.baseArea) * 100;
 
-    if (elArea) elArea.textContent = Math.round(metrics.baseArea).toLocaleString() + ' m2';
-    if (elCos) elCos.textContent = cos.toFixed(1) + '%';
-    if (elCus) elCus.textContent = cus.toFixed(2);
+    if (elArea) { elArea.textContent = Math.round(metrics.baseArea).toLocaleString() + ' m2'; pulseStat(elArea); }
+    if (elCos) { elCos.textContent = cos.toFixed(1) + '%'; pulseStat(elCos); }
+    if (elCus) { elCus.textContent = cus.toFixed(2); pulseStat(elCus); }
     if (elGreen) {
       elGreen.textContent = metrics.minCAS ? greenP.toFixed(1) + ' / ' + metrics.minCAS + '%' : greenP.toFixed(1) + '%';
+      pulseStat(elGreen);
       if (metrics.casViolations > 0) elGreen.classList.add('violation');
       else elGreen.classList.remove('violation');
     }
     if (elHeight) {
        elHeight.textContent = metrics.maxAllowedHeight ? metrics.maxBuildingHeight.toFixed(1) + ' / ' + metrics.maxAllowedHeight + ' m' : metrics.maxBuildingHeight.toFixed(1) + ' m';
+       pulseStat(elHeight);
        if (metrics.heightViolations > 0) elHeight.classList.add('violation');
        else elHeight.classList.remove('violation');
     }
     if (elPop) {
       const pop = Math.floor(metrics.totalBuiltArea / 35);
       elPop.textContent = pop.toLocaleString() + ' hab.';
+      pulseStat(elPop);
     }
 
     if (barCos) barCos.style.width = Math.min(cos, 100) + '%';

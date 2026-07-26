@@ -1,5 +1,5 @@
 /* ============================================================
-   RESET — Base normalization
+   RESET — Base normalization + global micro-interactions
    ============================================================ */
 *,
 *::before,
@@ -22,6 +22,22 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* ── Smooth scroll ── */
+html {
+  scroll-behavior: smooth;
+}
+
+/* ── Selection color ── */
+::selection {
+  background: var(--accent);
+  color: var(--text-on-accent);
+}
+
+::-moz-selection {
+  background: var(--accent);
+  color: var(--text-on-accent);
+}
+
 /* ── SCROLLBAR (technical ruler style) ── */
 ::-webkit-scrollbar {
   width: 3px;
@@ -35,6 +51,7 @@ body {
 ::-webkit-scrollbar-thumb {
   background: var(--accent);
   border-radius: var(--radius-xs);
+  transition: background var(--transition-fast);
 }
 
 ::-webkit-scrollbar-thumb:hover {
@@ -47,6 +64,52 @@ body {
   outline-offset: 2px;
 }
 
+/* ── RANGE INPUTS ── */
+input[type=range] {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 4px;
+  background: var(--bg-500);
+  border-radius: 2px;
+  outline: none;
+}
+
+input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  background: var(--accent);
+  border-radius: 50%;
+  cursor: pointer;
+  border: 2px solid var(--bg-700);
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+input[type=range]::-webkit-slider-thumb:hover {
+  transform: scale(1.2);
+  box-shadow: 0 0 0 3px var(--accent-glow);
+}
+
+input[type=range]::-webkit-slider-thumb:active {
+  transform: scale(1.1);
+}
+
+input[type=range]::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  background: var(--accent);
+  border-radius: 50%;
+  cursor: pointer;
+  border: 2px solid var(--bg-700);
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+input[type=range]::-moz-range-thumb:hover {
+  transform: scale(1.2);
+  box-shadow: 0 0 0 3px var(--accent-glow);
+}
+
 /* ── REDUCED MOTION ── */
 @media (prefers-reduced-motion: reduce) {
   *,
@@ -55,5 +118,6 @@ body {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }

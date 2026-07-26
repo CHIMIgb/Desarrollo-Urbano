@@ -28,18 +28,19 @@
   color: var(--text-secondary);
   pointer-events: none;
   z-index: 10;
-  animation: fadeInUp 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  animation: drawHintIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   white-space: nowrap;
+  box-shadow: var(--shadow);
 }
 
-@keyframes fadeInUp {
+@keyframes drawHintIn {
   from {
     opacity: 0;
-    transform: translateX(-50%) translateY(6px);
+    transform: translateX(-50%) translateY(8px) scale(0.95);
   }
   to {
     opacity: 1;
-    transform: translateX(-50%) translateY(0);
+    transform: translateX(-50%) translateY(0) scale(1);
   }
 }
 
@@ -61,6 +62,7 @@
   pointer-events: none;
   z-index: 10;
   letter-spacing: 0.3px;
+  transition: color var(--transition-fast);
 }
 
 /* ── Map cursor modes ── */

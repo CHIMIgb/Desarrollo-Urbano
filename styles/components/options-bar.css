@@ -118,7 +118,7 @@
   border: 1px solid var(--border);
   border-radius: var(--radius-full);
   position: relative;
-  transition: background var(--transition-base), border-color var(--transition-base);
+  transition: background var(--transition-base), border-color var(--transition-base), box-shadow var(--transition-base);
   flex-shrink: 0;
 }
 
@@ -130,17 +130,33 @@
   height: 12px;
   background: var(--text-muted);
   border-radius: 50%;
-  transition: left var(--transition-base), background var(--transition-base);
+  transition: left 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), background var(--transition-base), transform var(--transition-fast);
+}
+
+.opt-toggle:hover .toggle-track {
+  border-color: var(--border-hover);
+}
+
+.opt-toggle:hover .toggle-thumb {
+  transform: scale(1.1);
 }
 
 .opt-toggle input:checked+.toggle-track {
   background: var(--accent);
   border-color: var(--accent);
+  box-shadow: 0 0 6px var(--accent-glow);
 }
 
 .opt-toggle input:checked+.toggle-track .toggle-thumb {
   left: 16px;
   background: var(--text-primary);
+  animation: thumbBounce 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes thumbBounce {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.2); }
+  100% { transform: scale(1); }
 }
 
 /* Map shifts down when options bar visible */

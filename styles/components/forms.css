@@ -125,6 +125,31 @@
   font-size: 12px;
   margin-bottom: 14px;
   border: 1px solid var(--red-dim-20);
+  animation: errorShake 0.4s ease;
+}
+
+@keyframes errorShake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-6px); }
+  40% { transform: translateX(6px); }
+  60% { transform: translateX(-4px); }
+  80% { transform: translateX(4px); }
+}
+
+.login-success {
+  background: var(--green-dim-25);
+  color: var(--green);
+  padding: 10px;
+  border-radius: var(--radius);
+  font-size: 12px;
+  margin-bottom: 14px;
+  border: 1px solid var(--green);
+  animation: successFade 0.3s ease;
+}
+
+@keyframes successFade {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: none; }
 }
 
 /* ── Confirm modal ── */

@@ -1,4 +1,6 @@
-/* ============================================================ TOOLBAR */
+/* ============================================================
+   TOOLBAR — Left sidebar with micro-interactions
+   ============================================================ */
 .toolbar {
   width: var(--toolbar-w);
   background: var(--bg-800);
@@ -9,6 +11,8 @@
   padding: 8px 0;
   overflow-y: auto;
   flex-shrink: 0;
+  scrollbar-width: thin;
+  scrollbar-color: var(--accent) var(--bg-800);
 }
 
 /* ── Tool Groups ── */
@@ -49,7 +53,12 @@
   font-family: inherit;
   font-weight: 500;
   cursor: pointer;
-  transition: all var(--transition-fast);
+  transition:
+    background var(--transition-fast),
+    color var(--transition-fast),
+    border-color var(--transition-fast),
+    transform var(--transition-fast),
+    box-shadow var(--transition-fast);
   position: relative;
 }
 
@@ -57,21 +66,39 @@
   background: var(--surface-hover);
   color: var(--text-secondary);
   border-color: var(--border);
+  transform: translateY(-1px);
 }
 
+.tool-btn:active {
+  transform: translateY(0) scale(0.96);
+  transition-duration: 0.08s;
+}
+
+/* ── Active state with left indicator ── */
 .tool-btn.active {
   background: var(--surface-active);
   color: var(--accent-hover);
   border-color: var(--border);
   border-left: 2px solid var(--indigo);
+  box-shadow: inset 0 0 0 1px var(--indigo-dim-20);
 }
 
+/* ── Icon micro-animation ── */
 .tool-btn i {
   transition: transform var(--transition-fast);
 }
 
+.tool-btn:hover i {
+  transform: scale(1.08);
+}
+
 .tool-btn:active i {
-  transform: scale(0.92);
+  transform: scale(0.88);
+  transition-duration: 0.08s;
+}
+
+.tool-btn.active i {
+  transform: scale(1.05);
 }
 
 /* ── Danger variant (delete) ── */
@@ -85,4 +112,5 @@
   background: var(--red-dim-10);
   color: var(--red);
   border-color: var(--red-dim-30);
+  box-shadow: inset 0 0 0 1px var(--red-dim-20);
 }

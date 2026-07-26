@@ -19,12 +19,10 @@ export function notify(msg, type = 'info', duration = 3000) {
   }
   
   container.appendChild(t);
-  requestAnimationFrame(() => { t.style.opacity = '1'; t.style.transform = 'translateY(0)'; });
   
   const removeToast = () => {
-    t.style.opacity = '0';
-    t.style.transform = 'translateY(10px)';
-    setTimeout(() => t.remove(), 400);
+    t.classList.add('dismissing');
+    setTimeout(() => t.remove(), 250);
   };
 
   if (duration > 0) {

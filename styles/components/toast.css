@@ -1,5 +1,5 @@
 /* ============================================================
-   TOAST — Notification toasts
+   TOAST — Notification toasts with micro-interactions
    ============================================================ */
 .toast-container {
   position: fixed;
@@ -25,22 +25,30 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  animation: toastIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  animation: toastIn 0.35s cubic-bezier(0.16, 1, 0.3, 1);
   min-width: 200px;
   max-width: 360px;
   pointer-events: auto;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.toast.dismissing {
+  animation: toastOut 0.25s ease forwards;
 }
 
 .toast.success {
   border-color: var(--green-dim-25);
+  background: linear-gradient(135deg, var(--bg-700) 0%, var(--green-dim-25) 100%);
 }
 
 .toast.error {
   border-color: var(--red-dim-25);
+  background: linear-gradient(135deg, var(--bg-700) 0%, var(--red-dim-25) 100%);
 }
 
 .toast.info {
   border-color: var(--accent-glow);
+  background: linear-gradient(135deg, var(--bg-700) 0%, var(--indigo-dim-20) 100%);
 }
 
 .toast-dot {
@@ -48,26 +56,34 @@
   height: 6px;
   border-radius: 50%;
   flex-shrink: 0;
+  animation: dotPulse 1.5s ease infinite;
 }
 
 .toast.success .toast-dot {
   background: var(--green);
+  box-shadow: 0 0 6px var(--green);
 }
 
 .toast.error .toast-dot {
   background: var(--red);
+  box-shadow: 0 0 6px var(--red);
 }
 
 .toast.info .toast-dot {
   background: var(--accent);
+  box-shadow: 0 0 6px var(--accent);
+}
+
+@keyframes dotPulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.6; transform: scale(0.8); }
 }
 
 @keyframes toastIn {
   from {
     opacity: 0;
-    transform: translateY(10px) scale(0.95);
+    transform: translateX(20px) scale(0.95);
   }
-
   to {
     opacity: 1;
     transform: none;
@@ -77,6 +93,6 @@
 @keyframes toastOut {
   to {
     opacity: 0;
-    transform: translateY(10px) scale(0.95);
+    transform: translateX(20px) scale(0.95);
   }
 }
