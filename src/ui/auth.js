@@ -1,4 +1,5 @@
 import { state } from '../config/state.js';
+import { trapFocus, releaseFocus } from '../utils/focusTrap.js';
 
 export function initAuth() {
   const loginOverlay = document.getElementById('loginOverlay');
@@ -20,6 +21,7 @@ export function initAuth() {
   } else {
     // Si no hay token, mostramos el login inmediatamente
     loginOverlay.classList.remove('hidden');
+    trapFocus(loginOverlay);
   }
 
   // Intercambiar formularios
@@ -137,6 +139,7 @@ export function initAuth() {
 
   function showApp(user) {
     loginOverlay.classList.add('hidden');
+    releaseFocus();
     appContainer.classList.remove('hidden');
     const rawName = user.full_name || user.username;
     

@@ -27,11 +27,11 @@
   </div>
 
   <!-- LOGIN MODAL / OVERLAY -->
-  <div id="loginOverlay" class="login-overlay">
+  <div id="loginOverlay" class="login-overlay" role="dialog" aria-modal="true" aria-labelledby="loginTitle">
     <div class="login-card">
       <div class="login-header">
-        <i data-icon="logoLarge"></i>
-        <h2>UrbanPlan 3D</h2>
+        <i data-icon="logoLarge" aria-hidden="true"></i>
+        <h2 id="loginTitle">UrbanPlan 3D</h2>
         <p>Inicia sesión para acceder al editor</p>
       </div>
       <form id="loginForm" class="login-form">
@@ -43,7 +43,7 @@
           <label for="loginPass">Contraseña</label>
           <input type="password" id="loginPass" required placeholder="••••••••" autocomplete="current-password">
         </div>
-        <div id="loginError" class="login-error hidden"></div>
+        <div id="loginError" class="login-error hidden" role="alert" aria-live="polite"></div>
         <button type="submit" class="btn btn-primary btn-full">Entrar</button>
         <p class="auth-footer-text">
           ¿No tienes una cuenta? <a href="#" id="btnShowRegister">Regístrate aquí</a>
@@ -75,7 +75,7 @@
             </div>
           </div>
         </div>
-        <div id="registerError" class="login-error hidden"></div>
+        <div id="registerError" class="login-error hidden" role="alert" aria-live="polite"></div>
         <button type="submit" class="btn btn-primary btn-full">Crear Cuenta</button>
         <p class="auth-footer-text">
           ¿Ya tienes cuenta? <a href="#" id="btnShowLogin">Inicia sesión</a>
@@ -89,10 +89,10 @@
     <header class="app-header">
       <div class="header-left">
         <div class="logo">
-          <i data-icon="logo"></i>
+          <i data-icon="logo" aria-hidden="true"></i>
           <span class="logo-text">UrbanPlan <span class="logo-tag">3D</span></span>
         </div>
-        <div class="project-name" id="projectName" contenteditable="true" spellcheck="false">Nuevo proyecto urbano</div>
+        <div class="project-name" id="projectName" contenteditable="true" spellcheck="false" role="textbox" aria-label="Nombre del proyecto">Nuevo proyecto urbano</div>
       </div>
       <div class="header-actions">
         <label class="btn btn-secondary" title="Cargar proyecto">
@@ -113,17 +113,17 @@
         </div>
       </div>
       <div class="header-right">
-        <button class="btn btn-ghost" id="btnUndo" title="Deshacer (Ctrl+Z)">
+        <button class="btn btn-ghost" id="btnUndo" title="Deshacer (Ctrl+Z)" aria-label="Deshacer">
           <i data-icon="undo"></i>
         </button>
-        <button class="btn btn-ghost" id="btnRedo" title="Rehacer (Ctrl+Y)">
+        <button class="btn btn-ghost" id="btnRedo" title="Rehacer (Ctrl+Y)" aria-label="Rehacer">
           <i data-icon="redo"></i>
         </button>
         <div class="divider-v"></div>
-        <button class="btn btn-ghost" id="btnNew" title="Nuevo Proyecto">
+        <button class="btn btn-ghost" id="btnNew" title="Nuevo Proyecto" aria-label="Nuevo proyecto">
           <i data-icon="new"></i>
         </button>
-        <button class="btn btn-ghost" id="btnOpenProjects" title="Mis Proyectos">
+        <button class="btn btn-ghost" id="btnOpenProjects" title="Mis Proyectos" aria-label="Abrir proyectos">
           <i data-icon="folder"></i>
         </button>
         <div class="divider-v"></div>
@@ -145,105 +145,105 @@
     <!-- MAIN LAYOUT -->
     <div class="app-body">
       <!-- LEFT TOOLBAR -->
-      <aside class="toolbar" id="toolbar">
+      <aside class="toolbar" id="toolbar" role="toolbar" aria-orientation="vertical" aria-label="Herramientas de diseño">
         <div class="tool-group">
           <div class="tool-label">Navegación</div>
-          <button class="tool-btn active" id="tool-select" data-tool="select" title="Seleccionar (S)">
+          <button class="tool-btn active" id="tool-select" data-tool="select" title="Seleccionar (S)" aria-pressed="true">
             <i data-icon="select"></i>
             <span>Seleccionar</span>
           </button>
         </div>
         <div class="tool-group">
           <div class="tool-label">Contexto Geográfico</div>
-          <button class="tool-btn" id="btnImportOSM" title="Importar ciudad desde OSM (Vista actual)">
+          <button class="tool-btn" id="btnImportOSM" title="Importar ciudad desde OSM (Vista actual)" aria-pressed="false">
             <i data-icon="importOSM"></i>
             <span>Generar OSM</span>
           </button>
         </div>
         <div class="tool-group">
           <div class="tool-label">Objetos</div>
-          <button class="tool-btn" id="tool-house" data-tool="house" title="Casa (H)">
+          <button class="tool-btn" id="tool-house" data-tool="house" title="Casa (H)" aria-pressed="false">
             <i data-icon="house"></i>
             <span>Casa</span>
           </button>
-          <button class="tool-btn" id="tool-building" data-tool="building" title="Edificio Caja (B)">
+          <button class="tool-btn" id="tool-building" data-tool="building" title="Edificio Caja (B)" aria-pressed="false">
             <i data-icon="building"></i>
             <span>Edificio</span>
           </button>
-          <button class="tool-btn" id="tool-custom-building" data-tool="custom_building" title="Silueta 3D (C)">
+          <button class="tool-btn" id="tool-custom-building" data-tool="custom_building" title="Silueta 3D (C)" aria-pressed="false">
             <i data-icon="custom_building"></i>
             <span>Silueta 3D</span>
           </button>
-          <button class="tool-btn" data-tool="furniture" title="Mobiliario Urbano">
+          <button class="tool-btn" data-tool="furniture" title="Mobiliario Urbano" aria-pressed="false">
             <i data-icon="furniture"></i>
             <span>Mobiliario</span>
           </button>
-          <button class="tool-btn" id="tool-park" data-tool="park" title="Parque (P)">
+          <button class="tool-btn" id="tool-park" data-tool="park" title="Parque (P)" aria-pressed="false">
             <i data-icon="park"></i>
             <span>Parque</span>
           </button>
-          <button class="tool-btn" data-tool="water" title="Agua / Lagos">
+          <button class="tool-btn" data-tool="water" title="Agua / Lagos" aria-pressed="false">
             <i data-icon="water"></i>
             <span>Agua</span>
           </button>
-          <button class="tool-btn" data-tool="tree" title="Árbol 3D">
+          <button class="tool-btn" data-tool="tree" title="Árbol 3D" aria-pressed="false">
             <i data-icon="tree"></i>
             <span>Árbol</span>
           </button>
         </div>
         <div class="tool-group">
           <div class="tool-label">Trazado</div>
-          <button class="tool-btn" id="tool-road" data-tool="road" title="Carretera (R)">
+          <button class="tool-btn" id="tool-road" data-tool="road" title="Carretera (R)" aria-pressed="false">
             <i data-icon="road"></i>
             <span>Carretera</span>
           </button>
-          <button class="tool-btn" id="tool-path" data-tool="path" title="Camino / Sendero">
+          <button class="tool-btn" id="tool-path" data-tool="path" title="Camino / Sendero" aria-pressed="false">
             <i data-icon="path"></i>
             <span>Camino</span>
           </button>
-          <button class="tool-btn" id="tool-sidewalk" data-tool="sidewalk" title="Banqueta / Acera">
+          <button class="tool-btn" id="tool-sidewalk" data-tool="sidewalk" title="Banqueta / Acera" aria-pressed="false">
             <i data-icon="sidewalk"></i>
             <span>Banqueta</span>
           </button>
-          <button class="tool-btn" id="tool-zone" data-tool="zone" title="Zona (Z)">
+          <button class="tool-btn" id="tool-zone" data-tool="zone" title="Zona (Z)" aria-pressed="false">
             <i data-icon="zone"></i>
             <span>Zona</span>
           </button>
-          <button class="tool-btn" id="tool-terrain" data-tool="terrain" title="Terreno/Parcela (T)">
+          <button class="tool-btn" id="tool-terrain" data-tool="terrain" title="Terreno/Parcela (T)" aria-pressed="false">
             <i data-icon="terrain"></i>
             <span>Terreno</span>
           </button>
-          <button class="tool-btn" data-tool="railway" title="Vía Férrea">
+          <button class="tool-btn" data-tool="railway" title="Vía Férrea" aria-pressed="false">
             <i data-icon="railway"></i>
             <span>Tren</span>
           </button>
-          <button class="tool-btn" data-tool="radius" title="Radio de Influencia (Isócrona)">
+          <button class="tool-btn" data-tool="radius" title="Radio de Influencia (Isócrona)" aria-pressed="false">
             <i data-icon="radius"></i>
             <span>Radio / Isócrona</span>
           </button>
         </div>
         <div class="tool-group">
           <div class="tool-label">Edición</div>
-          <button class="tool-btn" id="tool-move" data-tool="move" title="Mover (M)">
+          <button class="tool-btn" id="tool-move" data-tool="move" title="Mover (M)" aria-pressed="false">
             <i data-icon="move"></i>
             <span>Mover</span>
           </button>
-          <button class="tool-btn tool-btn-danger" id="tool-delete" data-tool="delete" title="Borrar (Del)">
+          <button class="tool-btn tool-btn-danger" id="tool-delete" data-tool="delete" title="Borrar (Del)" aria-pressed="false">
             <i data-icon="delete"></i>
             <span>Borrar</span>
           </button>
         </div>
         <div class="tool-group">
           <div class="tool-label">Vista</div>
-          <button class="tool-btn" id="tool-3d" title="Vista 3D">
+          <button class="tool-btn" id="tool-3d" title="Vista 3D" aria-pressed="false">
             <i data-icon="view3d"></i>
             <span>3D / 2D</span>
           </button>
-          <button class="tool-btn" id="tool-satellite" title="Satélite / Mapa">
+          <button class="tool-btn" id="tool-satellite" title="Satélite / Mapa" aria-pressed="false">
             <i data-icon="satellite"></i>
             <span>Satélite</span>
           </button>
-          <button class="tool-btn" id="tool-terrain-toggle" title="Activar / Desactivar Relieve 3D">
+          <button class="tool-btn" id="tool-terrain-toggle" title="Activar / Desactivar Relieve 3D" aria-pressed="false">
             <i data-icon="terrainToggle"></i>
             <span>Relieve</span>
           </button>
@@ -297,7 +297,7 @@
       </main>
 
       <!-- RIGHT PANEL -->
-      <aside class="props-panel" id="propsPanel">
+      <aside class="props-panel" id="propsPanel" role="complementary" aria-label="Panel de propiedades">
         <!-- Layers Tab -->
         <div class="panel-section">
           <div class="panel-title">
@@ -308,33 +308,33 @@
             <h3>Capas (Visibilidad)</h3>
           </div>
           <div class="layers-list" id="layersList">
-            <label class="layer-item"><input type="checkbox" checked data-layer="house" /><span class="layer-dot"
+            <label class="layer-item"><input type="checkbox" checked data-layer="house" role="switch" aria-checked="true" /><span class="layer-dot"
                 style="background:var(--amber)"></span>Casas</label>
-            <label class="layer-item"><input type="checkbox" checked data-layer="building" /><span class="layer-dot"
+            <label class="layer-item"><input type="checkbox" checked data-layer="building" role="switch" aria-checked="true" /><span class="layer-dot"
                 style="background:var(--indigo)"></span>Edificios</label>
-            <label class="layer-item"><input type="checkbox" checked data-layer="custom_building" /><span
+            <label class="layer-item"><input type="checkbox" checked data-layer="custom_building" role="switch" aria-checked="true" /><span
                 class="layer-dot" style="background:var(--purple)"></span>Siluetas 3D</label>
-            <label class="layer-item"><input type="checkbox" checked data-layer="water" /><span class="layer-dot"
+            <label class="layer-item"><input type="checkbox" checked data-layer="water" role="switch" aria-checked="true" /><span class="layer-dot"
                 style="background:var(--blue)"></span>Agua</label>
-            <label class="layer-item"><input type="checkbox" checked data-layer="furniture" /><span class="layer-dot"
+            <label class="layer-item"><input type="checkbox" checked data-layer="furniture" role="switch" aria-checked="true" /><span class="layer-dot"
                 style="background:var(--text-muted)"></span>Mobiliario</label>
-            <label class="layer-item"><input type="checkbox" checked data-layer="tree" /><span class="layer-dot"
+            <label class="layer-item"><input type="checkbox" checked data-layer="tree" role="switch" aria-checked="true" /><span class="layer-dot"
                 style="background:var(--green)"></span>Árboles 3D</label>
-            <label class="layer-item"><input type="checkbox" checked data-layer="road" /><span class="layer-dot"
+            <label class="layer-item"><input type="checkbox" checked data-layer="road" role="switch" aria-checked="true" /><span class="layer-dot"
                 style="background:var(--text-secondary)"></span>Carreteras</label>
-            <label class="layer-item"><input type="checkbox" checked data-layer="path" /><span class="layer-dot"
+            <label class="layer-item"><input type="checkbox" checked data-layer="path" role="switch" aria-checked="true" /><span class="layer-dot"
                 style="background:var(--stone)"></span>Caminos</label>
-            <label class="layer-item"><input type="checkbox" checked data-layer="sidewalk" /><span class="layer-dot"
+            <label class="layer-item"><input type="checkbox" checked data-layer="sidewalk" role="switch" aria-checked="true" /><span class="layer-dot"
                 style="background:var(--slate)"></span>Banquetas</label>
-            <label class="layer-item"><input type="checkbox" checked data-layer="railway" /><span class="layer-dot"
+            <label class="layer-item"><input type="checkbox" checked data-layer="railway" role="switch" aria-checked="true" /><span class="layer-dot"
                 style="background:var(--bg-500)"></span>Vías Férreas</label>
-            <label class="layer-item"><input type="checkbox" checked data-layer="park" /><span class="layer-dot"
+            <label class="layer-item"><input type="checkbox" checked data-layer="park" role="switch" aria-checked="true" /><span class="layer-dot"
                 style="background:var(--green-light)"></span>Parques</label>
-            <label class="layer-item"><input type="checkbox" checked data-layer="zone" /><span class="layer-dot"
+            <label class="layer-item"><input type="checkbox" checked data-layer="zone" role="switch" aria-checked="true" /><span class="layer-dot"
                 style="background:var(--pink)"></span>Zonas</label>
-            <label class="layer-item"><input type="checkbox" checked data-layer="terrain" /><span class="layer-dot"
+            <label class="layer-item"><input type="checkbox" checked data-layer="terrain" role="switch" aria-checked="true" /><span class="layer-dot"
                 style="background:var(--amber)"></span>Terrenos</label>
-            <label class="layer-item"><input type="checkbox" checked data-layer="radius" /><span class="layer-dot"
+            <label class="layer-item"><input type="checkbox" checked data-layer="radius" role="switch" aria-checked="true" /><span class="layer-dot"
                 style="background:var(--violet)"></span>Isócronas</label>
           </div>
         </div>
@@ -401,7 +401,7 @@
     </div>
 
     <!-- Dashboard de Métricas Urbanas -->
-    <div class="stats-dashboard" id="stats-dashboard">
+    <div class="stats-dashboard" id="stats-dashboard" role="region" aria-label="Métricas normativas urbanas">
       <div class="stats-header" id="stats-header">
         <div class="stats-title">
           <i data-icon="statsDash"></i>
@@ -475,7 +475,7 @@
   </div>
 
   <!-- CONFIRM MODAL -->
-  <div id="confirmModal" class="login-overlay modal-overlay hidden">
+  <div id="confirmModal" class="login-overlay modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="confirmModalTitle">
     <div class="login-card projects-modal-card confirm-modal-card">
       <div class="login-header">
         <h3 id="confirmModalTitle">Confirmar acción</h3>
@@ -489,7 +489,7 @@
   </div>
 
   <!-- PROJECTS MODAL -->
-  <div id="projectsModal" class="login-overlay modal-overlay hidden">
+  <div id="projectsModal" class="login-overlay modal-overlay hidden" role="dialog" aria-modal="true" aria-label="Mis proyectos">
     <div class="login-card projects-modal-card">
       <div class="login-header">
         <h3>Mis Proyectos en la Nube</h3>

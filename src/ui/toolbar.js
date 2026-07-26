@@ -5,6 +5,8 @@ import { clearDrawing } from '../tools/drawing.js';
 import { createNewProject, listUserProjects, loadProjectById } from './io.js';
 import { importOSMContext } from '../tools/osm.js';
 import { notify, confirmDialog } from './notifications.js';
+import { escapeHTML } from '../utils/sanitize.js';
+import { trapFocus, releaseFocus } from '../utils/focusTrap.js';
 
 // Re-exportar para compatibilidad con módulos que importan { toast } de aquí
 export const toast = notify;
@@ -13,8 +15,15 @@ export const toast = notify;
 export function setTool(tool) {
   state.tool = tool; 
   clearDrawing();
-  document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
-  document.querySelector(`[data-tool="${tool}"]`)?.classList.add('active');
+  document.querySelectorAll('.tool-btn').forEach(b => {
+    b.classList.remove('active');
+    b.setAttribute('aria-pressed', 'false');
+  });
+  const activeBtn = document.querySelector(`[data-tool="${tool}"]`);
+  if (activeBtn) {
+    activeBtn.classList.add('active');
+    activeBtn.setAttribute('aria-pressed', 'true');
+  }
 
   ['treeOptionsBar', 'furnitureOptionsBar'].forEach(id => {
     const el = document.getElementById(id);
@@ -129,9 +138,10 @@ export function initToolbarEvents() {
     const modal = document.getElementById('projectsModal');
     if (modal) {
       modal.classList.remove('hidden');
+      trapFocus(modal);
       const list = document.getElementById('projectsList');
       if (list) {
-        list.innerHTML = '<p style="text-align:center; padding:20px;">Cargando proyectos...</p>';
+        list.innerHTML = '<p class="loading-text">Cargando proyectos...</p>';
         const projects = await listUserProjects();
         renderProjectsList(projects);
       }
@@ -146,6 +156,7 @@ export function initToolbarEvents() {
   if (btnCloseModal) {
     btnCloseModal.addEventListener('click', () => {
       document.getElementById('projectsModal').classList.add('hidden');
+      releaseFocus();
     });
   }
 }
@@ -155,7 +166,7 @@ function renderProjectsList(projects) {
   if (!list) return;
   
   if (projects.length === 0) {
-    list.innerHTML = '<p style="text-align:center; padding:20px; color:var(--text-secondary);">Sin proyectos en la nube. Crea uno nuevo.</p>';
+    list.innerHTML = '<p class="empty-text">Sin proyectos en la nube. Crea uno nuevo.</p>';
     return;
   }
 
@@ -167,7 +178,7 @@ function renderProjectsList(projects) {
     
     item.innerHTML = `
       <div class="project-info">
-        <div class="project-name-item">${p.name}</div>
+        <div class="project-name-item">${escapeHTML(p.name)}</div>
         <div class="project-date-item">Actualizado: ${date}</div>
       </div>
       <button class="btn btn-secondary btn-sm" data-id="${p.id}">Cargar</button>
@@ -186,7 +197,11 @@ function updateLayersVisibility() {
   if (!state.map) return;
   const getVis = (id) => {
     const el = document.querySelector(`input[data-layer="${id}"]`);
-    return el ? el.checked : true;
+    if (el) {
+      el.setAttribute('aria-checked', el.checked ? 'true' : 'false');
+      return el.checked;
+    }
+    return true;
   };
   
   const t = {

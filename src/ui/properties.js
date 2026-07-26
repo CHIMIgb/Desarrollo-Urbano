@@ -1,6 +1,7 @@
 import { state, TYPE_CONFIG } from '../config/state.js';
 import { addFeatures } from '../config/store.js';
 import { fmtLen, fmtArea, fmtVol } from '../utils/geo.js';
+import { escapeHTML } from '../utils/sanitize.js';
 import { pushHistory, getFeatureCenter } from '../tools/interaction.js';
 import { refreshMap } from '../map/core.js';
 import { toast } from './toolbar.js';
@@ -20,7 +21,7 @@ export function showPropsPanel(feat, lngLat) {
   const measHTML = buildMeasureHTML(feat);
 
   let fields = `
-    <div class="form-field"><label>Nombre</label><input type="text" id="prop-name" value="${p.name || ''}" /></div>
+    <div class="form-field"><label>Nombre</label><input type="text" id="prop-name" value="${escapeHTML(p.name || '')}" /></div>
     ${measHTML}`;
 
   if (['house', 'building'].includes(p.type)) {
@@ -309,7 +310,7 @@ export function showPropsPanel(feat, lngLat) {
     const ctr = getFeatureCenter(feat);
     state.popup = new maplibregl.Popup({ closeButton: true, maxWidth: '220px' })
       .setLngLat(ctr || lngLat)
-      .setHTML(`<div class="popup-name">${p.name || cfg.label}</div><div class="popup-type">${cfg.label || p.type}</div>
+      .setHTML(`<div class="popup-name">${escapeHTML(p.name || cfg.label)}</div><div class="popup-type">${escapeHTML(cfg.label || p.type)}</div>
         <div class="popup-props">
           ${p.width_m ? `<div class="popup-prop"><span class="popup-prop-key">Ancho</span><span class="popup-prop-val">${fmtLen(p.width_m)}</span></div>` : ''}
           ${p.length_m ? `<div class="popup-prop"><span class="popup-prop-key">Largo</span><span class="popup-prop-val">${fmtLen(p.length_m)}</span></div>` : ''}

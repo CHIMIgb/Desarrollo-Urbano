@@ -55,7 +55,7 @@
   padding: 4px 10px;
   border-radius: var(--radius-sm);
   font-size: 10px;
-  color: var(--text-muted);
+  color: var(--text-secondary);
   font-family: var(--font-mono);
   pointer-events: none;
   z-index: 10;

@@ -1,4 +1,6 @@
 import { state, publicConfig } from '../config/state.js';
+import { escapeHTML } from '../utils/sanitize.js';
+import { notify } from './notifications.js';
 
 export function initSearchEvents() {
   let searchTimer;
@@ -35,8 +37,8 @@ async function doSearch(q) {
     const data = await res.json();
     searchResults.innerHTML = data.map(r => `
       <div class="search-result-item" data-lng="${r.lon}" data-lat="${r.lat}">
-        <strong>${r.display_name.split(',')[0]}</strong>
-        ${r.display_name.split(',').slice(1, 3).join(',')}
+        <strong>${escapeHTML(r.display_name.split(',')[0])}</strong>
+        ${escapeHTML(r.display_name.split(',').slice(1, 3).join(','))}
       </div>`).join('');
     searchResults.classList.add('open');
     
@@ -53,5 +55,7 @@ async function doSearch(q) {
         if (input) input.value = item.querySelector('strong').textContent;
       });
     });
-  } catch (e) { }
+  } catch (e) {
+    notify('Error al buscar ubicación', 'error');
+  }
 }

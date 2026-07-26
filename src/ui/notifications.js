@@ -3,6 +3,9 @@
  * Uso: import { notify } from './notifications.js';
  *       notify('Proyecto guardado', 'success');
  */
+import { escapeHTML } from '../utils/sanitize.js';
+import { trapFocus, releaseFocus } from '../utils/focusTrap.js';
+
 export function notify(msg, type = 'info', duration = 3000) {
   const container = document.getElementById('toastContainer');
   if (!container) return () => {};
@@ -10,13 +13,13 @@ export function notify(msg, type = 'info', duration = 3000) {
   t.className = `toast ${type}`;
   
   if (type === 'loading') {
-    t.innerHTML = `<span class="spinner" style="margin-right: 8px;"></span><span>${msg}</span>`;
+    t.innerHTML = `<span class="spinner" style="margin-right: 8px;"></span><span>${escapeHTML(msg)}</span>`;
   } else {
-    t.innerHTML = `<div class="toast-dot"></div><span>${msg}</span>`;
+    t.innerHTML = `<div class="toast-dot"></div><span>${escapeHTML(msg)}</span>`;
   }
   
   container.appendChild(t);
-  setTimeout(() => { t.style.opacity = '1'; t.style.transform = 'translateY(0)'; }, 10);
+  requestAnimationFrame(() => { t.style.opacity = '1'; t.style.transform = 'translateY(0)'; });
   
   const removeToast = () => {
     t.style.opacity = '0';
@@ -43,14 +46,21 @@ export function confirmDialog(title, message) {
     document.getElementById('confirmModalMessage').textContent = message;
     
     modal.classList.remove('hidden');
+    trapFocus(modal);
     
     const btnAccept = document.getElementById('btnConfirmAccept');
     const btnCancel = document.getElementById('btnConfirmCancel');
     
+    const onEscape = (e) => {
+      if (e.key === 'Escape') { cleanup(); resolve(false); }
+    };
+    
     const cleanup = () => {
       modal.classList.add('hidden');
+      releaseFocus();
       btnAccept.removeEventListener('click', onAccept);
       btnCancel.removeEventListener('click', onCancel);
+      document.removeEventListener('keydown', onEscape);
     };
     
     const onAccept = () => { cleanup(); resolve(true); };
@@ -58,5 +68,6 @@ export function confirmDialog(title, message) {
     
     btnAccept.addEventListener('click', onAccept);
     btnCancel.addEventListener('click', onCancel);
+    document.addEventListener('keydown', onEscape);
   });
 }

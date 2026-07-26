@@ -19,7 +19,7 @@
   font-family: var(--font-display);
   font-size: 9px;
   font-weight: 600;
-  color: var(--text-muted);
+  color: var(--text-secondary);
   text-transform: uppercase;
   letter-spacing: 0.8px;
   padding: 4px 6px 6px;

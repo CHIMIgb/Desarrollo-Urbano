@@ -1,5 +1,6 @@
 import { state } from '../config/state.js';
 import { polygonArea, isPointInPolygon, getFeatureCenter } from '../utils/geo.js';
+import { escapeHTML } from '../utils/sanitize.js';
 
 /**
  * Logica de calculo y actualizacion del Dashboard de Metricas Urbanas.
@@ -216,7 +217,7 @@ function renderLotBreakdown(lots) {
   if (!listEl) return;
 
   if (lots.length === 0) {
-    listEl.innerHTML = '<div style="font-size:11px; opacity:0.5; padding:10px">No hay terrenos definidos.</div>';
+    listEl.innerHTML = '<div class="empty-text">No hay terrenos definidos.</div>';
     return;
   }
 
@@ -227,7 +228,7 @@ function renderLotBreakdown(lots) {
     return `
       <div class="lot-card ${lot.isSelected ? 'selected' : ''}" data-id="${lot.id}">
         <div class="lot-card-header">
-          <span class="lot-name">${lot.name}</span>
+          <span class="lot-name">${escapeHTML(lot.name)}</span>
           <button class="btn-locate-lot" title="Centrar camara en este lote" data-id="${lot.id}">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
               <circle cx="12" cy="12" r="3" />
@@ -368,6 +369,8 @@ export function initStatsEvents() {
 
   const toggle = () => {
     dashboard?.classList.toggle('collapsed');
+    const isCollapsed = dashboard?.classList.contains('collapsed');
+    toggleBtn?.setAttribute('aria-expanded', !isCollapsed);
   };
 
   toggleBtn?.addEventListener('click', (e) => {
