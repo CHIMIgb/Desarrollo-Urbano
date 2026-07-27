@@ -84,28 +84,78 @@ app.get('/api/config', (req, res) => {
 
 // ── Overpass API proxy (evita CORS en Vercel/producción) ────────
 const osmProxyLimiter = rateLimit({
-  windowMs: 60 * 1000,
-  max: 10,
+  windowMs: parseInt(process.env.OSM_PROXY_RATE_LIMIT_WINDOW_MS) || 60_000,
+  max: parseInt(process.env.OSM_PROXY_RATE_LIMIT_MAX) || 10,
   standardHeaders: true,
   legacyHeaders: false,
   message: { success: false, error: 'Demasiadas consultas OSM, espera 1 minuto' },
 });
+
+const OVERPASS_MIRRORS = process.env.OSM_OVERPASS_MIRRORS
+  ? process.env.OSM_OVERPASS_MIRRORS.split(',').map((s) => s.trim()).filter(Boolean)
+  : ['https://overpass-api.de/api/interpreter', 'https://overpass.kumi.systems/api/interpreter'];
+
+const OSM_USER_AGENT = process.env.OSM_USER_AGENT || 'UrbanPlan3D/1.0';
+const OSM_REFERER = process.env.APP_URL || 'http://localhost:3000';
+const OSM_TIMEOUT = parseInt(process.env.OSM_PROXY_TIMEOUT_MS) || 60_000;
+
 app.post('/osm-proxy', osmProxyLimiter, async (req, res) => {
   try {
     const query = req.body.data || req.body.query;
     if (!query) return res.status(400).json({ success: false, error: 'Falta campo data' });
-    const overpassRes = await fetch('https://overpass-api.de/api/interpreter', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: `data=${encodeURIComponent(query)}`,
-    });
-    if (!overpassRes.ok) {
-      return res
-        .status(overpassRes.status)
-        .json({ success: false, error: `Overpass ${overpassRes.status}` });
+
+    let lastError = null;
+
+    for (const endpoint of OVERPASS_MIRRORS) {
+      try {
+        const overpassRes = await fetch(endpoint, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'User-Agent': OSM_USER_AGENT,
+            'Referer': OSM_REFERER,
+            'Accept': 'application/json, */*',
+          },
+          body: `data=${encodeURIComponent(query)}`,
+          signal: AbortSignal.timeout(OSM_TIMEOUT),
+        });
+
+        if (overpassRes.ok) {
+          const json = await overpassRes.json();
+          return res.json(json);
+        }
+
+        // Si el servidor devuelve 429/502/504, intentar siguiente espejo
+        const status = overpassRes.status;
+        const errBody = await overpassRes.text().catch(() => '');
+        logger.warn(
+          { endpoint, status, body: errBody.slice(0, 200) },
+          'Overpass respondió con error'
+        );
+
+        if ([429, 502, 503, 504].includes(status)) {
+          lastError = { status, endpoint };
+          continue; // siguiente espejo
+        }
+
+        // Otros errores (400, 406, etc.) no se reintentan
+        return res.status(status).json({
+          success: false,
+          error: `Overpass respondió ${status}: ${errBody.slice(0, 200)}`,
+        });
+      } catch (fetchErr) {
+        logger.warn({ endpoint, err: fetchErr.message }, 'Error de red con espejo Overpass');
+        lastError = { status: 502, endpoint, message: fetchErr.message };
+        continue; // siguiente espejo
+      }
     }
-    const json = await overpassRes.json();
-    res.json(json);
+
+    // Todos los espejos fallaron
+    const status = lastError?.status || 502;
+    return res.status(status).json({
+      success: false,
+      error: `Todos los servidores Overpass saturados (último: ${status})`,
+    });
   } catch (err) {
     logger.error({ err: err.message }, 'OSM proxy error');
     res.status(502).json({ success: false, error: 'Proxy OSM no disponible' });
