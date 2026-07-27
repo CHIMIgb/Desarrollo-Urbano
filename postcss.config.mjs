@@ -21,6 +21,8 @@ export default {
           /^toast/, /^modal/, /^search/, /^tool-/,
           /^layer/, /^stat/, /^draw/, /^maplibre/,
           /^ls-/, /^lot-/, /^project/, /^prec/,
+          /^measure/, /^popup/, /^form/, /^btn/,
+          /^toggle/, /^opt-/,
         ],
       },
       defaultExtractor: content => content.match(/[\w-/:]+(?<!:)/g) || [],

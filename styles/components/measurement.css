@@ -1,15 +1,19 @@
-/* ============================================================ MEASUREMENT CARD */
+/* ============================================================
+   MEASUREMENT CARD — Elegant stat grid
+   ============================================================ */
 .measure-card {
   background: var(--bg-700);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: 10px;
+  padding: 12px;
   margin-top: 6px;
-  transition: border-color var(--transition-fast);
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
 }
 
 .measure-card:hover {
   border-color: var(--border-hover);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
 .measure-title {
@@ -18,10 +22,15 @@
   color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.8px;
-  margin-bottom: 8px;
+  margin-bottom: 10px;
   display: flex;
   align-items: center;
   gap: 5px;
+  font-family: var(--font-display);
+}
+
+.measure-title svg {
+  opacity: 0.6;
 }
 
 .measure-grid {
@@ -30,24 +39,56 @@
   gap: 6px;
 }
 
+/* ── Individual measure cell ── */
 .measure-item {
-  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  background: var(--bg-600);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 8px 6px;
+  transition: border-color var(--transition-fast), background var(--transition-fast), transform var(--transition-fast);
+}
+
+.measure-item:hover {
+  border-color: var(--border-hover);
+  background: var(--bg-500);
+  transform: translateY(-1px);
+}
+
+/* First item (e.g. type/name) spans full width */
+.measure-item:first-child:last-child {
+  grid-column: 1 / -1;
 }
 
 .measure-val {
-  font-size: 15px;
+  font-size: 16px;
   font-weight: 700;
-  color: var(--green);
+  color: var(--accent-hover);
   line-height: 1.1;
   font-family: var(--font-mono);
+  letter-spacing: -0.5px;
+  transition: color var(--transition-fast);
+}
+
+.measure-item:hover .measure-val {
+  color: var(--accent);
 }
 
 .measure-unit {
   font-size: 9px;
   color: var(--text-muted);
-  margin-top: 1px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-family: var(--font-display);
+  font-weight: 500;
 }
 
+/* ============================================================
+   DRAW MEASURE — Floating indicator on canvas
+   ============================================================ */
 .draw-measure {
   position: absolute;
   bottom: 60px;
@@ -66,7 +107,9 @@
   font-family: var(--font-mono);
 }
 
-/* ── Object popup ── */
+/* ============================================================
+   OBJECT POPUP — Map tooltip
+   ============================================================ */
 .maplibregl-popup-content {
   background: var(--bg-700) !important;
   color: var(--text-primary) !important;
@@ -225,15 +268,8 @@
   min-height: 0;
 }
 
-/* Scrollbar para la zona inferior */
-.stats-scroll-area::-webkit-scrollbar {
-  width: 3px;
-}
-
-.stats-scroll-area::-webkit-scrollbar-track {
-  background: var(--bg-800);
-}
-
+.stats-scroll-area::-webkit-scrollbar { width: 3px; }
+.stats-scroll-area::-webkit-scrollbar-track { background: var(--bg-800); }
 .stats-scroll-area::-webkit-scrollbar-thumb {
   background: var(--accent);
   border-radius: var(--radius-xs);
