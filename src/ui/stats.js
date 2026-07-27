@@ -1,6 +1,7 @@
 import { state } from '../config/state.js';
 import { polygonArea, isPointInPolygon, getFeatureCenter } from '../utils/geo.js';
 import { escapeHTML } from '../utils/sanitize.js';
+import { logger } from '../utils/logger.js';
 
 /**
  * Logica de calculo y actualizacion del Dashboard de Metricas Urbanas.
@@ -96,7 +97,7 @@ export function calculateCurrentMetrics() {
                   if (minDistance < lot.min_setback) {
                     lot.setback_violations++;
                   }
-                } catch (e) { console.warn('[Stats] Error verificando setback', e); }
+                } catch (e) { logger.warn('[Stats] Error verificando setback', e); }
               }
             } else if (['park', 'water'].includes(type)) {
               lot.green_area += area;

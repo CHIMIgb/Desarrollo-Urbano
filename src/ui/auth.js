@@ -1,5 +1,6 @@
 import { state } from '../config/state.js';
 import { trapFocus, releaseFocus } from '../utils/focusTrap.js';
+import { logger } from '../utils/logger.js';
 
 export function initAuth() {
   const loginOverlay = document.getElementById('loginOverlay');
@@ -70,7 +71,7 @@ export function initAuth() {
         loginError.classList.remove('hidden');
       }
     } catch (err) {
-      console.error(err);
+      logger.error(err);
       loginError.textContent = 'No se pudo contactar al servidor';
       loginError.classList.remove('hidden');
     } finally {
@@ -112,7 +113,7 @@ export function initAuth() {
         registerError.classList.remove('hidden');
       }
     } catch (err) {
-      console.error('[Auth] Error en registro:', err.message);
+      logger.error('[Auth] Error en registro:', err.message);
       registerError.textContent = 'No se pudo contactar al servidor';
       registerError.classList.remove('hidden');
     } finally {
@@ -144,7 +145,7 @@ export function initAuth() {
         loginOverlay.classList.remove('hidden');
       }
     } catch (err) {
-      console.error('Error verificando sesión:', err);
+      logger.error('Error verificando sesión:', err);
       loginOverlay.classList.remove('hidden');
     }
   }

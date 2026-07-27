@@ -6,6 +6,7 @@ import { toast } from './toolbar.js';
 import { markClean, markDirty, isDirty } from './toolbar.js';
 import { calculateCurrentMetrics } from './stats.js';
 import { getFeatureCenter } from '../utils/geo.js';
+import { logger } from '../utils/logger.js';
 
 // ── Autosave ──────────────────────────────────────────────────
 let _lastSavedAt = null;
@@ -48,7 +49,7 @@ async function doAutosave() {
       body: JSON.stringify(saveData)
     });
     if (res.ok) { markClean(); _lastSavedAt = Date.now(); updateSaveIndicator(); }
-  } catch (e) { console.warn('[Autosave] Error guardando automáticamente', e); }
+  } catch (e) { logger.warn('[Autosave] Error guardando automáticamente', e); }
 }
 
 // Actualizar indicador cada 15s
@@ -86,7 +87,7 @@ function handleFileImport(file) {
         toast('Proyecto importado correctamente', 'success');
       } else toast('Formato de archivo no reconocido', 'error');
     } catch (err) {
-      console.warn('[IO] Error leyendo archivo importado:', err.message);
+      logger.warn('[IO] Error leyendo archivo importado:', err.message);
       toast('No se pudo leer el archivo', 'error');
     }
   };
@@ -124,7 +125,7 @@ export function initIOEvents() {
           details: { filename: a.download, featureCount: state.features.length }
         })
       });
-    } catch (e) { console.warn('[Export] Error registrando auditoría', e); }
+    } catch (e) { logger.warn('[Export] Error registrando auditoría', e); }
 
     toast('Exportado y registrado en bitácora', 'success');
   });
@@ -210,7 +211,7 @@ export function initIOEvents() {
         toast('No se pudo guardar el proyecto', 'error');
       }
     } catch (err) {
-      console.warn('[IO] Error guardando proyecto:', err.message);
+      logger.warn('[IO] Error guardando proyecto:', err.message);
       toast('Sin conexión al servidor', 'error');
     } finally {
       btnSave.disabled = false;
@@ -238,7 +239,7 @@ export async function loadSavedState() {
     if (data.project) applyProjectData(data.project);
   } catch (e) {
     dismissToast();
-    console.error('[IO] Error cargando estado inicial', e);
+      logger.error('[IO] Error cargando estado inicial', e);
     toast('Error al cargar el proyecto', 'error');
   }
 }
@@ -255,7 +256,7 @@ export async function listUserProjects() {
     const data = await response.json();
     return data.projects || [];
   } catch (e) {
-    console.error('[IO] Error listando proyectos', e);
+    logger.error('[IO] Error listando proyectos', e);
     toast('Error al cargar proyectos', 'error');
     return [];
   }
@@ -281,7 +282,7 @@ export async function loadProjectById(id) {
       toast('Proyecto cargado correctamente', 'success');
     }
   } catch (e) {
-    console.warn('[IO] Error cargando proyecto:', e.message);
+    logger.warn('[IO] Error cargando proyecto:', e.message);
     dismissToast();
     toast('Sin conexión al servidor', 'error');
   }

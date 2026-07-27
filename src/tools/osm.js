@@ -7,6 +7,7 @@ import osmtogeojson from 'osmtogeojson';
 import { generateTreeParts } from '../models/trees.js';
 import { generateFurnitureParts } from '../models/furniture.js';
 import { APIError } from '../utils/errors.js';
+import { logger } from '../utils/logger.js';
 
 /**
  * Espejos públicos de Overpass para evitar bloqueos por IP y Timeouts.
@@ -263,7 +264,7 @@ export async function importOSMContext(retryCount = 0) {
     }
 
   } catch (err) {
-    console.error(`[OSM] Error importando (${err.code ?? 'UNKNOWN'}):`, err);
+    logger.error(`[OSM] Error importando (${err.code ?? 'UNKNOWN'}):`, err);
     if (retryCount >= 2) {
       toast('Los servidores de OSM están muy ocupados. Intenta en una zona más pequeña o más tarde.', 'error');
     }

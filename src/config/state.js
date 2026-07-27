@@ -1,3 +1,5 @@
+import { logger } from '../utils/logger.js';
+
 export const SATELLITE_URL = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}';
 export let OSM_URL = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
 
@@ -23,9 +25,9 @@ export async function loadPublicConfig() {
     if (data.OSM_OVERPASS_ENDPOINTS && data.OSM_OVERPASS_ENDPOINTS.length) {
       publicConfig.OSM_OVERPASS_ENDPOINTS = data.OSM_OVERPASS_ENDPOINTS;
     }
-    console.log('[CONFIG] Configuración remota de OSM cargada con éxito');
+    logger.log('[CONFIG] Configuración remota de OSM cargada con éxito');
   } catch (e) {
-    console.warn('[CONFIG] Error cargando configuración remota, usando valores por defecto:', e.message);
+    logger.warn('[CONFIG] Error cargando configuración remota, usando valores por defecto:', e.message);
   }
 }
 export const TERRAIN_URL = 'https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png';

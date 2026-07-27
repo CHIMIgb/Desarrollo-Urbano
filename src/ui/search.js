@@ -1,6 +1,7 @@
 import { state, publicConfig } from '../config/state.js';
 import { escapeHTML } from '../utils/sanitize.js';
 import { notify } from './notifications.js';
+import { logger } from '../utils/logger.js';
 
 export function initSearchEvents() {
   let searchTimer;
@@ -61,7 +62,7 @@ async function doSearch(q) {
       });
     });
   } catch (e) {
-    console.warn('[Search] Error en geocoding:', e.message);
+    logger.warn('[Search] Error en geocoding:', e.message);
     notify('Error al buscar ubicación', 'error');
   }
 }

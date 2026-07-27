@@ -3,6 +3,8 @@
    Elimina dependencias circulares entre map/ y ui/.
    ============================================================= */
 
+import { logger } from '../utils/logger.js';
+
 /**
  * Catálogo de eventos estándar del sistema.
  * Usar estas constantes en lugar de strings sueltos para evitar typos.
@@ -71,7 +73,7 @@ class EventBusImpl {
       try {
         handler(payload);
       } catch (err) {
-        console.error(`[EventBus] Error en handler de "${event}":`, err);
+        logger.error(`[EventBus] Error en handler de "${event}":`, err);
       }
     }
   }

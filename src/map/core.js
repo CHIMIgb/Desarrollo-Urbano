@@ -1,6 +1,7 @@
 import { state, TERRAIN_URL, GLYPHS_URL, SATELLITE_URL, OSM_URL } from '../config/state.js';
 import { EventBus, Events } from '../config/events.js';
 import { addDataLayers, setupLayerInteractivity } from './layers.js';
+import { logger } from '../utils/logger.js';
 
 export function initMap() {
   let initialView = {
@@ -16,7 +17,7 @@ export function initMap() {
     try {
       initialView = JSON.parse(savedView);
       hasSavedView = true;
-    } catch (e) { console.error('Error loading saved view', e); }
+    } catch (e) { logger.error('Error loading saved view', e); }
   }
 
   state.map = new maplibregl.Map({
@@ -38,7 +39,7 @@ export function initMap() {
         state.map.flyTo({ center, zoom: 16, duration: 2000 });
         saveMapView();
       },
-      err => { console.warn('Geolocation denied or failed', err); },
+      err => { logger.warn('Geolocation denied or failed', err); },
       { enableHighAccuracy: true }
     );
   }
@@ -156,7 +157,7 @@ export function addTerrainSource() {
       'space-color': 'rgb(5,8,20)',
       'star-intensity': 0.5
     });
-  } catch (e) { console.warn('[Map] Error configurando niebla', e); }
+  } catch (e) { logger.warn('[Map] Error configurando niebla', e); }
 }
 
 export function buildGeoJSON() {
