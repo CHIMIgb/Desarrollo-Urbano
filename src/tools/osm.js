@@ -77,9 +77,9 @@ export async function importOSMContext(retryCount = 0) {
     });
 
     if (response.status === 429 || response.status === 504 || response.status === 502) {
-      if (retryCount < 2) {
+      if (retryCount < 1) {
         toast('Servidor saturado, reintentando...', 'warning');
-        await new Promise((r) => setTimeout(r, 2000));
+        await new Promise((r) => setTimeout(r, 1000));
         return importOSMContext(retryCount + 1);
       }
       throw new APIError(`Servidor saturado (${response.status})`, {
@@ -318,9 +318,9 @@ export async function importOSMContext(retryCount = 0) {
     }
   } catch (err) {
     logger.error(`[OSM] Error importando (${err.code ?? 'UNKNOWN'}):`, err);
-    if (retryCount < 2) {
+    if (retryCount < 1) {
       toast('Error de conexión, reintentando...', 'warning');
-      await new Promise((r) => setTimeout(r, 2000));
+      await new Promise((r) => setTimeout(r, 1000));
       return importOSMContext(retryCount + 1);
     }
     toast(
