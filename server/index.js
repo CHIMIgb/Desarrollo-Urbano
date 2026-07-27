@@ -114,9 +114,13 @@ app.use((err, req, res, next) => {
 
 app.use(errorHandler);
 
-app.listen(PORT, () => {
-  logger.info(
-    { port: PORT, env: process.env.NODE_ENV || 'development' },
-    'Servidor UrbanPlan 3D iniciado'
-  );
-});
+if (require.main === module) {
+  app.listen(PORT, () => {
+    logger.info(
+      { port: PORT, env: process.env.NODE_ENV || 'development' },
+      'Servidor UrbanPlan 3D iniciado'
+    );
+  });
+}
+
+module.exports = app;
