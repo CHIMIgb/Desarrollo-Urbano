@@ -24,7 +24,7 @@ const _state = {
   draggingVertexIdx: null,
   terrainEnabled: false,
   currentProjectId: null,
-  map: null
+  map: null,
 };
 
 /**
@@ -41,7 +41,7 @@ export const state = new Proxy(_state, {
   set(target, prop, value) {
     target[prop] = value;
     return true;
-  }
+  },
 });
 
 // ── Acciones del Store (Setters Controlados) ──────────────────
@@ -61,7 +61,7 @@ export function addFeatures(...features) {
  * @param {Object} propsUpdate — Objeto parcial con las propiedades a sobreescribir.
  */
 export function updateFeatureProps(id, propsUpdate) {
-  const f = _state.features.find(x => x.properties.id === id);
+  const f = _state.features.find((x) => x.properties.id === id);
   if (!f) return;
   Object.assign(f.properties, propsUpdate);
   EventBus.emit(Events.FEATURES_UPDATED);
@@ -73,7 +73,7 @@ export function updateFeatureProps(id, propsUpdate) {
  * @param {Object} geometry — Nuevo objeto GeoJSON geometry.
  */
 export function updateFeatureGeometry(id, geometry) {
-  const f = _state.features.find(x => x.properties.id === id);
+  const f = _state.features.find((x) => x.properties.id === id);
   if (!f) return;
   f.geometry = geometry;
   EventBus.emit(Events.FEATURES_UPDATED);
@@ -86,12 +86,12 @@ export function updateFeatureGeometry(id, geometry) {
 export function deleteFeatures(ids) {
   const toDelete = new Set(ids);
   // También eliminar sub-features (hijos de los IDs dados)
-  _state.features.forEach(f => {
+  _state.features.forEach((f) => {
     if (f.properties.parent_id && toDelete.has(f.properties.parent_id)) {
       toDelete.add(f.properties.id);
     }
   });
-  _state.features = _state.features.filter(f => !toDelete.has(f.properties.id));
+  _state.features = _state.features.filter((f) => !toDelete.has(f.properties.id));
   EventBus.emit(Events.FEATURES_UPDATED);
 }
 

@@ -17,12 +17,20 @@
   flex-direction: column;
   animation: precFadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
   margin-bottom: 12px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.03);
+  box-shadow:
+    0 1px 3px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.03);
 }
 
 @keyframes precFadeIn {
-  from { opacity: 0; transform: translateY(-8px) scale(0.97); }
-  to   { opacity: 1; transform: none; }
+  from {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
 }
 
 /* ── Collapsed state ── */
@@ -31,13 +39,18 @@
   opacity: 0;
   overflow: hidden;
   padding: 0;
-  transition: max-height 0.25s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease, padding 0.2s ease;
+  transition:
+    max-height 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+    opacity 0.2s ease,
+    padding 0.2s ease;
 }
 
 .precision-panel:not(.collapsed) .prec-body {
   max-height: 800px;
   opacity: 1;
-  transition: max-height 0.3s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.25s ease 0.05s;
+  transition:
+    max-height 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+    opacity 0.25s ease 0.05s;
 }
 
 .precision-panel.collapsed {
@@ -89,7 +102,9 @@
   padding: 4px;
   display: flex;
   align-items: center;
-  transition: transform var(--transition-fast), color var(--transition-fast);
+  transition:
+    transform var(--transition-fast),
+    color var(--transition-fast);
 }
 
 .prec-header:hover .prec-toggle {
@@ -104,7 +119,9 @@
   flex: 1;
 }
 
-.prec-body::-webkit-scrollbar { width: 3px; }
+.prec-body::-webkit-scrollbar {
+  width: 3px;
+}
 .prec-body::-webkit-scrollbar-thumb {
   background: var(--accent);
   border-radius: var(--radius-xs);
@@ -155,7 +172,10 @@
   outline: none;
   cursor: pointer;
   margin-bottom: 8px;
-  transition: border-color var(--transition-fast), box-shadow var(--transition-fast), background var(--transition-fast);
+  transition:
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast),
+    background var(--transition-fast);
 }
 
 .prec-select:hover {
@@ -264,7 +284,10 @@
   font-family: var(--font-mono);
   font-size: 11px;
   outline: none;
-  transition: border-color var(--transition-fast), box-shadow var(--transition-fast), background var(--transition-fast);
+  transition:
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast),
+    background var(--transition-fast);
 }
 
 .prec-input-group input:hover {
@@ -364,13 +387,13 @@
 }
 
 /* ── Hide Chrome number input spinners ── */
-.prec-input-group input[type=number]::-webkit-inner-spin-button,
-.prec-input-group input[type=number]::-webkit-outer-spin-button {
+.prec-input-group input[type='number']::-webkit-inner-spin-button,
+.prec-input-group input[type='number']::-webkit-outer-spin-button {
   -webkit-appearance: none;
   margin: 0;
 }
 
-.prec-input-group input[type=number] {
+.prec-input-group input[type='number'] {
   -moz-appearance: textfield;
   appearance: textfield;
 }
@@ -396,5 +419,7 @@
 }
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }

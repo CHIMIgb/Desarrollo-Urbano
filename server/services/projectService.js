@@ -6,9 +6,9 @@ async function saveProject(userId, projectData) {
 
   const centerLng = mapView?.center?.[0] ?? -99.1332;
   const centerLat = mapView?.center?.[1] ?? 19.4326;
-  const zoom      = mapView?.zoom      ?? 13;
-  const pitch     = mapView?.pitch     ?? 65;
-  const bearing   = mapView?.bearing   ?? -20;
+  const zoom = mapView?.zoom ?? 13;
+  const pitch = mapView?.pitch ?? 65;
+  const bearing = mapView?.bearing ?? -20;
 
   try {
     await db.query('BEGIN');
@@ -22,8 +22,12 @@ async function saveProject(userId, projectData) {
       );
       currentProjectId = result.rows[0].id;
     } else {
-      const check = await db.query('SELECT id FROM projects WHERE id = $1 AND user_id = $2', [currentProjectId, userId]);
-      if (check.rows.length === 0) throw new HttpError(403, 'Proyecto no encontrado o no pertenece al usuario');
+      const check = await db.query('SELECT id FROM projects WHERE id = $1 AND user_id = $2', [
+        currentProjectId,
+        userId,
+      ]);
+      if (check.rows.length === 0)
+        throw new HttpError(403, 'Proyecto no encontrado o no pertenece al usuario');
 
       await db.query(
         `UPDATE projects
@@ -39,9 +43,12 @@ async function saveProject(userId, projectData) {
     // Limpiar features anteriores y añadir nuevas
     await db.query('DELETE FROM project_features WHERE project_id = $1', [currentProjectId]);
     for (const feat of features) {
-      await db.query('INSERT INTO project_features (project_id, feature_data) VALUES ($1, $2)', [currentProjectId, feat]);
+      await db.query('INSERT INTO project_features (project_id, feature_data) VALUES ($1, $2)', [
+        currentProjectId,
+        feat,
+      ]);
     }
-    
+
     // Guardar métricas si existen
     if (metrics && metrics.global) {
       const g = metrics.global;
@@ -49,7 +56,16 @@ async function saveProject(userId, projectData) {
         `INSERT INTO project_metrics_snapshots 
           (project_id, total_base_area, total_occupied_area, total_built_area, total_green_area, cos, cus, estimated_population)
          VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id`,
-        [currentProjectId, g.total_base_area, g.total_occupied_area, g.total_built_area, g.total_green_area, g.cos, g.cus, g.estimated_population]
+        [
+          currentProjectId,
+          g.total_base_area,
+          g.total_occupied_area,
+          g.total_built_area,
+          g.total_green_area,
+          g.cos,
+          g.cus,
+          g.estimated_population,
+        ]
       );
 
       const snapshotId = snapshotResult.rows[0].id;
@@ -60,7 +76,17 @@ async function saveProject(userId, projectData) {
             `INSERT INTO project_lot_metrics_snapshots
               (snapshot_id, lot_id, name, base_area, occupied_area, built_area, green_area, cos, cus)
              VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
-            [snapshotId, lot.lot_id, lot.name, lot.base_area, lot.occupied_area, lot.built_area, lot.green_area, lot.cos, lot.cus]
+            [
+              snapshotId,
+              lot.lot_id,
+              lot.name,
+              lot.base_area,
+              lot.occupied_area,
+              lot.built_area,
+              lot.green_area,
+              lot.cos,
+              lot.cus,
+            ]
           );
         }
       }
@@ -84,44 +110,57 @@ async function listUserProjects(userId) {
 }
 
 async function loadLatestProject(userId) {
-  const projectResult = await db.query('SELECT * FROM projects WHERE user_id = $1 ORDER BY updated_at DESC LIMIT 1', [userId]);
+  const projectResult = await db.query(
+    'SELECT * FROM projects WHERE user_id = $1 ORDER BY updated_at DESC LIMIT 1',
+    [userId]
+  );
   if (projectResult.rows.length === 0) return null;
 
   const project = projectResult.rows[0];
-  const featuresResult = await db.query('SELECT feature_data FROM project_features WHERE project_id = $1', [project.id]);
+  const featuresResult = await db.query(
+    'SELECT feature_data FROM project_features WHERE project_id = $1',
+    [project.id]
+  );
 
   return {
     id: project.id,
     name: project.name,
     nextId: project.next_id,
-    features: featuresResult.rows.map(r => r.feature_data),
+    features: featuresResult.rows.map((r) => r.feature_data),
     mapView: {
       center: [parseFloat(project.map_center_lng), parseFloat(project.map_center_lat)],
-      zoom:    parseFloat(project.map_zoom),
-      pitch:   parseFloat(project.map_pitch),
-      bearing: parseFloat(project.map_bearing)
-    }
+      zoom: parseFloat(project.map_zoom),
+      pitch: parseFloat(project.map_pitch),
+      bearing: parseFloat(project.map_bearing),
+    },
   };
 }
 
 async function loadProjectById(userId, projectId) {
-  const projectResult = await db.query('SELECT * FROM projects WHERE id = $1 AND user_id = $2', [projectId, userId]);
-  if (projectResult.rows.length === 0) throw new HttpError(404, 'Proyecto no encontrado o sin acceso');
+  const projectResult = await db.query('SELECT * FROM projects WHERE id = $1 AND user_id = $2', [
+    projectId,
+    userId,
+  ]);
+  if (projectResult.rows.length === 0)
+    throw new HttpError(404, 'Proyecto no encontrado o sin acceso');
 
   const project = projectResult.rows[0];
-  const featuresResult = await db.query('SELECT feature_data FROM project_features WHERE project_id = $1', [project.id]);
+  const featuresResult = await db.query(
+    'SELECT feature_data FROM project_features WHERE project_id = $1',
+    [project.id]
+  );
 
   return {
     id: project.id,
     name: project.name,
     nextId: project.next_id,
-    features: featuresResult.rows.map(r => r.feature_data),
+    features: featuresResult.rows.map((r) => r.feature_data),
     mapView: {
       center: [parseFloat(project.map_center_lng), parseFloat(project.map_center_lat)],
-      zoom:    parseFloat(project.map_zoom),
-      pitch:   parseFloat(project.map_pitch),
-      bearing: parseFloat(project.map_bearing)
-    }
+      zoom: parseFloat(project.map_zoom),
+      pitch: parseFloat(project.map_pitch),
+      bearing: parseFloat(project.map_bearing),
+    },
   };
 }
 
@@ -137,5 +176,5 @@ module.exports = {
   listUserProjects,
   loadLatestProject,
   loadProjectById,
-  addAuditLog
+  addAuditLog,
 };

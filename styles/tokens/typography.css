@@ -36,6 +36,6 @@ body {
 .lot-sub-val,
 .popup-prop-val,
 #searchInput,
-.form-field input[type="number"] {
+.form-field input[type='number'] {
   font-family: var(--font-mono);
 }

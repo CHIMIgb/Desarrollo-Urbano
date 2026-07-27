@@ -7,5 +7,5 @@ const ESCAPE_RE = /[&<>"']/g;
 
 export function escapeHTML(str) {
   if (str == null) return '';
-  return String(str).replace(ESCAPE_RE, ch => ESCAPE_MAP[ch]);
+  return String(str).replace(ESCAPE_RE, (ch) => ESCAPE_MAP[ch]);
 }

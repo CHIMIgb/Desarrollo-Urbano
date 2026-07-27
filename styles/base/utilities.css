@@ -2,7 +2,9 @@
    UTILITIES — Shared helper classes
    ============================================================ */
 
-.hidden { display: none !important; }
+.hidden {
+  display: none !important;
+}
 
 /* ── Auth footer ── */
 .auth-footer-text {
@@ -40,7 +42,9 @@
   background: var(--surface-hover);
   border-radius: var(--radius);
   border: 1px solid transparent;
-  transition: background var(--transition-fast), border-color var(--transition-fast);
+  transition:
+    background var(--transition-fast),
+    border-color var(--transition-fast);
 }
 
 .project-item:hover {
@@ -71,11 +75,21 @@
 }
 
 /* ── Radius utilities ── */
-.rounded-sm { border-radius: var(--radius-sm); }
-.rounded { border-radius: var(--radius); }
-.rounded-lg { border-radius: var(--radius-lg); }
-.rounded-xl { border-radius: var(--radius-xl); }
-.rounded-full { border-radius: var(--radius-full); }
+.rounded-sm {
+  border-radius: var(--radius-sm);
+}
+.rounded {
+  border-radius: var(--radius);
+}
+.rounded-lg {
+  border-radius: var(--radius-lg);
+}
+.rounded-xl {
+  border-radius: var(--radius-xl);
+}
+.rounded-full {
+  border-radius: var(--radius-full);
+}
 
 /* ── Loading & Empty states ── */
 .loading-text {
@@ -87,8 +101,13 @@
 }
 
 @keyframes loadingPulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
 }
 
 .empty-text {
@@ -109,8 +128,12 @@
 }
 
 @keyframes skeletonShimmer {
-  0% { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
 }
 
 /* ── Fade transitions ── */

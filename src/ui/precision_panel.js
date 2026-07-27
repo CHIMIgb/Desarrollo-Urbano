@@ -11,7 +11,7 @@ import {
   moveFeatureByPolar,
   moveFeatureToCoord,
   getVertexInfo,
-  bearingBetween
+  bearingBetween,
 } from '../tools/precision.js';
 import { haversine } from '../utils/geo.js';
 
@@ -19,13 +19,13 @@ import { haversine } from '../utils/geo.js';
 const precisionState = {
   isOpen: false,
   selectedVertexIdx: null,
-  isCollapsed: false
+  isCollapsed: false,
 };
 
 function setVertexSelection(idx) {
   precisionState.selectedVertexIdx = idx;
   state.selectedVertexIdx = idx;
-  import('../tools/selection.js').then(m => m.updateEditHandles());
+  import('../tools/selection.js').then((m) => m.updateEditHandles());
 }
 
 // ── Inicialización ────────────────────────────────────────────
@@ -88,7 +88,7 @@ function updatePanelVisibility() {
 
   const hasSelection = state.selectedIds.length === 1;
   const feat = hasSelection
-    ? state.features.find(f => f.properties.id === state.selectedIds[0])
+    ? state.features.find((f) => f.properties.id === state.selectedIds[0])
     : null;
 
   // El panel es relevante solo cuando hay 1 feature seleccionada con vértices editables
@@ -128,7 +128,7 @@ function updatePanelContent() {
   if (!precisionState.isOpen || state.selectedIds.length !== 1) return;
 
   const featureId = state.selectedIds[0];
-  const feat = state.features.find(f => f.properties.id === featureId);
+  const feat = state.features.find((f) => f.properties.id === featureId);
   if (!feat) return;
 
   const hasVertices = feat.properties.raw_pts && feat.properties.raw_pts.length > 0;
@@ -141,7 +141,7 @@ function updatePanelContent() {
 
   // Mostrar/ocultar secciones de vértice
   const vertexSections = document.querySelectorAll('.prec-vertex-section');
-  vertexSections.forEach(s => {
+  vertexSections.forEach((s) => {
     s.style.display = hasVertices ? 'block' : 'none';
   });
 
@@ -180,8 +180,14 @@ function updateVertexInfo(feat) {
   const featureId = feat.properties.id;
   const idx = precisionState.selectedVertexIdx;
 
-  if (idx === null || idx < 0 || !feat.properties.raw_pts || idx >= feat.properties.raw_pts.length) {
-    infoContainer.innerHTML = '<div class="prec-hint">Haz clic en un vértice del mapa o selecciona uno arriba</div>';
+  if (
+    idx === null ||
+    idx < 0 ||
+    !feat.properties.raw_pts ||
+    idx >= feat.properties.raw_pts.length
+  ) {
+    infoContainer.innerHTML =
+      '<div class="prec-hint">Haz clic en un vértice del mapa o selecciona uno arriba</div>';
     // Limpiar inputs de coordenadas exactas
     const latIn = document.getElementById('precExactLat');
     const lngIn = document.getElementById('precExactLng');
@@ -197,8 +203,9 @@ function updateVertexInfo(feat) {
   }
 
   // Formatear distancias
-  const fmtDist = (d) => d != null ? (d >= 1000 ? (d / 1000).toFixed(3) + ' km' : d.toFixed(2) + ' m') : '—';
-  const fmtAngle = (a) => a != null ? a.toFixed(1) + '°' : '—';
+  const fmtDist = (d) =>
+    d != null ? (d >= 1000 ? (d / 1000).toFixed(3) + ' km' : d.toFixed(2) + ' m') : '—';
+  const fmtAngle = (a) => (a != null ? a.toFixed(1) + '°' : '—');
 
   infoContainer.innerHTML = `
     <div class="prec-info-grid">
@@ -248,7 +255,7 @@ function updateFeatureInfo(feat) {
     const c = g.coordinates[0];
     center = {
       lng: c.reduce((s, p) => s + p[0], 0) / c.length,
-      lat: c.reduce((s, p) => s + p[1], 0) / c.length
+      lat: c.reduce((s, p) => s + p[1], 0) / c.length,
     };
   }
 
@@ -275,8 +282,12 @@ function bindActionButtons() {
 
     // Volar al vértice en el mapa para visualizarlo
     if (precisionState.selectedVertexIdx !== null && state.selectedIds.length === 1) {
-      const feat = state.features.find(f => f.properties.id === state.selectedIds[0]);
-      if (feat && feat.properties.raw_pts && feat.properties.raw_pts[precisionState.selectedVertexIdx]) {
+      const feat = state.features.find((f) => f.properties.id === state.selectedIds[0]);
+      if (
+        feat &&
+        feat.properties.raw_pts &&
+        feat.properties.raw_pts[precisionState.selectedVertexIdx]
+      ) {
         const pt = feat.properties.raw_pts[precisionState.selectedVertexIdx];
         state.map.easeTo({ center: pt, duration: 500 });
       }
@@ -295,10 +306,21 @@ function bindActionButtons() {
     const dist = parseFloat(distIn?.value);
     const angle = parseFloat(angIn?.value);
 
-    if (isNaN(dist) || dist <= 0) { toast('Distancia inválida (mínimo 0.1)', 'error'); return; }
-    if (isNaN(angle)) { toast('Ángulo requerido', 'error'); return; }
+    if (isNaN(dist) || dist <= 0) {
+      toast('Distancia inválida (mínimo 0.1)', 'error');
+      return;
+    }
+    if (isNaN(angle)) {
+      toast('Ángulo requerido', 'error');
+      return;
+    }
 
-    const ok = moveVertexByPolar(state.selectedIds[0], precisionState.selectedVertexIdx, dist, angle);
+    const ok = moveVertexByPolar(
+      state.selectedIds[0],
+      precisionState.selectedVertexIdx,
+      dist,
+      angle
+    );
     if (ok) {
       toast(`V${precisionState.selectedVertexIdx + 1} desplazado ${dist}m @ ${angle}°`, 'success');
       updatePanelContent();
@@ -319,8 +341,14 @@ function bindActionButtons() {
     const lat = parseFloat(latIn?.value);
     const lng = parseFloat(lngIn?.value);
 
-    if (isNaN(lat) || lat < -90 || lat > 90) { toast('Latitud fuera de rango (-90 a 90)', 'error'); return; }
-    if (isNaN(lng) || lng < -180 || lng > 180) { toast('Longitud fuera de rango (-180 a 180)', 'error'); return; }
+    if (isNaN(lat) || lat < -90 || lat > 90) {
+      toast('Latitud fuera de rango (-90 a 90)', 'error');
+      return;
+    }
+    if (isNaN(lng) || lng < -180 || lng > 180) {
+      toast('Longitud fuera de rango (-180 a 180)', 'error');
+      return;
+    }
 
     const ok = moveVertexToCoord(state.selectedIds[0], precisionState.selectedVertexIdx, lng, lat);
     if (ok) {
@@ -333,15 +361,24 @@ function bindActionButtons() {
 
   // Botón: Mover feature por polar
   document.getElementById('btnPrecMoveFeaturePolar')?.addEventListener('click', () => {
-    if (state.selectedIds.length !== 1) { toast('Selecciona un elemento', 'error'); return; }
+    if (state.selectedIds.length !== 1) {
+      toast('Selecciona un elemento', 'error');
+      return;
+    }
 
     const distIn = document.getElementById('precFeatureDist');
     const angIn = document.getElementById('precFeatureAngle');
     const dist = parseFloat(distIn?.value);
     const angle = parseFloat(angIn?.value);
 
-    if (isNaN(dist) || dist <= 0) { toast('Distancia inválida (mínimo 0.1)', 'error'); return; }
-    if (isNaN(angle)) { toast('Ángulo requerido', 'error'); return; }
+    if (isNaN(dist) || dist <= 0) {
+      toast('Distancia inválida (mínimo 0.1)', 'error');
+      return;
+    }
+    if (isNaN(angle)) {
+      toast('Ángulo requerido', 'error');
+      return;
+    }
 
     const ok = moveFeatureByPolar(state.selectedIds[0], dist, angle);
     if (ok) {
@@ -354,15 +391,24 @@ function bindActionButtons() {
 
   // Botón: Mover feature a coordenada
   document.getElementById('btnPrecMoveFeatureCoord')?.addEventListener('click', () => {
-    if (state.selectedIds.length !== 1) { toast('Selecciona un elemento', 'error'); return; }
+    if (state.selectedIds.length !== 1) {
+      toast('Selecciona un elemento', 'error');
+      return;
+    }
 
     const latIn = document.getElementById('precFeatureLat');
     const lngIn = document.getElementById('precFeatureLng');
     const lat = parseFloat(latIn?.value);
     const lng = parseFloat(lngIn?.value);
 
-    if (isNaN(lat) || lat < -90 || lat > 90) { toast('Latitud fuera de rango (-90 a 90)', 'error'); return; }
-    if (isNaN(lng) || lng < -180 || lng > 180) { toast('Longitud fuera de rango (-180 a 180)', 'error'); return; }
+    if (isNaN(lat) || lat < -90 || lat > 90) {
+      toast('Latitud fuera de rango (-90 a 90)', 'error');
+      return;
+    }
+    if (isNaN(lng) || lng < -180 || lng > 180) {
+      toast('Longitud fuera de rango (-180 a 180)', 'error');
+      return;
+    }
 
     const ok = moveFeatureToCoord(state.selectedIds[0], lng, lat);
     if (ok) {
@@ -374,25 +420,25 @@ function bindActionButtons() {
   });
 
   // Atajos de teclado rápidos: Enter en los inputs ejecuta la acción
-  ['precVertexDist', 'precVertexAngle'].forEach(id => {
+  ['precVertexDist', 'precVertexAngle'].forEach((id) => {
     document.getElementById(id)?.addEventListener('keydown', (e) => {
       if (e.key === 'Enter') document.getElementById('btnPrecMoveVertexPolar')?.click();
     });
   });
 
-  ['precExactLat', 'precExactLng'].forEach(id => {
+  ['precExactLat', 'precExactLng'].forEach((id) => {
     document.getElementById(id)?.addEventListener('keydown', (e) => {
       if (e.key === 'Enter') document.getElementById('btnPrecMoveVertexCoord')?.click();
     });
   });
 
-  ['precFeatureDist', 'precFeatureAngle'].forEach(id => {
+  ['precFeatureDist', 'precFeatureAngle'].forEach((id) => {
     document.getElementById(id)?.addEventListener('keydown', (e) => {
       if (e.key === 'Enter') document.getElementById('btnPrecMoveFeaturePolar')?.click();
     });
   });
 
-  ['precFeatureLat', 'precFeatureLng'].forEach(id => {
+  ['precFeatureLat', 'precFeatureLng'].forEach((id) => {
     document.getElementById(id)?.addEventListener('keydown', (e) => {
       if (e.key === 'Enter') document.getElementById('btnPrecMoveFeatureCoord')?.click();
     });

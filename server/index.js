@@ -15,22 +15,26 @@ const PORT = process.env.PORT || 3000;
 const isProd = process.env.NODE_ENV === 'production';
 
 // ── Helmet — HTTP security headers ─────────────────────────────
-app.use(helmet({
-  contentSecurityPolicy: false,
-  crossOriginEmbedderPolicy: false
-}));
+app.use(
+  helmet({
+    contentSecurityPolicy: false,
+    crossOriginEmbedderPolicy: false,
+  })
+);
 
 // ── CORS ───────────────────────────────────────────────────────
 const allowedOrigins = process.env.CORS_ORIGINS
-  ? process.env.CORS_ORIGINS.split(',').map(s => s.trim())
+  ? process.env.CORS_ORIGINS.split(',').map((s) => s.trim())
   : ['http://localhost:3000', 'http://localhost:5173'];
 
-app.use(cors({
-  origin: allowedOrigins,
-  methods: ['GET', 'POST', 'PUT', 'DELETE'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-  credentials: true
-}));
+app.use(
+  cors({
+    origin: allowedOrigins,
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    credentials: true,
+  })
+);
 
 // ── Rate limiting global ────────────────────────────────────────
 const globalLimiter = rateLimit({
@@ -38,7 +42,7 @@ const globalLimiter = rateLimit({
   max: 100,
   standardHeaders: true,
   legacyHeaders: false,
-  message: { success: false, error: 'Demasiadas peticiones, intenta más tarde' }
+  message: { success: false, error: 'Demasiadas peticiones, intenta más tarde' },
 });
 app.use('/api/', globalLimiter);
 
@@ -48,7 +52,7 @@ const authLimiter = rateLimit({
   max: 10,
   standardHeaders: true,
   legacyHeaders: false,
-  message: { success: false, error: 'Demasiados intentos de autenticación, espera 15 minutos' }
+  message: { success: false, error: 'Demasiados intentos de autenticación, espera 15 minutos' },
 });
 app.use('/api/auth/login', authLimiter);
 app.use('/api/auth/register', authLimiter);
@@ -69,8 +73,11 @@ app.use('/api/projects', projectsRouter);
 app.get('/api/config', (req, res) => {
   res.json({
     OSM_TILE_URL: process.env.OSM_TILE_URL || 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-    OSM_NOMINATIM_URL: process.env.OSM_NOMINATIM_URL || 'https://nominatim.openstreetmap.org/search',
-    OSM_OVERPASS_ENDPOINTS: (process.env.OSM_OVERPASS_ENDPOINTS || '').split(',').filter(e => e.trim())
+    OSM_NOMINATIM_URL:
+      process.env.OSM_NOMINATIM_URL || 'https://nominatim.openstreetmap.org/search',
+    OSM_OVERPASS_ENDPOINTS: (process.env.OSM_OVERPASS_ENDPOINTS || '')
+      .split(',')
+      .filter((e) => e.trim()),
   });
 });
 
@@ -81,7 +88,7 @@ app.use(express.static(staticDir));
 // ── Security: block access to backend files ─────────────────────
 app.use((req, res, next) => {
   const forbidden = ['/server', '/data', '/package', '/.env', '/README'];
-  if (forbidden.some(f => req.path.startsWith(f))) {
+  if (forbidden.some((f) => req.path.startsWith(f))) {
     return res.status(403).json({ success: false, error: 'Acceso denegado' });
   }
   next();
@@ -108,5 +115,8 @@ app.use((err, req, res, next) => {
 app.use(errorHandler);
 
 app.listen(PORT, () => {
-  logger.info({ port: PORT, env: process.env.NODE_ENV || 'development' }, 'Servidor UrbanPlan 3D iniciado');
+  logger.info(
+    { port: PORT, env: process.env.NODE_ENV || 'development' },
+    'Servidor UrbanPlan 3D iniciado'
+  );
 });

@@ -4,7 +4,7 @@ require('dotenv').config();
 const poolConfig = process.env.DATABASE_URL
   ? {
       connectionString: process.env.DATABASE_URL,
-      ssl: { rejectUnauthorized: true }
+      ssl: { rejectUnauthorized: true },
     }
   : {
       user: process.env.DB_USER,

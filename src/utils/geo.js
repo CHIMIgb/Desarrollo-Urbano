@@ -1,8 +1,11 @@
 // ── HELPERS GEO ──────────────────────────────────────────────
 export function haversine(lng1, lat1, lng2, lat2) {
-  const R = 6371000, r = Math.PI / 180;
-  const dLat = (lat2 - lat1) * r, dLng = (lng2 - lng1) * r;
-  const a = Math.sin(dLat / 2) ** 2 + Math.cos(lat1 * r) * Math.cos(lat2 * r) * Math.sin(dLng / 2) ** 2;
+  const R = 6371000,
+    r = Math.PI / 180;
+  const dLat = (lat2 - lat1) * r,
+    dLng = (lng2 - lng1) * r;
+  const a =
+    Math.sin(dLat / 2) ** 2 + Math.cos(lat1 * r) * Math.cos(lat2 * r) * Math.sin(dLng / 2) ** 2;
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
@@ -17,15 +20,19 @@ export function polygonArea(coords) {
   // Shoelace in local meters
   if (coords.length < 3) return 0;
   const cLat = coords.reduce((s, c) => s + c[1], 0) / coords.length;
-  const mLat = 111320, mLng = 111320 * Math.cos(cLat * Math.PI / 180);
+  const mLat = 111320,
+    mLng = 111320 * Math.cos((cLat * Math.PI) / 180);
   let area = 0;
   for (let i = 0, j = coords.length - 1; i < coords.length; j = i++) {
-    area += (coords[j][0] * mLng + coords[i][0] * mLng) * (coords[j][1] * mLat - coords[i][1] * mLat);
+    area +=
+      (coords[j][0] * mLng + coords[i][0] * mLng) * (coords[j][1] * mLat - coords[i][1] * mLat);
   }
   return Math.abs(area / 2);
 }
 
-export function polygonPerimeter(coords) { return lineLength(coords); }
+export function polygonPerimeter(coords) {
+  return lineLength(coords);
+}
 
 /**
  * Returns array of individual edge lengths (meters) from raw_pts.
@@ -45,9 +52,11 @@ export function edgeLengths(pts, closed = false) {
 
 // Bounding box dims of a polygon (lat/lon → meters)
 export function polygonBBox(coords) {
-  const lngs = coords.map(c => c[0]), lats = coords.map(c => c[1]);
+  const lngs = coords.map((c) => c[0]),
+    lats = coords.map((c) => c[1]);
   const cLat = (Math.max(...lats) + Math.min(...lats)) / 2;
-  const mLng = 111320 * Math.cos(cLat * Math.PI / 180), mLat = 111320;
+  const mLng = 111320 * Math.cos((cLat * Math.PI) / 180),
+    mLat = 111320;
   const w = (Math.max(...lngs) - Math.min(...lngs)) * mLng;
   const h = (Math.max(...lats) - Math.min(...lats)) * mLat;
   return { width: w, length: h };
@@ -59,9 +68,16 @@ export function buildingPolygon(cLng, cLat, widthM, lengthM, rotDeg) {
   // Half-dimensions in local offset meters
   const hw = widthM / 2;
   const hl = lengthM / 2;
-  const a = rotDeg * r, cos = Math.cos(a), sin = Math.sin(a);
+  const a = rotDeg * r,
+    cos = Math.cos(a),
+    sin = Math.sin(a);
   // Unrotated corners in meters (origin at 0,0)
-  const raw = [[-hw, -hl], [hw, -hl], [hw, hl], [-hw, hl]];
+  const raw = [
+    [-hw, -hl],
+    [hw, -hl],
+    [hw, hl],
+    [-hw, hl],
+  ];
   // Factors to convert meters back to degrees at this latitude
   const mLat = 111320;
   const mLng = 111320 * Math.cos(cLat * r);
@@ -71,7 +87,7 @@ export function buildingPolygon(cLng, cLat, widthM, lengthM, rotDeg) {
     const rx = x * cos - y * sin;
     const ry = x * sin + y * cos;
     // 2. Convert to geographic degrees
-    return [cLng + (rx / mLng), cLat + (ry / mLat)];
+    return [cLng + rx / mLng, cLat + ry / mLat];
   });
   pts.push(pts[0]);
   return pts;
@@ -85,10 +101,20 @@ export function catmullRom(pts, steps = 10) {
   for (let i = 1; i < ext.length - 2; i++) {
     const [p0, p1, p2, p3] = [ext[i - 1], ext[i], ext[i + 1], ext[i + 2]];
     for (let t = 0; t < steps; t++) {
-      const tt = t / steps, t2 = tt * tt, t3 = t2 * tt;
+      const tt = t / steps,
+        t2 = tt * tt,
+        t3 = t2 * tt;
       result.push([
-        0.5 * ((2 * p1[0]) + (-p0[0] + p2[0]) * tt + (2 * p0[0] - 5 * p1[0] + 4 * p2[0] - p3[0]) * t2 + (-p0[0] + 3 * p1[0] - 3 * p2[0] + p3[0]) * t3),
-        0.5 * ((2 * p1[1]) + (-p0[1] + p2[1]) * tt + (2 * p0[1] - 5 * p1[1] + 4 * p2[1] - p3[1]) * t2 + (-p0[1] + 3 * p1[1] - 3 * p2[1] + p3[1]) * t3)
+        0.5 *
+          (2 * p1[0] +
+            (-p0[0] + p2[0]) * tt +
+            (2 * p0[0] - 5 * p1[0] + 4 * p2[0] - p3[0]) * t2 +
+            (-p0[0] + 3 * p1[0] - 3 * p2[0] + p3[0]) * t3),
+        0.5 *
+          (2 * p1[1] +
+            (-p0[1] + p2[1]) * tt +
+            (2 * p0[1] - 5 * p1[1] + 4 * p2[1] - p3[1]) * t2 +
+            (-p0[1] + 3 * p1[1] - 3 * p2[1] + p3[1]) * t3),
       ]);
     }
   }
@@ -104,10 +130,20 @@ export function catmullRomClosed(pts, steps = 10) {
   for (let i = 1; i < ext.length - 2; i++) {
     const [p0, p1, p2, p3] = [ext[i - 1], ext[i], ext[i + 1], ext[i + 2]];
     for (let t = 0; t < steps; t++) {
-      const tt = t / steps, t2 = tt * tt, t3 = t2 * tt;
+      const tt = t / steps,
+        t2 = tt * tt,
+        t3 = t2 * tt;
       result.push([
-        0.5 * ((2 * p1[0]) + (-p0[0] + p2[0]) * tt + (2 * p0[0] - 5 * p1[0] + 4 * p2[0] - p3[0]) * t2 + (-p0[0] + 3 * p1[0] - 3 * p2[0] + p3[0]) * t3),
-        0.5 * ((2 * p1[1]) + (-p0[1] + p2[1]) * tt + (2 * p0[1] - 5 * p1[1] + 4 * p2[1] - p3[1]) * t2 + (-p0[1] + 3 * p1[1] - 3 * p2[1] + p3[1]) * t3)
+        0.5 *
+          (2 * p1[0] +
+            (-p0[0] + p2[0]) * tt +
+            (2 * p0[0] - 5 * p1[0] + 4 * p2[0] - p3[0]) * t2 +
+            (-p0[0] + 3 * p1[0] - 3 * p2[0] + p3[0]) * t3),
+        0.5 *
+          (2 * p1[1] +
+            (-p0[1] + p2[1]) * tt +
+            (2 * p0[1] - 5 * p1[1] + 4 * p2[1] - p3[1]) * t2 +
+            (-p0[1] + 3 * p1[1] - 3 * p2[1] + p3[1]) * t3),
       ]);
     }
   }
@@ -137,12 +173,15 @@ export function fmtVol(m3) {
  * Algoritmo Ray-Casting para determinar si un punto está dentro de un polígono.
  */
 export function isPointInPolygon(point, polygon) {
-  const x = point[0], y = point[1];
+  const x = point[0],
+    y = point[1];
   let inside = false;
   for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
-    const xi = polygon[i][0], yi = polygon[i][1];
-    const xj = polygon[j][0], yj = polygon[j][1];
-    const intersect = ((yi > y) !== (yj > y)) && (x < (xj - xi) * (y - yi) / (yj - yi) + xi);
+    const xi = polygon[i][0],
+      yi = polygon[i][1];
+    const xj = polygon[j][0],
+      yj = polygon[j][1];
+    const intersect = yi > y !== yj > y && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi;
     if (intersect) inside = !inside;
   }
   return inside;
@@ -156,10 +195,11 @@ export function getFeatureCenter(feature) {
   if (g.type === 'Point') return { lng: g.coordinates[0], lat: g.coordinates[1] };
   if (g.type === 'Polygon' || g.type === 'MultiPolygon') {
     const coords = g.type === 'Polygon' ? g.coordinates[0] : g.coordinates[0][0];
-    const lngs = coords.map(c => c[0]), lats = coords.map(c => c[1]);
+    const lngs = coords.map((c) => c[0]),
+      lats = coords.map((c) => c[1]);
     return {
       lng: (Math.max(...lngs) + Math.min(...lngs)) / 2,
-      lat: (Math.max(...lats) + Math.min(...lats)) / 2
+      lat: (Math.max(...lats) + Math.min(...lats)) / 2,
     };
   }
   if (g.type === 'LineString') {

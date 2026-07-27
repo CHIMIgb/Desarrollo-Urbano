@@ -11,18 +11,18 @@ import { logger } from '../utils/logger.js';
  */
 export const Events = {
   // ── Mapa ────────────────────────────────────────────────
-  MAP_READY:            'map:ready',
-  MAP_REFRESHED:        'map:refreshed',
+  MAP_READY: 'map:ready',
+  MAP_REFRESHED: 'map:refreshed',
 
   // ── Estado ──────────────────────────────────────────────
-  STATE_CHANGED:        'state:changed',
-  FEATURES_UPDATED:     'state:features_updated',
+  STATE_CHANGED: 'state:changed',
+  FEATURES_UPDATED: 'state:features_updated',
 
   // ── Notificaciones ──────────────────────────────────────
-  TOAST:                'ui:toast',
+  TOAST: 'ui:toast',
 
   // ── Estadísticas ────────────────────────────────────────
-  STATS_UPDATE:         'ui:stats_update',
+  STATS_UPDATE: 'ui:stats_update',
 };
 
 /**

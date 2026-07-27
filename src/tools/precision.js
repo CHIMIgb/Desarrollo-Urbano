@@ -4,7 +4,13 @@
    ============================================================= */
 import { state } from '../config/state.js';
 import { haversine, getFeatureCenter } from '../utils/geo.js';
-import { catmullRom, catmullRomClosed, lineLength, polygonArea, polygonPerimeter } from '../utils/geo.js';
+import {
+  catmullRom,
+  catmullRomClosed,
+  lineLength,
+  polygonArea,
+  polygonPerimeter,
+} from '../utils/geo.js';
 import { refreshMap } from '../map/core.js';
 import { pushHistory, translateFeature } from './interaction.js';
 import { updateEditHandles } from './selection.js';
@@ -17,7 +23,7 @@ import { updateEditHandles } from './selection.js';
  */
 function metersToDegreesAtLat(dxMeters, dyMeters, lat) {
   const mLat = 111320;
-  const mLng = 111320 * Math.cos(lat * Math.PI / 180);
+  const mLng = 111320 * Math.cos((lat * Math.PI) / 180);
   return { dlng: dxMeters / mLng, dlat: dyMeters / mLat };
 }
 
@@ -26,10 +32,10 @@ function metersToDegreesAtLat(dxMeters, dyMeters, lat) {
  * Convención de rumbo: 0° = Norte, 90° = Este, 180° = Sur, 270° = Oeste.
  */
 function polarToCartesian(distanceM, bearingDeg) {
-  const rad = bearingDeg * Math.PI / 180;
+  const rad = (bearingDeg * Math.PI) / 180;
   return {
     dx: distanceM * Math.sin(rad),
-    dy: distanceM * Math.cos(rad)
+    dy: distanceM * Math.cos(rad),
   };
 }
 
@@ -38,12 +44,12 @@ function polarToCartesian(distanceM, bearingDeg) {
  * @returns {number} Grados de 0 a 360 (0° = Norte, 90° = Este)
  */
 export function bearingBetween(lng1, lat1, lng2, lat2) {
-  const dLng = (lng2 - lng1) * Math.PI / 180;
-  const lat1R = lat1 * Math.PI / 180;
-  const lat2R = lat2 * Math.PI / 180;
+  const dLng = ((lng2 - lng1) * Math.PI) / 180;
+  const lat1R = (lat1 * Math.PI) / 180;
+  const lat2R = (lat2 * Math.PI) / 180;
   const y = Math.sin(dLng) * Math.cos(lat2R);
   const x = Math.cos(lat1R) * Math.sin(lat2R) - Math.sin(lat1R) * Math.cos(lat2R) * Math.cos(dLng);
-  return (Math.atan2(y, x) * 180 / Math.PI + 360) % 360;
+  return ((Math.atan2(y, x) * 180) / Math.PI + 360) % 360;
 }
 
 // ── Recalcular Geometría ──────────────────────────────────────
@@ -56,15 +62,17 @@ export function recalculateGeometry(f) {
   if (!f || !f.properties.raw_pts) return;
 
   if (['road', 'path', 'sidewalk', 'railway'].includes(f.properties.type)) {
-    f.geometry.coordinates = f.properties.curved && f.properties.raw_pts.length > 2
-      ? catmullRom(f.properties.raw_pts)
-      : [...f.properties.raw_pts];
+    f.geometry.coordinates =
+      f.properties.curved && f.properties.raw_pts.length > 2
+        ? catmullRom(f.properties.raw_pts)
+        : [...f.properties.raw_pts];
     f.properties.length_m = Math.round(lineLength(f.geometry.coordinates));
   } else {
     const curved = f.properties.curved;
-    const closed = curved && f.properties.raw_pts.length > 2
-      ? catmullRomClosed(f.properties.raw_pts)
-      : [...f.properties.raw_pts, f.properties.raw_pts[0]];
+    const closed =
+      curved && f.properties.raw_pts.length > 2
+        ? catmullRomClosed(f.properties.raw_pts)
+        : [...f.properties.raw_pts, f.properties.raw_pts[0]];
     f.geometry.coordinates = [closed];
     f.properties.area_m2 = Math.round(polygonArea(closed));
     f.properties.perimeter_m = Math.round(polygonPerimeter(closed));
@@ -82,7 +90,7 @@ export function recalculateGeometry(f) {
  * @returns {boolean} true si la operación fue exitosa
  */
 export function moveVertexByPolar(featureId, vertexIdx, distanceM, bearingDeg) {
-  const f = state.features.find(x => x.properties.id === featureId);
+  const f = state.features.find((x) => x.properties.id === featureId);
   if (!f || !f.properties.raw_pts || !f.properties.raw_pts[vertexIdx]) return false;
 
   pushHistory();
@@ -107,7 +115,7 @@ export function moveVertexByPolar(featureId, vertexIdx, distanceM, bearingDeg) {
  * @returns {boolean} true si la operación fue exitosa
  */
 export function moveVertexToCoord(featureId, vertexIdx, lng, lat) {
-  const f = state.features.find(x => x.properties.id === featureId);
+  const f = state.features.find((x) => x.properties.id === featureId);
   if (!f || !f.properties.raw_pts || !f.properties.raw_pts[vertexIdx]) return false;
 
   pushHistory();
@@ -130,7 +138,7 @@ export function moveVertexToCoord(featureId, vertexIdx, lng, lat) {
  * @returns {boolean} true si la operación fue exitosa
  */
 export function moveFeatureByPolar(featureId, distanceM, bearingDeg) {
-  const f = state.features.find(x => x.properties.id === featureId);
+  const f = state.features.find((x) => x.properties.id === featureId);
   if (!f) return false;
 
   const center = getFeatureCenter(f);
@@ -154,7 +162,7 @@ export function moveFeatureByPolar(featureId, distanceM, bearingDeg) {
  * @returns {boolean} true si la operación fue exitosa
  */
 export function moveFeatureToCoord(featureId, lng, lat) {
-  const f = state.features.find(x => x.properties.id === featureId);
+  const f = state.features.find((x) => x.properties.id === featureId);
   if (!f) return false;
 
   const center = getFeatureCenter(f);
@@ -179,7 +187,7 @@ export function moveFeatureToCoord(featureId, lng, lat) {
  * @returns {Object|null} { lng, lat, distPrev, distNext, bearingFromPrev, bearingToNext, interiorAngle }
  */
 export function getVertexInfo(featureId, vertexIdx) {
-  const f = state.features.find(x => x.properties.id === featureId);
+  const f = state.features.find((x) => x.properties.id === featureId);
   if (!f || !f.properties.raw_pts) return null;
 
   const pts = f.properties.raw_pts;
@@ -190,7 +198,8 @@ export function getVertexInfo(featureId, vertexIdx) {
   const isLine = ['road', 'path', 'sidewalk', 'railway'].includes(f.properties.type);
 
   // Obtener vértices adyacentes (manejo de extremos)
-  let prev = null, next = null;
+  let prev = null,
+    next = null;
   if (vertexIdx > 0) prev = pts[vertexIdx - 1];
   else if (!isLine && n > 2) prev = pts[n - 1]; // Cerrar polígono
 
@@ -204,7 +213,7 @@ export function getVertexInfo(featureId, vertexIdx) {
     distNext: null,
     bearingFromPrev: null,
     bearingToNext: null,
-    interiorAngle: null
+    interiorAngle: null,
   };
 
   if (prev) {

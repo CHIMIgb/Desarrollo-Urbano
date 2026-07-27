@@ -4,7 +4,11 @@ export function initGlobalErrors() {
   window.addEventListener('error', (event) => {
     const { message, filename, lineno, error } = event;
     if (error instanceof AppError) {
-      console.error(`[GlobalError] ${error.code}: ${message}`, { filename, lineno, cause: error.cause });
+      console.error(`[GlobalError] ${error.code}: ${message}`, {
+        filename,
+        lineno,
+        cause: error.cause,
+      });
     } else {
       console.error('[GlobalError]', message, filename, lineno);
     }
@@ -32,6 +36,9 @@ function showGlobalToast(msg, type) {
     t.className = `toast ${type}`;
     t.innerHTML = `<span class="toast-dot"></span><span>${msg}</span>`;
     c.appendChild(t);
-    setTimeout(() => { t.classList.add('dismissing'); setTimeout(() => t.remove(), 300); }, 5000);
+    setTimeout(() => {
+      t.classList.add('dismissing');
+      setTimeout(() => t.remove(), 300);
+    }, 5000);
   }
 }

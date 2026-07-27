@@ -13,33 +13,64 @@ export function generateFurnitureParts(baseId, lng, lat, rot, fType) {
   const addCircle = (rM, base, h, col) => {
     const id = getNextId();
     parts.push({
-      type: 'Feature', id,
-      properties: { id, parent_id: baseId, type: 'furniture', color: col, fillColor: col, base_height: base, height: h },
-      geometry: { type: 'Polygon', coordinates: [buildTreePolygon(lng, lat, rM)] }
+      type: 'Feature',
+      id,
+      properties: {
+        id,
+        parent_id: baseId,
+        type: 'furniture',
+        color: col,
+        fillColor: col,
+        base_height: base,
+        height: h,
+      },
+      geometry: { type: 'Polygon', coordinates: [buildTreePolygon(lng, lat, rM)] },
     });
   };
 
   const addOffBox = (dlngM, dlatM, w, l, rotOff, base, h, col) => {
-    const rad = rot * Math.PI / 180;
+    const rad = (rot * Math.PI) / 180;
     const dx = dlngM * Math.cos(rad) - dlatM * Math.sin(rad);
     const dy = dlngM * Math.sin(rad) + dlatM * Math.cos(rad);
     const dlat = dy / 111320;
-    const dlng = dx / (40075000 * Math.cos(lat * Math.PI / 180) / 360);
+    const dlng = dx / ((40075000 * Math.cos((lat * Math.PI) / 180)) / 360);
     const id = getNextId();
     parts.push({
-      type: 'Feature', id,
-      properties: { id, parent_id: baseId, type: 'furniture', color: col, fillColor: col, base_height: base, height: h },
-      geometry: { type: 'Polygon', coordinates: [buildingPolygon(lng + dlng, lat + dlat, w, l, rot + rotOff)] }
+      type: 'Feature',
+      id,
+      properties: {
+        id,
+        parent_id: baseId,
+        type: 'furniture',
+        color: col,
+        fillColor: col,
+        base_height: base,
+        height: h,
+      },
+      geometry: {
+        type: 'Polygon',
+        coordinates: [buildingPolygon(lng + dlng, lat + dlat, w, l, rot + rotOff)],
+      },
     });
   };
 
   parts.push({
-    type: 'Feature', id: baseId,
+    type: 'Feature',
+    id: baseId,
     properties: {
-      id: baseId, type: 'furniture', name: `Mobiliario ${baseId}`, color: '#374151', fillColor: '#4b5563',
-      base_height: 0, height: 0.5, center_lng: lng, center_lat: lat, rotation: rot, furniture_type: fType
+      id: baseId,
+      type: 'furniture',
+      name: `Mobiliario ${baseId}`,
+      color: '#374151',
+      fillColor: '#4b5563',
+      base_height: 0,
+      height: 0.5,
+      center_lng: lng,
+      center_lat: lat,
+      rotation: rot,
+      furniture_type: fType,
     },
-    geometry: { type: 'Polygon', coordinates: [buildTreePolygon(lng, lat, 0.4)] }
+    geometry: { type: 'Polygon', coordinates: [buildTreePolygon(lng, lat, 0.4)] },
   });
 
   const poleCol = '#6b7280';
@@ -147,6 +178,7 @@ export function finishFurniture(lng, lat, furnitureType, rotation) {
   const baseId = getNextId();
   const parts = generateFurnitureParts(baseId, lng, lat, rot, fType);
   addFeatures(...parts);
-  pushHistory(); refreshMap();
+  pushHistory();
+  refreshMap();
   selectFeature(baseId);
 }

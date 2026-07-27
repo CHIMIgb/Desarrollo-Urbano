@@ -12,7 +12,7 @@ const errorHandler = (err, req, res, next) => {
 
   res.status(statusCode).json({
     success: false,
-    error: isClient ? err.message : 'Error interno del servidor'
+    error: isClient ? err.message : 'Error interno del servidor',
   });
 };
 
@@ -25,5 +25,5 @@ class HttpError extends Error {
 
 module.exports = {
   errorHandler,
-  HttpError
+  HttpError,
 };

@@ -36,7 +36,10 @@ function verifyToken(token) {
 
 async function registerUser(username, full_name, email, password) {
   // Ver si existe
-  const existing = await db.query('SELECT username FROM users WHERE username = $1 OR email = $2', [username, email]);
+  const existing = await db.query('SELECT username FROM users WHERE username = $1 OR email = $2', [
+    username,
+    email,
+  ]);
   if (existing.rows.length > 0) {
     throw new HttpError(400, 'El usuario o correo ya está en uso');
   }
@@ -65,5 +68,5 @@ async function registerUser(username, full_name, email, password) {
 module.exports = {
   loginUser,
   verifyToken,
-  registerUser
+  registerUser,
 };

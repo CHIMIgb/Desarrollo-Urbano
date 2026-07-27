@@ -7,7 +7,7 @@ import { catmullRom, lineLength } from '../utils/geo.js';
 /**
  * Reconstruye la geometría de una feature de tipo línea (road, path, sidewalk, railway)
  * a partir de sus raw_pts y la configuración de curvas.
- * 
+ *
  * @param {Object} feature — La feature GeoJSON completa.
  * @param {Object} [overrides] — Propiedades opcionales a sobreescribir.
  * @param {number} [overrides.widthM] — Nuevo ancho en metros.
@@ -23,9 +23,10 @@ export function rebuildLineGeometry(feature, overrides = {}) {
   if (overrides.lanes !== undefined) f.properties.lanes = overrides.lanes;
   if (overrides.curved !== undefined) f.properties.curved = overrides.curved;
 
-  f.geometry.coordinates = f.properties.curved && f.properties.raw_pts.length > 2
-    ? catmullRom(f.properties.raw_pts)
-    : [...f.properties.raw_pts];
+  f.geometry.coordinates =
+    f.properties.curved && f.properties.raw_pts.length > 2
+      ? catmullRom(f.properties.raw_pts)
+      : [...f.properties.raw_pts];
   f.properties.length_m = Math.round(lineLength(f.geometry.coordinates));
 
   return f;

@@ -11,15 +11,15 @@ export function notify(msg, type = 'info', duration = 3000) {
   if (!container) return () => {};
   const t = document.createElement('div');
   t.className = `toast ${type}`;
-  
+
   if (type === 'loading') {
     t.innerHTML = `<span class="spinner" style="margin-right: 8px;"></span><span>${escapeHTML(msg)}</span>`;
   } else {
     t.innerHTML = `<div class="toast-dot"></div><span>${escapeHTML(msg)}</span>`;
   }
-  
+
   container.appendChild(t);
-  
+
   const removeToast = () => {
     t.classList.add('dismissing');
     setTimeout(() => t.remove(), 250);
@@ -39,20 +39,23 @@ export function confirmDialog(title, message) {
       resolve(confirm(`${title}\n${message}`));
       return;
     }
-    
+
     document.getElementById('confirmModalTitle').textContent = title;
     document.getElementById('confirmModalMessage').textContent = message;
-    
+
     modal.classList.remove('hidden');
     trapFocus(modal);
-    
+
     const btnAccept = document.getElementById('btnConfirmAccept');
     const btnCancel = document.getElementById('btnConfirmCancel');
-    
+
     const onEscape = (e) => {
-      if (e.key === 'Escape') { cleanup(); resolve(false); }
+      if (e.key === 'Escape') {
+        cleanup();
+        resolve(false);
+      }
     };
-    
+
     const cleanup = () => {
       modal.classList.add('hidden');
       releaseFocus();
@@ -60,10 +63,16 @@ export function confirmDialog(title, message) {
       btnCancel.removeEventListener('click', onCancel);
       document.removeEventListener('keydown', onEscape);
     };
-    
-    const onAccept = () => { cleanup(); resolve(true); };
-    const onCancel = () => { cleanup(); resolve(false); };
-    
+
+    const onAccept = () => {
+      cleanup();
+      resolve(true);
+    };
+    const onCancel = () => {
+      cleanup();
+      resolve(false);
+    };
+
     btnAccept.addEventListener('click', onAccept);
     btnCancel.addEventListener('click', onCancel);
     document.addEventListener('keydown', onEscape);

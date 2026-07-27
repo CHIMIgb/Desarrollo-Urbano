@@ -5,7 +5,13 @@ import { escapeHTML } from '../utils/sanitize.js';
 import { pushHistory, getFeatureCenter } from '../tools/interaction.js';
 import { refreshMap } from '../map/core.js';
 import { toast } from './toolbar.js';
-import { deleteSelection, groupSelectedFeatures, ungroupSelectedFeatures, highlightEdge, clearEdgeHighlight } from '../tools/selection.js';
+import {
+  deleteSelection,
+  groupSelectedFeatures,
+  ungroupSelectedFeatures,
+  highlightEdge,
+  clearEdgeHighlight,
+} from '../tools/selection.js';
 import { generateBuildingParts } from '../models/buildings.js';
 import { generateFurnitureParts } from '../models/furniture.js';
 import { rebuildLineGeometry } from '../models/roads.js';
@@ -13,7 +19,8 @@ import { rebuildPolygonGeometry, rebuildRadiusGeometry } from '../models/zones.j
 
 export function showPropsPanel(feat, lngLat) {
   clearEdgeHighlight();
-  const p = feat.properties, cfg = TYPE_CONFIG[p.type] || {};
+  const p = feat.properties,
+    cfg = TYPE_CONFIG[p.type] || {};
   const ps = document.getElementById('propsSection');
   if (ps) ps.classList.remove('hidden');
   const form = document.getElementById('propsForm');
@@ -32,7 +39,7 @@ export function showPropsPanel(feat, lngLat) {
         <div class="form-field"><label>Largo (m)</label><input type="number" id="prop-l" value="${p.length_m || 10}" min="2" max="500" step="0.1"/></div>
       `;
     }
-    
+
     fields += `
       <div class="form-field"><label>Altura (m)</label><input type="number" id="prop-height" value="${p.height || 5}" min="1" max="600" step="0.1"/></div>
       <div class="form-field"><label>Pisos</label><input type="number" id="prop-floors" value="${p.floors || 1}" min="1" max="200"/></div>
@@ -140,7 +147,7 @@ export function showPropsPanel(feat, lngLat) {
     const fIn = document.getElementById('prop-floors');
 
     const rebuildGeom = () => {
-      const f = state.features.find(f => f.properties.id === state.selectedIds[0]);
+      const f = state.features.find((f) => f.properties.id === state.selectedIds[0]);
       if (!f) return;
       const h = parseFloat(hIn.value) || 5;
 
@@ -154,67 +161,107 @@ export function showPropsPanel(feat, lngLat) {
         const rot = parseFloat(rotRange?.value) || 0;
 
         const baseId = f.properties.id;
-        state.features = state.features.filter(x => !(x.properties.id === baseId || x.properties.parent_id === baseId));
-        const newParts = generateBuildingParts(baseId, f.properties.center_lng, f.properties.center_lat, w, l, h, rot, f.properties.type);
+        state.features = state.features.filter(
+          (x) => !(x.properties.id === baseId || x.properties.parent_id === baseId)
+        );
+        const newParts = generateBuildingParts(
+          baseId,
+          f.properties.center_lng,
+          f.properties.center_lat,
+          w,
+          l,
+          h,
+          rot,
+          f.properties.type
+        );
         addFeatures(...newParts);
       }
 
       refreshMap();
       const mc = document.getElementById('liveMeasures');
-      if (mc) { mc.innerHTML = buildMeasureHTML(f); attachEdgeHandlers(f); }
+      if (mc) {
+        mc.innerHTML = buildMeasureHTML(f);
+        attachEdgeHandlers(f);
+      }
     };
 
-    rotRange?.addEventListener('input', () => { if (rotLabel) rotLabel.textContent = rotRange.value + '°'; rebuildGeom(); });
-    [wIn, lIn, hIn].forEach(el => el?.addEventListener('input', rebuildGeom));
-    fIn?.addEventListener('input', () => { if (hIn) hIn.value = Math.round(parseFloat(fIn.value) * 3.5); rebuildGeom(); });
+    rotRange?.addEventListener('input', () => {
+      if (rotLabel) rotLabel.textContent = rotRange.value + '°';
+      rebuildGeom();
+    });
+    [wIn, lIn, hIn].forEach((el) => el?.addEventListener('input', rebuildGeom));
+    fIn?.addEventListener('input', () => {
+      if (hIn) hIn.value = Math.round(parseFloat(fIn.value) * 3.5);
+      rebuildGeom();
+    });
   }
 
   if (p.type === 'furniture') {
     const rotRange = document.getElementById('prop-rotation');
     const rotLabel = document.getElementById('propRotLabel');
     const rebuildFurn = () => {
-      const f = state.features.find(f => f.properties.id === state.selectedIds[0]);
+      const f = state.features.find((f) => f.properties.id === state.selectedIds[0]);
       if (!f) return;
       const rot = parseFloat(rotRange.value) || 0;
       f.properties.rotation = rot;
       const oldId = f.properties.id;
-      state.features = state.features.filter(x => !(x.properties.id === oldId || x.properties.parent_id === oldId));
-      const newParts = generateFurnitureParts(oldId, f.properties.center_lng, f.properties.center_lat, rot, f.properties.furniture_type);
+      state.features = state.features.filter(
+        (x) => !(x.properties.id === oldId || x.properties.parent_id === oldId)
+      );
+      const newParts = generateFurnitureParts(
+        oldId,
+        f.properties.center_lng,
+        f.properties.center_lat,
+        rot,
+        f.properties.furniture_type
+      );
       addFeatures(...newParts);
       refreshMap();
     };
-    rotRange?.addEventListener('input', () => { if (rotLabel) rotLabel.textContent = rotRange.value + '°'; rebuildFurn(); });
+    rotRange?.addEventListener('input', () => {
+      if (rotLabel) rotLabel.textContent = rotRange.value + '°';
+      rebuildFurn();
+    });
   }
 
   if (p.type === 'custom_building') {
     const hIn = document.getElementById('prop-height');
     const fIn = document.getElementById('prop-floors');
     const rebuildCB = () => {
-      const f = state.features.find(f => f.properties.id === state.selectedIds[0]);
+      const f = state.features.find((f) => f.properties.id === state.selectedIds[0]);
       if (!f) return;
       f.properties.height = parseFloat(hIn.value) || 30;
       f.properties.floors = Math.round(f.properties.height / 3.5);
       refreshMap();
       const mc = document.getElementById('liveMeasures');
-      if (mc) { mc.innerHTML = buildMeasureHTML(f); attachEdgeHandlers(f); }
+      if (mc) {
+        mc.innerHTML = buildMeasureHTML(f);
+        attachEdgeHandlers(f);
+      }
     };
     hIn?.addEventListener('input', rebuildCB);
-    fIn?.addEventListener('input', () => { if (hIn) hIn.value = Math.round(parseFloat(fIn.value) * 3.5); rebuildCB(); });
+    fIn?.addEventListener('input', () => {
+      if (hIn) hIn.value = Math.round(parseFloat(fIn.value) * 3.5);
+      rebuildCB();
+    });
   }
 
   if (['park', 'zone', 'terrain', 'custom_building', 'water'].includes(p.type)) {
     const curvedCb = document.getElementById('prop-poly-curved');
     const depthIn = document.getElementById('prop-water-depth');
     const rebuildPoly = () => {
-      const f = state.features.find(f => f.properties.id === state.selectedIds[0]);
+      const f = state.features.find((f) => f.properties.id === state.selectedIds[0]);
       if (!f) return;
       rebuildPolygonGeometry(f, {
         curved: curvedCb ? curvedCb.checked : undefined,
-        depth_m: depthIn ? parseFloat(depthIn.value) || 2 : undefined
+        depth_m: depthIn ? parseFloat(depthIn.value) || 2 : undefined,
       });
       refreshMap();
       const mc = document.getElementById('liveMeasures');
-      if (mc) { mc.innerHTML = buildMeasureHTML(f); attachEdgeHandlers(f); }
+      if (mc) {
+        mc.innerHTML = buildMeasureHTML(f);
+        attachEdgeHandlers(f);
+      }
     };
     curvedCb?.addEventListener('change', rebuildPoly);
     depthIn?.addEventListener('input', rebuildPoly);
@@ -226,22 +273,31 @@ export function showPropsPanel(feat, lngLat) {
     const curvedCb = document.getElementById('prop-curved');
 
     const rebuildLine = () => {
-      const f = state.features.find(f => f.properties.id === state.selectedIds[0]);
+      const f = state.features.find((f) => f.properties.id === state.selectedIds[0]);
       if (!f) return;
       rebuildLineGeometry(f, {
         widthM: wIn ? parseFloat(wIn.value) || f.properties.widthM : undefined,
         lanes: lIn ? parseInt(lIn.value) || f.properties.lanes : undefined,
-        curved: curvedCb ? curvedCb.checked : undefined
+        curved: curvedCb ? curvedCb.checked : undefined,
       });
       refreshMap();
       const mc = document.getElementById('liveMeasures');
-      if (mc) { mc.innerHTML = buildMeasureHTML(f); attachEdgeHandlers(f); }
+      if (mc) {
+        mc.innerHTML = buildMeasureHTML(f);
+        attachEdgeHandlers(f);
+      }
     };
 
     if (wIn) {
       if (lIn) {
-        lIn.addEventListener('input', () => { wIn.value = (parseFloat(lIn.value) * 3.5).toFixed(1) || 3.5; rebuildLine(); });
-        wIn.addEventListener('input', () => { lIn.value = Math.max(1, Math.round(parseFloat(wIn.value) / 3.5)) || 1; rebuildLine(); });
+        lIn.addEventListener('input', () => {
+          wIn.value = (parseFloat(lIn.value) * 3.5).toFixed(1) || 3.5;
+          rebuildLine();
+        });
+        wIn.addEventListener('input', () => {
+          lIn.value = Math.max(1, Math.round(parseFloat(wIn.value) / 3.5)) || 1;
+          rebuildLine();
+        });
       } else {
         wIn.addEventListener('input', rebuildLine);
       }
@@ -253,36 +309,47 @@ export function showPropsPanel(feat, lngLat) {
     const radRange = document.getElementById('prop-radius');
     const radLabel = document.getElementById('propRadLabel');
     const rebuildRad = () => {
-      const f = state.features.find(f => f.properties.id === state.selectedIds[0]);
+      const f = state.features.find((f) => f.properties.id === state.selectedIds[0]);
       if (!f) return;
       const center = getFeatureCenter(f);
       if (!center) return;
       rebuildRadiusGeometry(f, center, parseFloat(radRange.value) || 400);
       refreshMap();
       const mc = document.getElementById('liveMeasures');
-      if (mc) { mc.innerHTML = buildMeasureHTML(f); attachEdgeHandlers(f); }
+      if (mc) {
+        mc.innerHTML = buildMeasureHTML(f);
+        attachEdgeHandlers(f);
+      }
     };
-    radRange?.addEventListener('input', () => { if (radLabel) radLabel.textContent = radRange.value; rebuildRad(); });
+    radRange?.addEventListener('input', () => {
+      if (radLabel) radLabel.textContent = radRange.value;
+      rebuildRad();
+    });
   }
 
   document.getElementById('btnApplyProps')?.addEventListener('click', () => {
     // ... same code as before (shortened for chunk match if needed)
     // Actually I'll keep it exactly to match correctly.
     pushHistory();
-    const f = state.features.find(f => f.properties.id === state.selectedIds[0]);
+    const f = state.features.find((f) => f.properties.id === state.selectedIds[0]);
     if (!f) return;
     f.properties.name = document.getElementById('prop-name').value;
-    if (document.getElementById('prop-uso')) f.properties.uso_suelo = document.getElementById('prop-uso').value;
-    if (document.getElementById('prop-roadType')) f.properties.roadType = document.getElementById('prop-roadType').value;
+    if (document.getElementById('prop-uso'))
+      f.properties.uso_suelo = document.getElementById('prop-uso').value;
+    if (document.getElementById('prop-roadType'))
+      f.properties.roadType = document.getElementById('prop-roadType').value;
     if (document.getElementById('prop-height')) {
       const h = parseFloat(document.getElementById('prop-height').value) || f.properties.height;
       f.properties.height = h;
-      if (document.getElementById('prop-floors')) f.properties.floors = parseInt(document.getElementById('prop-floors').value);
+      if (document.getElementById('prop-floors'))
+        f.properties.floors = parseInt(document.getElementById('prop-floors').value);
     }
     if (document.getElementById('prop-roadW')) {
       rebuildLineGeometry(f, {
         widthM: parseFloat(document.getElementById('prop-roadW').value) || 8,
-        lanes: document.getElementById('prop-lanes') ? parseInt(document.getElementById('prop-lanes').value) : undefined
+        lanes: document.getElementById('prop-lanes')
+          ? parseInt(document.getElementById('prop-lanes').value)
+          : undefined,
       });
     }
     if (document.getElementById('prop-curved')) {
@@ -298,11 +365,14 @@ export function showPropsPanel(feat, lngLat) {
       f.properties.minCAS = parseFloat(document.getElementById('prop-min-cas').value) || null;
     }
     if (document.getElementById('prop-min-setback')) {
-      f.properties.minSetback = parseFloat(document.getElementById('prop-min-setback').value) || null;
+      f.properties.minSetback =
+        parseFloat(document.getElementById('prop-min-setback').value) || null;
     }
     const col = document.getElementById('prop-color').value;
-    f.properties.fillColor = col; f.properties.color = col;
-    refreshMap(); toast('Propiedades actualizadas', 'success');
+    f.properties.fillColor = col;
+    f.properties.color = col;
+    refreshMap();
+    toast('Propiedades actualizadas', 'success');
   });
   document.getElementById('btnDeleteSelected')?.addEventListener('click', deleteSelection);
   document.getElementById('btnUngroup')?.addEventListener('click', ungroupSelectedFeatures);
@@ -312,13 +382,15 @@ export function showPropsPanel(feat, lngLat) {
     const ctr = getFeatureCenter(feat);
     state.popup = new maplibregl.Popup({ closeButton: true, maxWidth: '220px' })
       .setLngLat(ctr || lngLat)
-      .setHTML(`<div class="popup-name">${escapeHTML(p.name || cfg.label)}</div><div class="popup-type">${escapeHTML(cfg.label || p.type)}</div>
+      .setHTML(
+        `<div class="popup-name">${escapeHTML(p.name || cfg.label)}</div><div class="popup-type">${escapeHTML(cfg.label || p.type)}</div>
         <div class="popup-props">
           ${p.width_m ? `<div class="popup-prop"><span class="popup-prop-key">Ancho</span><span class="popup-prop-val">${fmtLen(p.width_m)}</span></div>` : ''}
           ${p.length_m ? `<div class="popup-prop"><span class="popup-prop-key">Largo</span><span class="popup-prop-val">${fmtLen(p.length_m)}</span></div>` : ''}
           ${p.height ? `<div class="popup-prop"><span class="popup-prop-key">Altura</span><span class="popup-prop-val">${p.height}m</span></div>` : ''}
           ${p.area_m2 ? `<div class="popup-prop"><span class="popup-prop-key">Área</span><span class="popup-prop-val">${fmtArea(p.area_m2)}</span></div>` : ''}
-        </div>`)
+        </div>`
+      )
       .addTo(state.map);
   }
 }
@@ -341,12 +413,17 @@ export function showMultiPropsPanel() {
   document.getElementById('btnMultiApply')?.addEventListener('click', () => {
     pushHistory();
     const col = document.getElementById('prop-multi-color').value;
-    state.features.forEach(f => {
-      if (state.selectedIds.includes(f.properties.id)) { f.properties.color = col; f.properties.fillColor = col; }
+    state.features.forEach((f) => {
+      if (state.selectedIds.includes(f.properties.id)) {
+        f.properties.color = col;
+        f.properties.fillColor = col;
+      }
     });
-    refreshMap(); toast('Color aplicado a todos', 'success');
+    refreshMap();
+    toast('Color aplicado a todos', 'success');
   });
-  state.popup?.remove(); state.popup = null;
+  state.popup?.remove();
+  state.popup = null;
 }
 
 function attachEdgeHandlers(feat) {
@@ -354,7 +431,7 @@ function attachEdgeHandlers(feat) {
   const closed = !isLine;
   document.querySelectorAll('.edge-row').forEach((row, i) => {
     row.addEventListener('click', () => {
-      document.querySelectorAll('.edge-row.active').forEach(r => r.classList.remove('active'));
+      document.querySelectorAll('.edge-row.active').forEach((r) => r.classList.remove('active'));
       row.classList.add('active');
       highlightEdge(feat, i, closed);
     });
@@ -372,7 +449,10 @@ export function buildMeasureHTML(feat) {
   if (p.length_m != null && !isRoad) items.push({ val: fmtLen(p.length_m), lbl: 'Largo' });
   if (p.height != null && isBuilding) items.push({ val: p.height + 'm', lbl: 'Altura' });
   if (['house', 'building'].includes(p.type) && p.width_m && p.length_m && p.height) {
-    items.push({ val: fmtArea(p.width_m * p.length_m), lbl: 'Área piso' }, { val: fmtVol(p.width_m * p.length_m * p.height), lbl: 'Volumen' });
+    items.push(
+      { val: fmtArea(p.width_m * p.length_m), lbl: 'Área piso' },
+      { val: fmtVol(p.width_m * p.length_m * p.height), lbl: 'Volumen' }
+    );
   }
   if (isPoly && p.area_m2) {
     items.push({ val: fmtArea(p.area_m2), lbl: 'Área' });
@@ -383,17 +463,23 @@ export function buildMeasureHTML(feat) {
     if (p.volume_m3) items.push({ val: fmtVol(p.volume_m3), lbl: 'Volumen' });
   }
   if (isPoly && p.perimeter_m) items.push({ val: fmtLen(p.perimeter_m), lbl: 'Perímetro' });
-  if (isRoad && p.length_m) items.push({ val: fmtLen(p.length_m), lbl: 'Longitud' }, { val: (p.widthM || 8) + 'm', lbl: 'Ancho' });
+  if (isRoad && p.length_m)
+    items.push(
+      { val: fmtLen(p.length_m), lbl: 'Longitud' },
+      { val: (p.widthM || 8) + 'm', lbl: 'Ancho' }
+    );
 
   let edgesHTML = '';
   if (p.raw_pts && p.raw_pts.length >= 2) {
     const closed = !isLine;
     const lengths = edgeLengths(p.raw_pts, closed);
     if (lengths.length > 0) {
-      const edgeItems = lengths.map((m, i) => {
-        const label = closed && i === lengths.length - 1 ? 'Cierre' : `Lado ${i + 1}`;
-        return `<div class="edge-row"><span class="edge-label">${label}</span><span class="edge-val">${fmtLen(m)}</span></div>`;
-      }).join('');
+      const edgeItems = lengths
+        .map((m, i) => {
+          const label = closed && i === lengths.length - 1 ? 'Cierre' : `Lado ${i + 1}`;
+          return `<div class="edge-row"><span class="edge-label">${label}</span><span class="edge-val">${fmtLen(m)}</span></div>`;
+        })
+        .join('');
       edgesHTML = `<div class="edge-card">
         <div class="measure-title">Lados (${lengths.length})</div>
         <div class="edge-list">${edgeItems}</div>
@@ -403,7 +489,7 @@ export function buildMeasureHTML(feat) {
 
   if (!items.length && !edgesHTML) return '';
   const gridHTML = items.length
-    ? `<div class="measure-grid">${items.map(i => `<div class="measure-item"><div class="measure-val">${i.val}</div><div class="measure-unit">${i.lbl}</div></div>`).join('')}</div>`
+    ? `<div class="measure-grid">${items.map((i) => `<div class="measure-item"><div class="measure-val">${i.val}</div><div class="measure-unit">${i.lbl}</div></div>`).join('')}</div>`
     : '';
   return `<div class="measure-card" id="liveMeasures">
     <div class="measure-title">Medidas</div>

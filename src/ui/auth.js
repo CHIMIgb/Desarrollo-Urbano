@@ -49,13 +49,14 @@ export function initAuth() {
     const originalBtnText = submitBtn.innerHTML;
 
     submitBtn.disabled = true;
-    submitBtn.innerHTML = '<span class="spinner-container"><span class="spinner"></span><span>Verificando credenciales...</span></span>';
+    submitBtn.innerHTML =
+      '<span class="spinner-container"><span class="spinner"></span><span>Verificando credenciales...</span></span>';
 
     try {
       const response = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password })
+        body: JSON.stringify({ username, password }),
       });
 
       const data = await response.json();
@@ -65,7 +66,7 @@ export function initAuth() {
         localStorage.setItem('urbanplan_user', JSON.stringify(data.user));
         showApp(data.user);
         // Cargar proyecto desde el servidor tras login
-        import('./io.js').then(m => m.loadSavedState());
+        import('./io.js').then((m) => m.loadSavedState());
       } else {
         loginError.textContent = data.error || 'Credenciales incorrectas';
         loginError.classList.remove('hidden');
@@ -92,13 +93,14 @@ export function initAuth() {
 
     submitBtn.disabled = true;
     submitBtn.classList.add('loading');
-    submitBtn.innerHTML = '<span class="spinner-container"><span class="spinner"></span><span>Creando cuenta...</span></span>';
+    submitBtn.innerHTML =
+      '<span class="spinner-container"><span class="spinner"></span><span>Creando cuenta...</span></span>';
 
     try {
       const response = await fetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, full_name, email, password })
+        body: JSON.stringify({ username, full_name, email, password }),
       });
 
       const data = await response.json();
@@ -107,7 +109,7 @@ export function initAuth() {
         localStorage.setItem('urbanplan_token', data.token);
         localStorage.setItem('urbanplan_user', JSON.stringify(data.user));
         showApp(data.user);
-        import('./io.js').then(m => m.loadSavedState());
+        import('./io.js').then((m) => m.loadSavedState());
       } else {
         registerError.textContent = data.error || 'No se pudo crear la cuenta';
         registerError.classList.remove('hidden');
@@ -133,13 +135,13 @@ export function initAuth() {
   async function checkSession(token) {
     try {
       const response = await fetch('/api/auth/me', {
-        headers: { 'Authorization': token }
+        headers: { Authorization: token },
       });
       if (response.ok) {
         const data = await response.json();
         showApp(data.user);
         // Cargar proyecto desde el servidor tras verificar sesión
-        import('./io.js').then(m => m.loadSavedState());
+        import('./io.js').then((m) => m.loadSavedState());
       } else {
         localStorage.removeItem('urbanplan_token');
         loginOverlay.classList.remove('hidden');
@@ -155,10 +157,11 @@ export function initAuth() {
     releaseFocus();
     appContainer.classList.remove('hidden');
     const rawName = user.full_name || user.username;
-    
+
     const maxLen = 12;
-    userNameLabel.textContent = rawName.length > maxLen ? rawName.substring(0, maxLen) + '...' : rawName;
-    
+    userNameLabel.textContent =
+      rawName.length > maxLen ? rawName.substring(0, maxLen) + '...' : rawName;
+
     const parts = rawName.trim().split(/\s+/);
     let initials;
     if (parts.length >= 2) {
@@ -169,7 +172,7 @@ export function initAuth() {
     userInitial.textContent = initials.toUpperCase();
     // Si el mapa ya estaba inicializado o necesita recarga, este es el punto
     if (state.map) {
-        state.map.resize();
+      state.map.resize();
     }
   }
 }

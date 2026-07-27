@@ -17,15 +17,16 @@ function pulseStat(el) {
 }
 
 /**
- * Calcula todas las metricas urbanas actuales (Globales e Individuales) 
+ * Calcula todas las metricas urbanas actuales (Globales e Individuales)
  * basandose en el estado actual de las features. No modifica el DOM.
  * @returns {Object} { global: Object, lots: Array }
  */
 export function calculateCurrentMetrics() {
-  const terrainFeatures = state.features.filter(f => f.properties.type === 'terrain');
+  const terrainFeatures = state.features.filter((f) => f.properties.type === 'terrain');
 
-  const lotsMetrics = terrainFeatures.map(t => {
-    const coords = t.geometry.type === 'Polygon' ? t.geometry.coordinates[0] : t.geometry.coordinates[0][0];
+  const lotsMetrics = terrainFeatures.map((t) => {
+    const coords =
+      t.geometry.type === 'Polygon' ? t.geometry.coordinates[0] : t.geometry.coordinates[0][0];
     return {
       lot_id: t.properties.id,
       name: t.properties.name || `Lote ${t.properties.id}`,
@@ -42,7 +43,7 @@ export function calculateCurrentMetrics() {
       max_building_height: 0,
       height_violations: 0,
       cas_violations: 0,
-      setback_violations: 0
+      setback_violations: 0,
     };
   });
 
@@ -52,11 +53,11 @@ export function calculateCurrentMetrics() {
   let globalGreenArea = 0;
   let globalMaxBuildingHeight = 0;
 
-  state.features.forEach(f => {
+  state.features.forEach((f) => {
     const type = f.properties.type;
     const geom = f.geometry;
     if (geom.type !== 'Polygon' && geom.type !== 'MultiPolygon') return;
-    
+
     const coords = geom.type === 'Polygon' ? geom.coordinates[0] : geom.coordinates[0][0];
     const area = polygonArea(coords);
 
@@ -64,7 +65,7 @@ export function calculateCurrentMetrics() {
       globalBaseArea += area;
     } else if (['building', 'house', 'custom_building'].includes(type) && !f.properties.parent_id) {
       globalOccupiedArea += area;
-      globalTotalBuiltArea += (area * (f.properties.floors || 1));
+      globalTotalBuiltArea += area * (f.properties.floors || 1);
       const h = f.properties.height || (f.properties.floors ? f.properties.floors * 3.5 : 3.5);
       if (h > globalMaxBuildingHeight) globalMaxBuildingHeight = h;
     } else if (['park', 'water'].includes(type)) {
@@ -74,15 +75,19 @@ export function calculateCurrentMetrics() {
     if (type !== 'terrain') {
       const center = getFeatureCenter(f);
       if (center) {
-        lotsMetrics.forEach(lot => {
+        lotsMetrics.forEach((lot) => {
           if (isPointInPolygon([center.lng, center.lat], lot.coords)) {
-            if (['building', 'house', 'custom_building'].includes(type) && !f.properties.parent_id) {
+            if (
+              ['building', 'house', 'custom_building'].includes(type) &&
+              !f.properties.parent_id
+            ) {
               lot.occupied_area += area;
-              lot.built_area += (area * (f.properties.floors || 1));
-              const h = f.properties.height || (f.properties.floors ? f.properties.floors * 3.5 : 3.5);
+              lot.built_area += area * (f.properties.floors || 1);
+              const h =
+                f.properties.height || (f.properties.floors ? f.properties.floors * 3.5 : 3.5);
               if (h > lot.max_building_height) lot.max_building_height = h;
               if (lot.max_allowed_height && h > lot.max_allowed_height) lot.height_violations++;
-              
+
               if (lot.min_setback && window.turf) {
                 try {
                   const bGeom = geom.type === 'Polygon' ? geom.coordinates : geom.coordinates[0];
@@ -90,14 +95,18 @@ export function calculateCurrentMetrics() {
                   const bPoly = window.turf.polygon(bGeom);
                   // Find minimum distance from building to lot edges
                   let minDistance = Infinity;
-                  bGeom[0].forEach(pt => {
-                    const dist = window.turf.pointToLineDistance(window.turf.point(pt), lotLine, {units: 'meters'});
+                  bGeom[0].forEach((pt) => {
+                    const dist = window.turf.pointToLineDistance(window.turf.point(pt), lotLine, {
+                      units: 'meters',
+                    });
                     if (dist < minDistance) minDistance = dist;
                   });
                   if (minDistance < lot.min_setback) {
                     lot.setback_violations++;
                   }
-                } catch (e) { logger.warn('[Stats] Error verificando setback', e); }
+                } catch (e) {
+                  logger.warn('[Stats] Error verificando setback', e);
+                }
               }
             } else if (['park', 'water'].includes(type)) {
               lot.green_area += area;
@@ -108,7 +117,7 @@ export function calculateCurrentMetrics() {
     }
   });
 
-  lotsMetrics.forEach(lot => {
+  lotsMetrics.forEach((lot) => {
     if (lot.base_area > 0) {
       lot.cos = (lot.occupied_area / lot.base_area) * 100;
       lot.cus = lot.built_area / lot.base_area;
@@ -126,7 +135,7 @@ export function calculateCurrentMetrics() {
       total_built_area: globalTotalBuiltArea,
       total_green_area: globalGreenArea,
       cos: globalBaseArea > 0 ? (globalOccupiedArea / globalBaseArea) * 100 : 0,
-      cus: globalBaseArea > 0 ? (globalTotalBuiltArea / globalBaseArea) : 0,
+      cus: globalBaseArea > 0 ? globalTotalBuiltArea / globalBaseArea : 0,
       estimated_population: Math.floor(globalTotalBuiltArea / 35),
       max_building_height: globalMaxBuildingHeight,
       max_allowed_height: null,
@@ -134,9 +143,9 @@ export function calculateCurrentMetrics() {
       min_cas: null,
       cas_violations: lotsMetrics.reduce((sum, lot) => sum + lot.cas_violations, 0),
       min_setback: null,
-      setback_violations: lotsMetrics.reduce((sum, lot) => sum + lot.setback_violations, 0)
+      setback_violations: lotsMetrics.reduce((sum, lot) => sum + lot.setback_violations, 0),
     },
-    lots: lotsMetrics
+    lots: lotsMetrics,
   };
 }
 
@@ -145,13 +154,15 @@ export function updateGlobalStats() {
   if (!dashboard) return;
 
   const data = calculateCurrentMetrics();
-  const selectedTerrainIds = new Set(state.selectedIds.filter(id => {
-    const f = state.features.find(x => x.properties.id === id);
-    return f && f.properties.type === 'terrain';
-  }));
+  const selectedTerrainIds = new Set(
+    state.selectedIds.filter((id) => {
+      const f = state.features.find((x) => x.properties.id === id);
+      return f && f.properties.type === 'terrain';
+    })
+  );
 
   // Adaptar datos para UI
-  const lotsMetricsUI = data.lots.map(l => ({
+  const lotsMetricsUI = data.lots.map((l) => ({
     ...l,
     id: l.lot_id,
     baseArea: l.base_area,
@@ -165,10 +176,10 @@ export function updateGlobalStats() {
     casViolations: l.cas_violations,
     minSetback: l.min_setback,
     setbackViolations: l.setback_violations,
-    isSelected: selectedTerrainIds.has(l.lot_id)
+    isSelected: selectedTerrainIds.has(l.lot_id),
   }));
 
-  const activeFocus = lotsMetricsUI.find(l => l.isSelected) || {
+  const activeFocus = lotsMetricsUI.find((l) => l.isSelected) || {
     baseArea: data.global.total_base_area,
     occupiedArea: data.global.total_occupied_area,
     totalBuiltArea: data.global.total_built_area,
@@ -181,7 +192,7 @@ export function updateGlobalStats() {
     minSetback: data.global.min_setback,
     setbackViolations: data.global.setback_violations,
     name: 'Metricas Globales',
-    isGlobal: true
+    isGlobal: true,
   };
 
   updateSummaryUI(activeFocus);
@@ -202,23 +213,44 @@ export function updateGlobalStats() {
   }
 
   // Actualizar también los contadores simples de UI (antes en toolbar.js updateStats)
-  const cnt = { house: 0, building: 0, road: 0, park: 0, zone: 0, terrain: 0, path: 0, sidewalk: 0 };
-  state.features.forEach(f => { 
+  const cnt = {
+    house: 0,
+    building: 0,
+    road: 0,
+    park: 0,
+    zone: 0,
+    terrain: 0,
+    path: 0,
+    sidewalk: 0,
+  };
+  state.features.forEach((f) => {
     if (!f.properties.parent_id) {
-      cnt[f.properties.type] = (cnt[f.properties.type] || 0) + 1; 
+      cnt[f.properties.type] = (cnt[f.properties.type] || 0) + 1;
     }
   });
   const sh = document.getElementById('stat-houses');
   const sb = document.getElementById('stat-buildings');
   const sr = document.getElementById('stat-roads');
   const sp = document.getElementById('stat-parks');
-  if (sh) { sh.textContent = cnt.house; pulseStat(sh); }
-  if (sb) { sb.textContent = cnt.building + (cnt.custom_building || 0); pulseStat(sb); }
-  if (sr) { sr.textContent = cnt.road; pulseStat(sr); }
-  if (sp) { sp.textContent = cnt.park; pulseStat(sp); }
+  if (sh) {
+    sh.textContent = cnt.house;
+    pulseStat(sh);
+  }
+  if (sb) {
+    sb.textContent = cnt.building + (cnt.custom_building || 0);
+    pulseStat(sb);
+  }
+  if (sr) {
+    sr.textContent = cnt.road;
+    pulseStat(sr);
+  }
+  if (sp) {
+    sp.textContent = cnt.park;
+    pulseStat(sp);
+  }
 
   // Actualizar badges en la lista de capas
-  Object.keys(cnt).forEach(type => {
+  Object.keys(cnt).forEach((type) => {
     const badge = document.querySelector(`[data-badge="${type}"]`);
     if (badge) badge.textContent = cnt[type];
   });
@@ -236,11 +268,12 @@ function renderLotBreakdown(lots) {
     return;
   }
 
-  listEl.innerHTML = lots.map(lot => {
-    const cos = lot.baseArea > 0 ? (lot.occupiedArea / lot.baseArea) * 100 : 0;
-    const cus = lot.baseArea > 0 ? (lot.totalBuiltArea / lot.baseArea) : 0;
-    
-    return `
+  listEl.innerHTML = lots
+    .map((lot) => {
+      const cos = lot.baseArea > 0 ? (lot.occupiedArea / lot.baseArea) * 100 : 0;
+      const cus = lot.baseArea > 0 ? lot.totalBuiltArea / lot.baseArea : 0;
+
+      return `
       <div class="lot-card ${lot.isSelected ? 'selected' : ''}" data-id="${lot.id}">
         <div class="lot-card-header">
           <span class="lot-name">${escapeHTML(lot.name)}</span>
@@ -270,7 +303,7 @@ function renderLotBreakdown(lots) {
           </div>
           <div class="lot-sub-stat ${lot.casViolations > 0 ? 'violation' : ''}" title="${lot.casViolations > 0 ? 'No cumple CAS Mínimo' : ''}">
             <span class="lot-sub-label">Á. Verde</span>
-            <span class="lot-sub-val">${lot.minCAS ? ((lot.greenArea/lot.baseArea)*100).toFixed(1) + '/' + lot.minCAS + '%' : ((lot.greenArea/lot.baseArea)*100).toFixed(1) + '%'}</span>
+            <span class="lot-sub-val">${lot.minCAS ? ((lot.greenArea / lot.baseArea) * 100).toFixed(1) + '/' + lot.minCAS + '%' : ((lot.greenArea / lot.baseArea) * 100).toFixed(1) + '%'}</span>
           </div>
           <div class="lot-sub-stat ${lot.setbackViolations > 0 ? 'violation' : ''}" title="${lot.setbackViolations > 0 ? 'Invasión de Retiro Perimetral' : ''}">
             <span class="lot-sub-label">Retiro</span>
@@ -279,22 +312,23 @@ function renderLotBreakdown(lots) {
         </div>
       </div>
     `;
-  }).join('');
+    })
+    .join('');
 
   // Re-enlazar eventos
-  listEl.querySelectorAll('.lot-card').forEach(card => {
+  listEl.querySelectorAll('.lot-card').forEach((card) => {
     card.onclick = (e) => {
       const id = parseInt(card.dataset.id);
-      import('../tools/selection.js').then(m => m.selectFeature(id, null));
+      import('../tools/selection.js').then((m) => m.selectFeature(id, null));
     };
 
     // Boton de localizacion (Fly-to)
     const btnLocate = card.querySelector('.btn-locate-lot');
     if (btnLocate) {
       btnLocate.onclick = (e) => {
-        e.stopPropagation(); 
+        e.stopPropagation();
         const id = parseInt(btnLocate.dataset.id);
-        const feature = state.features.find(f => f.properties.id === id);
+        const feature = state.features.find((f) => f.properties.id === id);
         if (feature) {
           const center = getFeatureCenter(feature);
           if (center && state.map) {
@@ -302,7 +336,7 @@ function renderLotBreakdown(lots) {
               center: [center.lng, center.lat],
               zoom: 17,
               pitch: 45,
-              duration: 2000
+              duration: 2000,
             });
           }
         }
@@ -331,23 +365,36 @@ function updateSummaryUI(metrics) {
 
   if (metrics.baseArea > 0) {
     const cos = (metrics.occupiedArea / metrics.baseArea) * 100;
-    const cus = (metrics.totalBuiltArea / metrics.baseArea);
+    const cus = metrics.totalBuiltArea / metrics.baseArea;
     const greenP = (metrics.greenArea / metrics.baseArea) * 100;
 
-    if (elArea) { elArea.textContent = Math.round(metrics.baseArea).toLocaleString() + ' m2'; pulseStat(elArea); }
-    if (elCos) { elCos.textContent = cos.toFixed(1) + '%'; pulseStat(elCos); }
-    if (elCus) { elCus.textContent = cus.toFixed(2); pulseStat(elCus); }
+    if (elArea) {
+      elArea.textContent = Math.round(metrics.baseArea).toLocaleString() + ' m2';
+      pulseStat(elArea);
+    }
+    if (elCos) {
+      elCos.textContent = cos.toFixed(1) + '%';
+      pulseStat(elCos);
+    }
+    if (elCus) {
+      elCus.textContent = cus.toFixed(2);
+      pulseStat(elCus);
+    }
     if (elGreen) {
-      elGreen.textContent = metrics.minCAS ? greenP.toFixed(1) + ' / ' + metrics.minCAS + '%' : greenP.toFixed(1) + '%';
+      elGreen.textContent = metrics.minCAS
+        ? greenP.toFixed(1) + ' / ' + metrics.minCAS + '%'
+        : greenP.toFixed(1) + '%';
       pulseStat(elGreen);
       if (metrics.casViolations > 0) elGreen.classList.add('violation');
       else elGreen.classList.remove('violation');
     }
     if (elHeight) {
-       elHeight.textContent = metrics.maxAllowedHeight ? metrics.maxBuildingHeight.toFixed(1) + ' / ' + metrics.maxAllowedHeight + ' m' : metrics.maxBuildingHeight.toFixed(1) + ' m';
-       pulseStat(elHeight);
-       if (metrics.heightViolations > 0) elHeight.classList.add('violation');
-       else elHeight.classList.remove('violation');
+      elHeight.textContent = metrics.maxAllowedHeight
+        ? metrics.maxBuildingHeight.toFixed(1) + ' / ' + metrics.maxAllowedHeight + ' m'
+        : metrics.maxBuildingHeight.toFixed(1) + ' m';
+      pulseStat(elHeight);
+      if (metrics.heightViolations > 0) elHeight.classList.add('violation');
+      else elHeight.classList.remove('violation');
     }
     if (elPop) {
       const pop = Math.floor(metrics.totalBuiltArea / 35);
@@ -364,15 +411,17 @@ function updateSummaryUI(metrics) {
     if (elCos) elCos.textContent = '0%';
     if (elCus) elCus.textContent = '0.0';
     if (elGreen) {
-       elGreen.textContent = '0%';
-       elGreen.classList.remove('violation');
+      elGreen.textContent = '0%';
+      elGreen.classList.remove('violation');
     }
     if (elHeight) {
-       elHeight.textContent = '0 m';
-       elHeight.classList.remove('violation');
+      elHeight.textContent = '0 m';
+      elHeight.classList.remove('violation');
     }
     if (elPop) elPop.textContent = '0 hab.';
-    [barCos, barCus, barGreen].forEach(b => { if (b) b.style.width = '0%'; });
+    [barCos, barCus, barGreen].forEach((b) => {
+      if (b) b.style.width = '0%';
+    });
     dashboard.classList.add('no-terrain');
   }
 }
@@ -400,7 +449,7 @@ export function initStatsEvents() {
 
   document.getElementById('btnBackToGlobal')?.addEventListener('click', (e) => {
     e.stopPropagation();
-    import('../tools/selection.js').then(m => {
+    import('../tools/selection.js').then((m) => {
       state.selectedIds = [];
       m.updateSelectionUI();
     });
