@@ -12,6 +12,27 @@ const OSM_USER_AGENT = process.env.OSM_USER_AGENT || 'UrbanPlan3D/1.0';
 const OSM_REFERER = process.env.APP_URL || '';
 const OSM_TIMEOUT = parseInt(process.env.OSM_PROXY_TIMEOUT_MS) || 55000;
 
+/**
+ * Lee y parsea el body del request manualmente.
+ * Vercel serverless no parsea automáticamente application/x-www-form-urlencoded,
+ * así que lo hacemos como fallback cuando req.body es undefined.
+ */
+async function readBody(req) {
+  if (req.body) return req.body;
+  const chunks = [];
+  for await (const chunk of req) chunks.push(chunk);
+  const raw = Buffer.concat(chunks).toString('utf-8');
+  if (!raw) return {};
+  try {
+    return JSON.parse(raw);
+  } catch {
+    const params = new URLSearchParams(raw);
+    const result = {};
+    for (const [key, value] of params) result[key] = value;
+    return result;
+  }
+}
+
 module.exports = async function handler(req, res) {
   if (req.method === 'OPTIONS') {
     res.setHeader('Access-Control-Allow-Origin', '*');
@@ -28,7 +49,8 @@ module.exports = async function handler(req, res) {
     return res.status(500).json({ error: 'OSM_OVERPASS_MIRRORS no configurado' });
   }
 
-  const query = req.body?.data;
+  const body = await readBody(req);
+  const query = body.data;
   if (!query) {
     return res.status(400).json({ error: 'Missing "data" field' });
   }
@@ -53,7 +75,7 @@ module.exports = async function handler(req, res) {
 
       clearTimeout(timeout);
 
-      if ([429, 502, 503, 504].includes(overpassRes.status)) {
+      if ([406, 429, 502, 503, 504].includes(overpassRes.status)) {
         lastError = `Overpass ${overpassRes.status} from ${mirror}`;
         continue;
       }
