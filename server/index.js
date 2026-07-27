@@ -93,11 +93,11 @@ const osmProxyLimiter = rateLimit({
 
 const OVERPASS_MIRRORS = process.env.OSM_OVERPASS_MIRRORS
   ? process.env.OSM_OVERPASS_MIRRORS.split(',').map((s) => s.trim()).filter(Boolean)
-  : ['https://overpass-api.de/api/interpreter', 'https://overpass.kumi.systems/api/interpreter'];
+  : ['https://overpass-api.de/api/interpreter', 'https://overpass.private.coffee/api/interpreter'];
 
 const OSM_USER_AGENT = process.env.OSM_USER_AGENT || 'UrbanPlan3D/1.0';
 const OSM_REFERER = process.env.APP_URL || 'http://localhost:3000';
-const OSM_TIMEOUT = parseInt(process.env.OSM_PROXY_TIMEOUT_MS) || 60_000;
+const OSM_TIMEOUT = parseInt(process.env.OSM_PROXY_TIMEOUT_MS) || 15000;
 
 app.post('/osm-proxy', osmProxyLimiter, async (req, res) => {
   try {

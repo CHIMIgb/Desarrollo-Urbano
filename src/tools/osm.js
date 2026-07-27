@@ -40,27 +40,21 @@ export async function importOSMContext(retryCount = 0) {
   const w = bounds.getWest();
   const e = bounds.getEast();
 
-  // Overpass QL Query: Extraemos edificios y carreteras dentro de la cámara actual
+  // Overpass QL Query optimizado: out geom incluye geometría inline (sin recurse)
   const query = `
-    [out:json][timeout:60];
+    [out:json][timeout:15];
     (
       way["building"](${s},${w},${n},${e});
-      relation["building"](${s},${w},${n},${e});
       way["building:part"](${s},${w},${n},${e});
-      relation["building:part"](${s},${w},${n},${e});
       way["highway"](${s},${w},${n},${e});
       way["leisure"="park"](${s},${w},${n},${e});
-      relation["leisure"="park"](${s},${w},${n},${e});
       way["railway"](${s},${w},${n},${e});
       way["landuse"](${s},${w},${n},${e});
-      relation["landuse"](${s},${w},${n},${e});
       node["natural"="tree"](${s},${w},${n},${e});
       node["amenity"~"bench|waste_basket|street_lamp"](${s},${w},${n},${e});
       node["highway"="street_lamp"](${s},${w},${n},${e});
     );
-    out body;
-    >;
-    out skel qt;
+    out geom;
   `;
 
   toast(`Consultando satélites (Servidor ${retryCount + 1})...`, 'info');
