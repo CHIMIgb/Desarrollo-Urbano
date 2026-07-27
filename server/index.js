@@ -80,7 +80,11 @@ app.get('/api/config', (req, res) => {
       process.env.OSM_NOMINATIM_URL || 'https://nominatim.openstreetmap.org/search',
     OSM_OVERPASS_ENDPOINTS: envEndpoints.length
       ? envEndpoints
-      : ['/osm-proxy', 'https://overpass-api.de/api/interpreter', 'https://overpass.kumi.systems/api/interpreter'],
+      : [
+          '/osm-proxy',
+          'https://overpass-api.de/api/interpreter',
+          'https://overpass.kumi.systems/api/interpreter',
+        ],
   });
 });
 
@@ -102,7 +106,9 @@ app.post('/osm-proxy', osmProxyLimiter, async (req, res) => {
       body: `data=${encodeURIComponent(query)}`,
     });
     if (!overpassRes.ok) {
-      return res.status(overpassRes.status).json({ success: false, error: `Overpass ${overpassRes.status}` });
+      return res
+        .status(overpassRes.status)
+        .json({ success: false, error: `Overpass ${overpassRes.status}` });
     }
     const json = await overpassRes.json();
     res.json(json);
