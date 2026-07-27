@@ -61,6 +61,7 @@ async function doSearch(q) {
       });
     });
   } catch (e) {
+    console.warn('[Search] Error en geocoding:', e.message);
     notify('Error al buscar ubicación', 'error');
   }
 }

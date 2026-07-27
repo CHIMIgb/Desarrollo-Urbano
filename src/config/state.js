@@ -25,7 +25,7 @@ export async function loadPublicConfig() {
     }
     console.log('[CONFIG] Configuración remota de OSM cargada con éxito');
   } catch (e) {
-    console.warn('[CONFIG] Error cargando configuración remota, usando valores por defecto');
+    console.warn('[CONFIG] Error cargando configuración remota, usando valores por defecto:', e.message);
   }
 }
 export const TERRAIN_URL = 'https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png';

@@ -2,9 +2,9 @@ import { defineConfig, loadEnv } from 'vite';
 import { resolve } from 'path';
 
 export default defineConfig(({ mode }) => {
-  const env = loadEnv(mode, process.cwd(), ['VITE_', 'API_']);
-  const vitePort = parseInt(env.VITE_PORT);
-  const apiPort = parseInt(env.API_PORT);
+  const env = loadEnv(mode, process.cwd(), ['VITE_', 'API_', '']);
+  const vitePort = parseInt(env.VITE_PORT) || 3000;
+  const apiPort = parseInt(env.API_PORT || env.PORT) || 3001;
 
   return {
     root: '.',
@@ -27,8 +27,12 @@ export default defineConfig(({ mode }) => {
     },
     server: {
       port: vitePort,
+      strictPort: true,
       proxy: {
-        '/api': `http://localhost:${apiPort}`,
+        '/api': {
+          target: `http://localhost:${apiPort}`,
+          changeOrigin: true,
+        },
       },
     },
     css: {

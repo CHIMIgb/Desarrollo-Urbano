@@ -1,11 +1,23 @@
+import { AppError } from './errors.js';
+
 export function initGlobalErrors() {
   window.addEventListener('error', (event) => {
-    console.error('[GlobalError]', event.message, event.filename, event.lineno);
+    const { message, filename, lineno, error } = event;
+    if (error instanceof AppError) {
+      console.error(`[GlobalError] ${error.code}: ${message}`, { filename, lineno, cause: error.cause });
+    } else {
+      console.error('[GlobalError]', message, filename, lineno);
+    }
     showGlobalToast('Error inesperado en la aplicación', 'error');
   });
 
   window.addEventListener('unhandledrejection', (event) => {
-    console.error('[UnhandledRejection]', event.reason);
+    const { reason } = event;
+    if (reason instanceof AppError) {
+      console.error(`[UnhandledRejection] ${reason.code}: ${reason.message}`, reason.cause);
+    } else {
+      console.error('[UnhandledRejection]', reason);
+    }
     showGlobalToast('Error de conexión o procesamiento', 'error');
   });
 }

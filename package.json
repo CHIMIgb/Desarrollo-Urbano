@@ -55,6 +55,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "@fullhuman/postcss-purgecss": "^8.0.0",
     "concurrently": "^10.0.4",
     "cross-env": "^10.1.0",
     "eslint": "^10.8.0",

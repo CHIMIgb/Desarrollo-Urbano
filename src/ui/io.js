@@ -125,7 +125,10 @@ export function initIOEvents() {
 
           toast('Proyecto importado correctamente', 'success');
         } else toast('Formato de archivo no reconocido', 'error');
-      } catch (err) { toast('No se pudo leer el archivo', 'error'); }
+      } catch (err) {
+        console.warn('[IO] Error leyendo archivo importado:', err.message);
+        toast('No se pudo leer el archivo', 'error');
+      }
     };
     reader.readAsText(file);
     e.target.value = '';
@@ -181,6 +184,7 @@ export function initIOEvents() {
         toast('No se pudo guardar el proyecto', 'error');
       }
     } catch (err) {
+      console.warn('[IO] Error guardando proyecto:', err.message);
       toast('Sin conexión al servidor', 'error');
     } finally {
       btnSave.disabled = false;
@@ -250,9 +254,10 @@ export async function loadProjectById(id) {
       applyProjectData(data.project);
       toast('Proyecto cargado correctamente', 'success');
     }
-  } catch (e) { 
+  } catch (e) {
+    console.warn('[IO] Error cargando proyecto:', e.message);
     dismissToast();
-    toast('Sin conexión al servidor', 'error'); 
+    toast('Sin conexión al servidor', 'error');
   }
 }
 

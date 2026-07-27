@@ -6,6 +6,7 @@ import { pushHistory } from './interaction.js';
 import osmtogeojson from 'osmtogeojson';
 import { generateTreeParts } from '../models/trees.js';
 import { generateFurnitureParts } from '../models/furniture.js';
+import { APIError } from '../utils/errors.js';
 
 /**
  * Espejos públicos de Overpass para evitar bloqueos por IP y Timeouts.
@@ -77,10 +78,15 @@ export async function importOSMContext(retryCount = 0) {
         await new Promise(r => setTimeout(r, 2000));
         return importOSMContext(retryCount + 1);
       }
-      throw new Error(`Server saturated (${response.status})`);
+      throw new APIError(`Servidor saturado (${response.status})`, {
+        statusCode: response.status,
+        code: 'OVERPASS_RATE_LIMIT',
+      });
     }
 
-    if (!response.ok) throw new Error('Network response was not ok');
+    if (!response.ok) throw new APIError('Respuesta no válida del servidor OSM', {
+      statusCode: response.status,
+    });
     
     const data = await response.json();
     
@@ -257,7 +263,7 @@ export async function importOSMContext(retryCount = 0) {
     }
 
   } catch (err) {
-    console.error('Error importando OSM:', err);
+    console.error(`[OSM] Error importando (${err.code ?? 'UNKNOWN'}):`, err);
     if (retryCount >= 2) {
       toast('Los servidores de OSM están muy ocupados. Intenta en una zona más pequeña o más tarde.', 'error');
     }

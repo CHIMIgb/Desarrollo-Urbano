@@ -112,6 +112,7 @@ export function initAuth() {
         registerError.classList.remove('hidden');
       }
     } catch (err) {
+      console.error('[Auth] Error en registro:', err.message);
       registerError.textContent = 'No se pudo contactar al servidor';
       registerError.classList.remove('hidden');
     } finally {
