@@ -25,9 +25,9 @@ export async function importOSMContext(retryCount = 0) {
 
   const zoom = state.map.getZoom();
   // Validar nivel de zoom para no saturar al servidor OSM gratuito
-  if (zoom < 15) {
+  if (zoom < 16) {
     toast(
-      'Debes acercar más la cámara (Zoom > 15) para importar contexto (prevención de Timeout).',
+      'Debes acercar más la cámara (Zoom > 16) para importar contexto rápido.',
       'error'
     );
     return;
@@ -40,16 +40,14 @@ export async function importOSMContext(retryCount = 0) {
   const w = bounds.getWest();
   const e = bounds.getEast();
 
-  // Overpass QL Query optimizado: out geom incluye geometría inline (sin recurse)
+  // Overpass QL Query ultra-optimizado: solo lo esencial para carga rápida
   const query = `
-    [out:json][timeout:15];
+    [out:json][timeout:8];
     (
       way["building"](${s},${w},${n},${e});
       way["building:part"](${s},${w},${n},${e});
       way["highway"](${s},${w},${n},${e});
       way["leisure"="park"](${s},${w},${n},${e});
-      way["railway"](${s},${w},${n},${e});
-      way["landuse"](${s},${w},${n},${e});
       node["natural"="tree"](${s},${w},${n},${e});
       node["amenity"~"bench|waste_basket|street_lamp"](${s},${w},${n},${e});
       node["highway"="street_lamp"](${s},${w},${n},${e});
