@@ -3,7 +3,7 @@
   "rewrites": [
     {
       "source": "/osm-proxy",
-      "destination": "https://overpass-api.de/api/interpreter"
+      "destination": "/api/index.js"
     },
     {
       "source": "/api/(.*)",
@@ -13,5 +13,6 @@
       "source": "/(.*)",
       "destination": "/index.html"
     }
-  ]
+  ],
+  "maxDuration": 30
 }

@@ -71,14 +71,45 @@ app.use('/api/projects', projectsRouter);
 
 // Endpoint para configuracion publica (OSM, etc.)
 app.get('/api/config', (req, res) => {
+  const envEndpoints = process.env.OSM_OVERPASS_ENDPOINTS
+    ? process.env.OSM_OVERPASS_ENDPOINTS.split(',').filter((e) => e.trim())
+    : [];
   res.json({
     OSM_TILE_URL: process.env.OSM_TILE_URL || 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
     OSM_NOMINATIM_URL:
       process.env.OSM_NOMINATIM_URL || 'https://nominatim.openstreetmap.org/search',
-    OSM_OVERPASS_ENDPOINTS: (process.env.OSM_OVERPASS_ENDPOINTS || '')
-      .split(',')
-      .filter((e) => e.trim()),
+    OSM_OVERPASS_ENDPOINTS: envEndpoints.length
+      ? envEndpoints
+      : ['/osm-proxy', 'https://overpass-api.de/api/interpreter', 'https://overpass.kumi.systems/api/interpreter'],
   });
+});
+
+// ── Overpass API proxy (evita CORS en Vercel/producción) ────────
+const osmProxyLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { success: false, error: 'Demasiadas consultas OSM, espera 1 minuto' },
+});
+app.post('/osm-proxy', osmProxyLimiter, async (req, res) => {
+  try {
+    const query = req.body.data || req.body.query;
+    if (!query) return res.status(400).json({ success: false, error: 'Falta campo data' });
+    const overpassRes = await fetch('https://overpass-api.de/api/interpreter', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: `data=${encodeURIComponent(query)}`,
+    });
+    if (!overpassRes.ok) {
+      return res.status(overpassRes.status).json({ success: false, error: `Overpass ${overpassRes.status}` });
+    }
+    const json = await overpassRes.json();
+    res.json(json);
+  } catch (err) {
+    logger.error({ err: err.message }, 'OSM proxy error');
+    res.status(502).json({ success: false, error: 'Proxy OSM no disponible' });
+  }
 });
 
 // ── Static files ────────────────────────────────────────────────
