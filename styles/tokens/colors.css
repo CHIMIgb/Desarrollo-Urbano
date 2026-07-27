@@ -82,5 +82,5 @@
   /* ── Layout dimensions ── */
   --header-h: 52px;
   --toolbar-w: 90px;
-  --panel-w: 300px;
+  --panel-w: clamp(260px, 22vw, 340px);
 }

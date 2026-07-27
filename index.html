@@ -303,8 +303,10 @@
       <aside class="props-panel" id="propsPanel" role="complementary" aria-label="Panel de propiedades">
         <!-- Panel toggle (for collapsing) -->
         <button class="panel-toggle-btn" id="panelToggleBtn" title="Colapsar panel" aria-label="Colapsar panel de propiedades">
-          <i data-icon="select"></i>
+          <i data-icon="panelToggle"></i>
         </button>
+        <!-- Panel resize handle -->
+        <div class="panel-resize-handle" id="panelResizeHandle"></div>
         <!-- Layers Tab -->
         <div class="panel-section">
           <div class="panel-title">
@@ -316,33 +318,33 @@
           </div>
           <div class="layers-list" id="layersList">
             <label class="layer-item"><input type="checkbox" checked data-layer="house" role="switch" aria-checked="true" /><span class="layer-dot"
-                style="background:var(--amber)"></span>Casas</label>
+                style="background:var(--amber)"></span>Casas<span class="layer-badge" data-badge="house">0</span></label>
             <label class="layer-item"><input type="checkbox" checked data-layer="building" role="switch" aria-checked="true" /><span class="layer-dot"
-                style="background:var(--accent)"></span>Edificios</label>
+                style="background:var(--accent)"></span>Edificios<span class="layer-badge" data-badge="building">0</span></label>
             <label class="layer-item"><input type="checkbox" checked data-layer="custom_building" role="switch" aria-checked="true" /><span
-                class="layer-dot" style="background:var(--purple)"></span>Siluetas 3D</label>
+                class="layer-dot" style="background:var(--purple)"></span>Siluetas 3D<span class="layer-badge" data-badge="custom_building">0</span></label>
             <label class="layer-item"><input type="checkbox" checked data-layer="water" role="switch" aria-checked="true" /><span class="layer-dot"
-                style="background:var(--blue)"></span>Agua</label>
+                style="background:var(--blue)"></span>Agua<span class="layer-badge" data-badge="water">0</span></label>
             <label class="layer-item"><input type="checkbox" checked data-layer="furniture" role="switch" aria-checked="true" /><span class="layer-dot"
-                style="background:var(--text-muted)"></span>Mobiliario</label>
+                style="background:var(--text-muted)"></span>Mobiliario<span class="layer-badge" data-badge="furniture">0</span></label>
             <label class="layer-item"><input type="checkbox" checked data-layer="tree" role="switch" aria-checked="true" /><span class="layer-dot"
-                style="background:var(--green)"></span>Árboles 3D</label>
+                style="background:var(--green)"></span>Árboles 3D<span class="layer-badge" data-badge="tree">0</span></label>
             <label class="layer-item"><input type="checkbox" checked data-layer="road" role="switch" aria-checked="true" /><span class="layer-dot"
-                style="background:var(--text-secondary)"></span>Carreteras</label>
+                style="background:var(--text-secondary)"></span>Carreteras<span class="layer-badge" data-badge="road">0</span></label>
             <label class="layer-item"><input type="checkbox" checked data-layer="path" role="switch" aria-checked="true" /><span class="layer-dot"
-                style="background:var(--stone)"></span>Caminos</label>
+                style="background:var(--stone)"></span>Caminos<span class="layer-badge" data-badge="path">0</span></label>
             <label class="layer-item"><input type="checkbox" checked data-layer="sidewalk" role="switch" aria-checked="true" /><span class="layer-dot"
-                style="background:var(--slate)"></span>Banquetas</label>
+                style="background:var(--slate)"></span>Banquetas<span class="layer-badge" data-badge="sidewalk">0</span></label>
             <label class="layer-item"><input type="checkbox" checked data-layer="railway" role="switch" aria-checked="true" /><span class="layer-dot"
-                style="background:var(--bg-500)"></span>Vías Férreas</label>
+                style="background:var(--bg-500)"></span>Vías Férreas<span class="layer-badge" data-badge="railway">0</span></label>
             <label class="layer-item"><input type="checkbox" checked data-layer="park" role="switch" aria-checked="true" /><span class="layer-dot"
-                style="background:var(--green-light)"></span>Parques</label>
+                style="background:var(--green-light)"></span>Parques<span class="layer-badge" data-badge="park">0</span></label>
             <label class="layer-item"><input type="checkbox" checked data-layer="zone" role="switch" aria-checked="true" /><span class="layer-dot"
-                style="background:var(--pink)"></span>Zonas</label>
+                style="background:var(--pink)"></span>Zonas<span class="layer-badge" data-badge="zone">0</span></label>
             <label class="layer-item"><input type="checkbox" checked data-layer="terrain" role="switch" aria-checked="true" /><span class="layer-dot"
-                style="background:var(--amber)"></span>Terrenos</label>
+                style="background:var(--amber)"></span>Terrenos<span class="layer-badge" data-badge="terrain">0</span></label>
             <label class="layer-item"><input type="checkbox" checked data-layer="radius" role="switch" aria-checked="true" /><span class="layer-dot"
-                style="background:var(--violet)"></span>Isócronas</label>
+                style="background:var(--violet)"></span>Isócronas<span class="layer-badge" data-badge="radius">0</span></label>
           </div>
         </div>
 
@@ -356,7 +358,14 @@
           <!-- Panel de Edición Precisa Integrado -->
           <div class="precision-panel hidden" id="precisionPanel"></div>
 
-          <div class="props-form" id="propsForm"></div>
+          <div class="props-form" id="propsForm">
+            <div class="skeleton-stat">
+              <div class="skeleton-line" style="width:60%"></div>
+              <div class="skeleton-line" style="width:80%"></div>
+              <div class="skeleton-line" style="width:45%"></div>
+              <div class="skeleton-block"></div>
+            </div>
+          </div>
         </div>
 
         <!-- Stats -->

@@ -57,6 +57,42 @@ setInterval(updateSaveIndicator, 15000);
 // Suscribirse a cambios para programar autosave
 EventBus.on(Events.FEATURES_UPDATED, scheduleAutosave);
 
+function handleFileImport(file) {
+  const reader = new FileReader();
+  reader.onload = async event => {
+    try {
+      const data = JSON.parse(event.target.result);
+      if (data.features && data.nextId) {
+        state.features = data.features;
+        state.nextId = data.nextId;
+        const nameDisplay = document.getElementById('projectName');
+        if (nameDisplay && data.projectName) nameDisplay.textContent = data.projectName;
+
+        pushHistory(); refreshMap();
+
+        await fetch('/api/projects/audit', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': localStorage.getItem('urbanplan_token')
+          },
+          body: JSON.stringify({
+            action_type: 'IMPORT',
+            projectId: state.currentProjectId,
+            details: { filename: file.name, featureCount: state.features.length }
+          })
+        });
+
+        toast('Proyecto importado correctamente', 'success');
+      } else toast('Formato de archivo no reconocido', 'error');
+    } catch (err) {
+      console.warn('[IO] Error leyendo archivo importado:', err.message);
+      toast('No se pudo leer el archivo', 'error');
+    }
+  };
+  reader.readAsText(file);
+}
+
 export function initIOEvents() {
   // EXPORTAR CON AUDITORIA
   document.getElementById('btnExport')?.addEventListener('click', async () => {
@@ -97,42 +133,32 @@ export function initIOEvents() {
   document.getElementById('fileImport')?.addEventListener('change', e => {
     const file = e.target.files[0];
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = async event => {
-      try {
-        const data = JSON.parse(event.target.result);
-        if (data.features && data.nextId) {
-          state.features = data.features;
-          state.nextId = data.nextId;
-          const nameDisplay = document.getElementById('projectName');
-          if (nameDisplay && data.projectName) nameDisplay.textContent = data.projectName;
-
-          pushHistory(); refreshMap();
-
-          // Registrar en AUDIT LOG
-          await fetch('/api/projects/audit', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': localStorage.getItem('urbanplan_token')
-            },
-            body: JSON.stringify({
-              action_type: 'IMPORT',
-              projectId: state.currentProjectId,
-              details: { filename: file.name, featureCount: state.features.length }
-            })
-          });
-
-          toast('Proyecto importado correctamente', 'success');
-        } else toast('Formato de archivo no reconocido', 'error');
-      } catch (err) {
-        console.warn('[IO] Error leyendo archivo importado:', err.message);
-        toast('No se pudo leer el archivo', 'error');
-      }
-    };
-    reader.readAsText(file);
+    handleFileImport(file);
     e.target.value = '';
   });
+
+  // DRAG-AND-DROP sobre el mapa
+  const mapEl = document.getElementById('map');
+  if (mapEl) {
+    mapEl.addEventListener('dragover', e => {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'copy';
+      mapEl.classList.add('drag-over');
+    });
+    mapEl.addEventListener('dragleave', () => {
+      mapEl.classList.remove('drag-over');
+    });
+    mapEl.addEventListener('drop', e => {
+      e.preventDefault();
+      mapEl.classList.remove('drag-over');
+      const file = e.dataTransfer.files[0];
+      if (file && file.name.endsWith('.json')) {
+        handleFileImport(file);
+      } else {
+        toast('Solo se permiten archivos .json', 'error');
+      }
+    });
+  }
 
   // GUARDAR EN BASE DE DATOS
   document.getElementById('btnSave')?.addEventListener('click', async () => {

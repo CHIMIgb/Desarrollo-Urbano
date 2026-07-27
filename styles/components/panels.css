@@ -384,3 +384,116 @@
 .control-row:hover span:last-child {
   color: var(--accent);
 }
+
+/* ============================================================
+   DRAG-AND-DROP overlay
+   ============================================================ */
+.drag-over {
+  outline: 2px dashed var(--accent);
+  outline-offset: -4px;
+}
+
+.drag-over::after {
+  content: 'Suelta el archivo .json aqui';
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(74, 158, 158, 0.08);
+  color: var(--accent);
+  font-size: 14px;
+  font-weight: 600;
+  pointer-events: none;
+  z-index: 50;
+}
+
+/* ============================================================
+   LAYER BADGES — Feature count per layer
+   ============================================================ */
+.layer-badge {
+  margin-left: auto;
+  background: var(--bg-500);
+  color: var(--text-muted);
+  font-size: 9px;
+  font-weight: 600;
+  font-family: var(--font-mono);
+  min-width: 18px;
+  height: 16px;
+  line-height: 16px;
+  text-align: center;
+  padding: 0 4px;
+  border-radius: var(--radius-full);
+  transition: background var(--transition-fast), color var(--transition-fast);
+}
+
+.layer-item:hover .layer-badge {
+  background: var(--accent-dim-20);
+  color: var(--accent);
+}
+
+/* ============================================================
+   SKELETON LOADERS
+   ============================================================ */
+.skeleton-line {
+  height: 12px;
+  border-radius: var(--radius-sm);
+  background: linear-gradient(90deg, var(--bg-600) 25%, var(--bg-500) 50%, var(--bg-600) 75%);
+  background-size: 200% 100%;
+  animation: skeletonShimmer 1.5s ease-in-out infinite;
+}
+
+.skeleton-block {
+  height: 40px;
+  border-radius: var(--radius);
+  background: linear-gradient(90deg, var(--bg-600) 25%, var(--bg-500) 50%, var(--bg-600) 75%);
+  background-size: 200% 100%;
+  animation: skeletonShimmer 1.5s ease-in-out infinite;
+}
+
+.skeleton-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px;
+  background: var(--bg-700);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+@keyframes skeletonShimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* ============================================================
+   PANEL RESIZE HANDLE
+   ============================================================ */
+.panel-resize-handle {
+  position: absolute;
+  top: 0;
+  left: -3px;
+  width: 6px;
+  height: 100%;
+  cursor: col-resize;
+  z-index: 30;
+  transition: background var(--transition-fast);
+}
+
+.panel-resize-handle::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 2px;
+  height: 32px;
+  background: var(--border);
+  border-radius: var(--radius-full);
+  transition: background var(--transition-fast), height var(--transition-fast);
+}
+
+.panel-resize-handle:hover::after {
+  background: var(--accent);
+  height: 48px;
+}

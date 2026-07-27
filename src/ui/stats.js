@@ -215,6 +215,12 @@ export function updateGlobalStats() {
   if (sb) { sb.textContent = cnt.building + (cnt.custom_building || 0); pulseStat(sb); }
   if (sr) { sr.textContent = cnt.road; pulseStat(sr); }
   if (sp) { sp.textContent = cnt.park; pulseStat(sp); }
+
+  // Actualizar badges en la lista de capas
+  Object.keys(cnt).forEach(type => {
+    const badge = document.querySelector(`[data-badge="${type}"]`);
+    if (badge) badge.textContent = cnt[type];
+  });
 }
 
 /**

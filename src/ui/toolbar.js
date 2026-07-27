@@ -144,6 +144,35 @@ export function initToolbarEvents() {
     setTimeout(() => { state.map?.resize(); }, 350);
   });
 
+  // Panel resize handle — drag para redimensionar
+  const resizeHandle = document.getElementById('panelResizeHandle');
+  const panel = document.getElementById('propsPanel');
+  if (resizeHandle && panel) {
+    let startX, startW;
+    resizeHandle.addEventListener('mousedown', e => {
+      e.preventDefault();
+      startX = e.clientX;
+      startW = panel.offsetWidth;
+      document.body.style.cursor = 'col-resize';
+      document.body.style.userSelect = 'none';
+
+      const onMove = ev => {
+        const dx = startX - ev.clientX;
+        const newW = Math.min(Math.max(startW + dx, 220), 450);
+        panel.style.width = newW + 'px';
+      };
+      const onUp = () => {
+        document.removeEventListener('mousemove', onMove);
+        document.removeEventListener('mouseup', onUp);
+        document.body.style.cursor = '';
+        document.body.style.userSelect = '';
+        state.map?.resize();
+      };
+      document.addEventListener('mousemove', onMove);
+      document.addEventListener('mouseup', onUp);
+    });
+  }
+
   // Zoom-to-fit: ajustar vista a todas las features
   document.getElementById('tool-fit-all')?.addEventListener('click', () => {
     if (!state.map || state.features.length === 0) {
