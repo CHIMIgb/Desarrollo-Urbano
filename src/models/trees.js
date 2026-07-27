@@ -10,7 +10,7 @@ export function buildTreePolygon(lng, lat, radiusM) {
   for (let i = 0; i < 6; i++) {
     const ang = (i / 6) * Math.PI * 2;
     const dlat = (radiusM * Math.cos(ang)) / 111320;
-    const dlng = (radiusM * Math.sin(ang)) / (40075000 * Math.cos(lat * Math.PI / 180) / 360);
+    const dlng = (radiusM * Math.sin(ang)) / ((40075000 * Math.cos((lat * Math.PI) / 180)) / 360);
     pts.push([lng + dlng, lat + dlat]);
   }
   return [...pts, pts[0]];
@@ -18,42 +18,71 @@ export function buildTreePolygon(lng, lat, radiusM) {
 
 export function generateTreeParts(trunkId, lng, lat, treeType) {
   treeType = treeType || 'pino';
-  let totalH = 8; 
+  let totalH = 8;
   totalH = totalH * (0.85 + Math.random() * 0.3);
 
   const cfg = TYPE_CONFIG['tree'];
   const parts = [];
 
-  const tc = '#451a03'; const tf = '#78350f'; 
-  const cc = cfg.color; const cf = cfg.fillColor; 
+  const tc = '#451a03';
+  const tf = '#78350f';
+  const cc = cfg.color;
+  const cf = cfg.fillColor;
 
   const addPart = (rM, base, h, colC, colF) => {
     const id = getNextId();
     parts.push({
-      type: 'Feature', id,
-      properties: { id, parent_id: trunkId, type: 'tree', color: colC, fillColor: colF, base_height: base, height: Math.round(h * 10) / 10 },
-      geometry: { type: 'Polygon', coordinates: [buildTreePolygon(lng, lat, rM)] }
+      type: 'Feature',
+      id,
+      properties: {
+        id,
+        parent_id: trunkId,
+        type: 'tree',
+        color: colC,
+        fillColor: colF,
+        base_height: base,
+        height: Math.round(h * 10) / 10,
+      },
+      geometry: { type: 'Polygon', coordinates: [buildTreePolygon(lng, lat, rM)] },
     });
   };
-  
+
   const addOffPart = (dlngM, dlatM, rM, base, h, colC, colF) => {
     const dlat = dlatM / 111320;
-    const dlng = dlngM / (40075000 * Math.cos(lat * Math.PI / 180) / 360);
+    const dlng = dlngM / ((40075000 * Math.cos((lat * Math.PI) / 180)) / 360);
     const id = getNextId();
     parts.push({
-      type: 'Feature', id,
-      properties: { id, parent_id: trunkId, type: 'tree', color: colC, fillColor: colF, base_height: base, height: Math.round(h * 10) / 10 },
-      geometry: { type: 'Polygon', coordinates: [buildTreePolygon(lng + dlng, lat + dlat, rM)] }
+      type: 'Feature',
+      id,
+      properties: {
+        id,
+        parent_id: trunkId,
+        type: 'tree',
+        color: colC,
+        fillColor: colF,
+        base_height: base,
+        height: Math.round(h * 10) / 10,
+      },
+      geometry: { type: 'Polygon', coordinates: [buildTreePolygon(lng + dlng, lat + dlat, rM)] },
     });
   };
 
   parts.push({
-    type: 'Feature', id: trunkId,
+    type: 'Feature',
+    id: trunkId,
     properties: {
-      id: trunkId, type: 'tree', name: `Árbol ${treeType} ${trunkId}`, color: tc, fillColor: tf,
-      base_height: 0, height: Math.round(totalH * 0.2 * 10) / 10, center_lng: lng, center_lat: lat, tree_type: treeType
+      id: trunkId,
+      type: 'tree',
+      name: `Árbol ${treeType} ${trunkId}`,
+      color: tc,
+      fillColor: tf,
+      base_height: 0,
+      height: Math.round(totalH * 0.2 * 10) / 10,
+      center_lng: lng,
+      center_lat: lat,
+      tree_type: treeType,
     },
-    geometry: { type: 'Polygon', coordinates: [buildTreePolygon(lng, lat, totalH * 0.05)] }
+    geometry: { type: 'Polygon', coordinates: [buildTreePolygon(lng, lat, totalH * 0.05)] },
   });
 
   if (treeType === 'pino') {
@@ -68,9 +97,9 @@ export function generateTreeParts(trunkId, lng, lat, treeType) {
     const steps = 6;
     const stepH = (totalH * 0.9) / steps;
     for (let i = 0; i < steps; i++) {
-      const base = totalH * 0.1 + (i * stepH);
+      const base = totalH * 0.1 + i * stepH;
       const r = rMax * (1 - (i / steps) * 0.75);
-      addPart(r, base, base + stepH * 1.4, cc, cf); 
+      addPart(r, base, base + stepH * 1.4, cc, cf);
     }
   } else if (treeType === 'roble') {
     parts[0].properties.height = totalH * 0.4;
@@ -99,6 +128,7 @@ export function finishTree(lng, lat, treeType) {
   const trunkId = getNextId();
   const parts = generateTreeParts(trunkId, lng, lat, treeType);
   addFeatures(...parts);
-  pushHistory(); refreshMap();
+  pushHistory();
+  refreshMap();
   selectFeature(trunkId);
 }

@@ -1,4 +1,6 @@
-/* ============================================================ OPTIONS BAR */
+/* ============================================================
+   OPTIONS BAR — Floating toolbar above map
+   ============================================================ */
 .options-bar {
   position: absolute;
   top: 0;
@@ -7,30 +9,45 @@
   z-index: 20;
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 7px 14px;
-  background: rgba(18, 21, 28, 0.92);
+  gap: 10px;
+  padding: 6px 12px;
+  background: var(--glass-bg-opaque);
   backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   border-bottom: 1px solid var(--border);
   font-size: 12px;
   color: var(--text-secondary);
   flex-wrap: wrap;
+  animation: optionsBarIn 0.2s ease;
+}
+
+@keyframes optionsBarIn {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
 }
 
 .opt-label {
+  font-family: var(--font-display);
   font-weight: 700;
-  font-size: 11px;
-  color: var(--text-secondary);
+  font-size: 10px;
+  color: var(--accent);
   letter-spacing: 0.5px;
   text-transform: uppercase;
   white-space: nowrap;
 }
 
 .opt-divider {
-  width: 1px;
+  width: 0;
   height: 18px;
-  background: var(--border);
+  border-left: 1px dashed var(--text-muted);
   flex-shrink: 0;
+  opacity: 0.5;
 }
 
 .opt-item {
@@ -45,21 +62,24 @@
   font-size: 11px;
 }
 
-.opt-item input[type=number] {
-  width: 62px;
+.opt-item input[type='number'] {
+  width: 58px;
   background: var(--bg-700);
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   padding: 3px 6px;
   color: var(--text-primary);
-  font-family: inherit;
-  font-size: 12px;
+  font-family: var(--font-mono);
+  font-size: 11px;
   outline: none;
-  transition: border-color var(--transition-fast);
+  transition:
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast);
 }
 
-.opt-item input[type=number]:focus {
+.opt-item input[type='number']:focus {
   border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-glow);
 }
 
 .opt-item select {
@@ -69,7 +89,7 @@
   padding: 3px 6px;
   color: var(--text-primary);
   font-family: inherit;
-  font-size: 12px;
+  font-size: 11px;
   outline: none;
   cursor: pointer;
   transition: border-color var(--transition-fast);
@@ -79,17 +99,17 @@
   background: var(--bg-800);
 }
 
-.opt-item input[type=range] {
+.opt-item input[type='range'] {
   cursor: pointer;
 }
 
-/* Toggle switch */
+/* ── Toggle switch ── */
 .opt-toggle {
   cursor: pointer;
   gap: 8px;
 }
 
-.opt-toggle input[type=checkbox] {
+.opt-toggle input[type='checkbox'] {
   display: none;
 }
 
@@ -100,7 +120,10 @@
   border: 1px solid var(--border);
   border-radius: var(--radius-full);
   position: relative;
-  transition: background var(--transition-base), border-color var(--transition-base);
+  transition:
+    background var(--transition-base),
+    border-color var(--transition-base),
+    box-shadow var(--transition-base);
   flex-shrink: 0;
 }
 
@@ -112,21 +135,46 @@
   height: 12px;
   background: var(--text-muted);
   border-radius: 50%;
-  transition: left var(--transition-base), background var(--transition-base);
+  transition:
+    left 0.25s cubic-bezier(0.34, 1.56, 0.64, 1),
+    background var(--transition-base),
+    transform var(--transition-fast);
 }
 
-.opt-toggle input:checked+.toggle-track {
+.opt-toggle:hover .toggle-track {
+  border-color: var(--border-hover);
+}
+
+.opt-toggle:hover .toggle-thumb {
+  transform: scale(1.1);
+}
+
+.opt-toggle input:checked + .toggle-track {
   background: var(--accent);
   border-color: var(--accent);
+  box-shadow: 0 0 6px var(--accent-glow);
 }
 
-.opt-toggle input:checked+.toggle-track .toggle-thumb {
+.opt-toggle input:checked + .toggle-track .toggle-thumb {
   left: 16px;
   background: var(--text-primary);
+  animation: thumbBounce 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes thumbBounce {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.2);
+  }
+  100% {
+    transform: scale(1);
+  }
 }
 
 /* Map shifts down when options bar visible */
-.options-bar[style*="display:none"]+#map,
-.options-bar[style="display:none"]~#map {
+.options-bar[style*='display:none'] + #map,
+.options-bar[style='display:none'] ~ #map {
   top: 0;
 }

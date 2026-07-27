@@ -1,10 +1,21 @@
-/* ============================================================ MEASUREMENT CARD */
+/* ============================================================
+   MEASUREMENT CARD — Elegant stat grid
+   ============================================================ */
 .measure-card {
   background: var(--bg-700);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: 10px;
+  padding: 12px;
   margin-top: 6px;
+  transition:
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+}
+
+.measure-card:hover {
+  border-color: var(--border-hover);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
 .measure-title {
@@ -13,10 +24,15 @@
   color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.8px;
-  margin-bottom: 8px;
+  margin-bottom: 10px;
   display: flex;
   align-items: center;
   gap: 5px;
+  font-family: var(--font-display);
+}
+
+.measure-title svg {
+  opacity: 0.6;
 }
 
 .measure-grid {
@@ -25,23 +41,128 @@
   gap: 6px;
 }
 
+/* ── Individual measure cell ── */
 .measure-item {
-  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  background: var(--bg-600);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 8px 6px;
+  transition:
+    border-color var(--transition-fast),
+    background var(--transition-fast),
+    transform var(--transition-fast);
+}
+
+.measure-item:hover {
+  border-color: var(--border-hover);
+  background: var(--bg-500);
+  transform: translateY(-1px);
+}
+
+/* First item (e.g. type/name) spans full width */
+.measure-item:first-child:last-child {
+  grid-column: 1 / -1;
 }
 
 .measure-val {
-  font-size: 15px;
+  font-size: 16px;
   font-weight: 700;
-  color: var(--green);
+  color: var(--accent-hover);
   line-height: 1.1;
+  font-family: var(--font-mono);
+  letter-spacing: -0.5px;
+  transition: color var(--transition-fast);
+}
+
+.measure-item:hover .measure-val {
+  color: var(--accent);
 }
 
 .measure-unit {
   font-size: 9px;
   color: var(--text-muted);
-  margin-top: 1px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-family: var(--font-display);
+  font-weight: 500;
 }
 
+/* ============================================================
+   EDGE LIST — Individual side lengths
+   ============================================================ */
+.edge-card {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border);
+}
+
+.edge-list {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.edge-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 5px 8px;
+  background: var(--bg-600);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  transition:
+    border-color var(--transition-fast),
+    background var(--transition-fast);
+}
+
+.edge-row:hover {
+  border-color: var(--border-hover);
+  background: var(--bg-500);
+}
+
+.edge-row.active {
+  border-color: var(--accent);
+  background: var(--accent-dim);
+}
+
+.edge-row.active .edge-label {
+  color: var(--accent-hover);
+}
+
+.edge-row.active .edge-val {
+  color: var(--accent);
+}
+
+.edge-row:last-child {
+  border-style: dashed;
+}
+
+.edge-label {
+  font-size: 10px;
+  font-family: var(--font-display);
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.edge-val {
+  font-size: 12px;
+  font-weight: 600;
+  font-family: var(--font-mono);
+  color: var(--accent-hover);
+  letter-spacing: -0.3px;
+}
+
+.edge-row:hover .edge-val {
+  color: var(--accent);
+}
+
+/* ============================================================
+   DRAW MEASURE — Floating indicator on canvas
+   ============================================================ */
 .draw-measure {
   position: absolute;
   bottom: 60px;
@@ -49,7 +170,7 @@
   transform: translateX(-50%);
   background: var(--glass-bg);
   backdrop-filter: blur(12px);
-  border: 1px solid rgba(92, 184, 122, 0.25);
+  border: 1px solid var(--green-dim-25);
   padding: 6px 14px;
   border-radius: var(--radius-lg);
   font-size: 12px;
@@ -57,9 +178,12 @@
   font-weight: 600;
   pointer-events: none;
   z-index: 10;
+  font-family: var(--font-mono);
 }
 
-/* Object popup */
+/* ============================================================
+   OBJECT POPUP — Map tooltip
+   ============================================================ */
 .maplibregl-popup-content {
   background: var(--bg-700) !important;
   color: var(--text-primary) !important;
@@ -108,36 +232,58 @@
 .popup-prop-val {
   color: var(--text-primary);
   font-weight: 500;
+  font-family: var(--font-mono);
+  font-size: 11px;
 }
 
-/* --- Dashboard de Métricas Urbanas --- */
+/* ============================================================
+   STATS DASHBOARD — Floating panel over map
+   ============================================================ */
 .stats-dashboard {
   position: absolute;
   bottom: 25px;
-  left: 100px;
+  left: calc(var(--toolbar-w) + 16px);
   width: 300px;
-  max-height: calc(100vh - 100px);
+  max-height: calc(100vh - 120px);
   background: var(--glass-bg);
+  background-image:
+    linear-gradient(var(--grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+  background-size: 20px 20px;
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-lg);
   color: var(--text-primary);
   z-index: 1000;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
+  box-shadow: var(--shadow-lg);
   transition: all var(--transition-smooth);
   overflow: hidden;
-  font-family: 'Inter', sans-serif;
+  font-family: var(--font-body);
   display: flex;
   flex-direction: column;
 }
 
-.stats-dashboard.collapsed {
-  height: 48px;
+.stats-dashboard.collapsed .stats-body {
+  max-height: 0;
+  opacity: 0;
+  overflow: hidden;
+  transition:
+    max-height 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+    opacity 0.2s ease;
 }
 
+.stats-body {
+  transition:
+    max-height 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+    opacity 0.2s ease;
+  max-height: 600px;
+  opacity: 1;
+}
+
+/* ── Dashboard Header ── */
 .stats-header {
-  padding: 14px 16px;
+  padding: 12px 14px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -145,15 +291,18 @@
   cursor: pointer;
   flex-shrink: 0;
   border-bottom: 1px solid var(--border);
+  user-select: none;
 }
 
 .stats-title {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   font-weight: 700;
-  font-size: 14px;
+  font-size: 12px;
   color: var(--accent);
+  font-family: var(--font-display);
+  letter-spacing: 0.3px;
 }
 
 .stats-toggle {
@@ -171,43 +320,48 @@
   transform: rotate(180deg);
 }
 
+/* ── Dashboard Body ── */
 .stats-body {
   padding: 0;
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  height: 100%;
+  flex: 1;
+  min-height: 0;
 }
 
 .stats-summary-fixed {
-  padding: 16px;
+  padding: 14px;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 12px;
   flex-shrink: 0;
   background: var(--surface-hover);
 }
 
 .stats-scroll-area {
-  padding: 0 16px 16px 16px;
+  padding: 0 14px 14px 14px;
   overflow-y: auto;
   flex: 1;
+  min-height: 0;
 }
 
-/* Scrollbar para la zona inferior */
 .stats-scroll-area::-webkit-scrollbar {
-  width: 4px;
+  width: 3px;
 }
-
+.stats-scroll-area::-webkit-scrollbar-track {
+  background: var(--bg-800);
+}
 .stats-scroll-area::-webkit-scrollbar-thumb {
-  background: var(--bg-500);
-  border-radius: 4px;
+  background: var(--accent);
+  border-radius: var(--radius-xs);
 }
 
+/* ── Stat items ── */
 .stat-item {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
 }
 
 .stat-info {
@@ -217,23 +371,43 @@
 }
 
 .stat-label {
-  font-size: 11px;
+  font-size: 10px;
   text-transform: uppercase;
   letter-spacing: 0.8px;
   color: var(--text-secondary);
   font-weight: 600;
+  font-family: var(--font-display);
 }
 
 .stat-val {
-  font-size: 15px;
-  font-weight: 800;
+  font-size: 14px;
+  font-weight: 700;
   color: var(--text-primary);
+  font-family: var(--font-mono);
+  transition: color var(--transition-fast);
+}
+
+.stat-val.pulse {
+  animation: statPulse 0.4s ease;
+}
+
+@keyframes statPulse {
+  0% {
+    transform: scale(1);
+  }
+  40% {
+    transform: scale(1.08);
+    color: var(--accent);
+  }
+  100% {
+    transform: scale(1);
+  }
 }
 
 .stat-bar-bg {
-  height: 5px;
+  height: 4px;
   background: var(--bg-500);
-  border-radius: 3px;
+  border-radius: 2px;
   overflow: hidden;
 }
 
@@ -241,71 +415,86 @@
   height: 100%;
   background: var(--accent);
   width: 0%;
-  transition: width 0.8s ease;
+  transition: width var(--transition-slow);
+  border-radius: 2px;
 }
 
+/* ── Dashboard Footer ── */
 .stats-footer {
-  padding: 10px 16px;
-  font-size: 10px;
-  color: var(--text-secondary);
+  padding: 8px 14px;
+  font-size: 9px;
+  color: var(--text-muted);
   font-style: italic;
   border-top: 1px solid var(--border);
-  background: rgba(0, 0, 0, 0.15);
+  background: var(--surface-active);
   flex-shrink: 0;
+  letter-spacing: 0.3px;
 }
 
-/* --- Desglose Multi-Lote --- */
+/* ============================================================
+   LOT BREAKDOWN — Per-terrain details
+   ============================================================ */
 .stats-breakdown {
   margin-top: 0;
-  padding-top: 15px;
+  padding-top: 14px;
   border-top: 1px dashed var(--border);
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
 }
 
 .breakdown-label {
-  font-size: 11px;
-  font-weight: 800;
+  font-size: 10px;
+  font-weight: 700;
   text-transform: uppercase;
   color: var(--accent);
   letter-spacing: 1.2px;
+  font-family: var(--font-display);
 }
 
 .lot-list {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
 }
 
 .lot-card {
   background: var(--surface-hover);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: 12px;
+  padding: 10px;
   cursor: pointer;
-  transition: background var(--transition-fast), border-color var(--transition-fast);
+  transition:
+    background var(--transition-fast),
+    border-color var(--transition-fast),
+    transform var(--transition-fast),
+    box-shadow var(--transition-fast);
 }
 
 .lot-card:hover {
   background: var(--surface-active);
   border-color: var(--border-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
 }
 
 .lot-card.selected {
   border-color: var(--accent);
-  background: rgba(91, 106, 191, 0.1);
+  background: var(--accent-dim);
+  box-shadow:
+    0 0 0 1px var(--accent-dim-20),
+    0 2px 8px rgba(74, 158, 158, 0.15);
 }
 
 .lot-card-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
 }
 
 .lot-name {
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 700;
   color: var(--text-primary);
   margin-bottom: 0;
@@ -316,14 +505,14 @@
   background: var(--surface-hover);
   border: 1px solid var(--border);
   color: var(--text-muted);
-  width: 24px;
-  height: 24px;
+  width: 22px;
+  height: 22px;
   border-radius: var(--radius-sm);
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: all var(--transition-base);
+  transition: all var(--transition-fast);
 }
 
 .btn-locate-lot:hover {
@@ -340,13 +529,13 @@
 .lot-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 6px 12px;
+  gap: 4px 10px;
 }
 
 .lot-sub-stat {
   display: flex;
   justify-content: space-between;
-  font-size: 11px;
+  font-size: 10px;
 }
 
 .lot-sub-label {
@@ -356,6 +545,8 @@
 .lot-sub-val {
   font-weight: 700;
   color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: 10px;
 }
 
 .lot-sub-val.alert {
@@ -379,9 +570,10 @@
   opacity: 0.15;
 }
 
+/* ── Back to global button ── */
 .btn-back-global {
-  background: rgba(91, 106, 191, 0.12);
-  border: 1px solid rgba(91, 106, 191, 0.25);
+  background: var(--accent-dim);
+  border: 1px solid var(--accent-dim-25);
   color: var(--accent-hover);
   border-radius: var(--radius-sm);
   padding: 4px 10px;
@@ -395,11 +587,17 @@
   gap: 6px;
   transition: all var(--transition-fast);
   margin-left: auto;
-  margin-right: 12px;
+  margin-right: 8px;
+  font-family: var(--font-display);
 }
 
 .btn-back-global:hover {
-  background: rgba(91, 106, 191, 0.2);
+  background: var(--accent-dim-20);
   border-color: var(--accent);
   color: var(--text-primary);
+  transform: translateX(-2px);
+}
+
+.btn-back-global:active {
+  transform: translateX(0) scale(0.96);
 }

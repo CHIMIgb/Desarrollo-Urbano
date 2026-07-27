@@ -22,23 +22,25 @@
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border: 1px solid var(--glass-border);
-  padding: 8px 16px;
+  padding: 7px 14px;
   border-radius: var(--radius-full);
-  font-size: 12px;
+  font-size: 11px;
   color: var(--text-secondary);
   pointer-events: none;
   z-index: 10;
-  animation: fadeInUp 0.3s ease;
+  animation: drawHintIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  white-space: nowrap;
+  box-shadow: var(--shadow);
 }
 
-@keyframes fadeInUp {
+@keyframes drawHintIn {
   from {
     opacity: 0;
-    transform: translateX(-50%) translateY(8px);
+    transform: translateX(-50%) translateY(8px) scale(0.95);
   }
   to {
     opacity: 1;
-    transform: translateX(-50%) translateY(0);
+    transform: translateX(-50%) translateY(0) scale(1);
   }
 }
 
@@ -52,13 +54,15 @@
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border: 1px solid var(--glass-border);
-  padding: 4px 10px;
+  padding: 3px 8px;
   border-radius: var(--radius-sm);
   font-size: 10px;
-  color: var(--text-muted);
-  font-family: 'JetBrains Mono', monospace;
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
   pointer-events: none;
   z-index: 10;
+  letter-spacing: 0.3px;
+  transition: color var(--transition-fast);
 }
 
 /* ── Map cursor modes ── */

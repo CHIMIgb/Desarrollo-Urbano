@@ -1,6 +1,14 @@
-/* ============================================================ APP BODY */
+/* ============================================================
+   APP BODY — Main layout container
+   ============================================================ */
 .app-body {
   display: flex;
   height: calc(100vh - var(--header-h));
   overflow: hidden;
+}
+
+/* ── Scrollbar for the body (if needed) ── */
+.app-body > * {
+  scrollbar-width: thin;
+  scrollbar-color: var(--accent) var(--bg-800);
 }

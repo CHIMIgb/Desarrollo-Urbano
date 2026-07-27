@@ -1,4 +1,6 @@
 import { state } from '../config/state.js';
+import { trapFocus, releaseFocus } from '../utils/focusTrap.js';
+import { logger } from '../utils/logger.js';
 
 export function initAuth() {
   const loginOverlay = document.getElementById('loginOverlay');
@@ -20,17 +22,20 @@ export function initAuth() {
   } else {
     // Si no hay token, mostramos el login inmediatamente
     loginOverlay.classList.remove('hidden');
+    trapFocus(loginOverlay);
   }
 
   // Intercambiar formularios
   btnShowRegister.addEventListener('click', (e) => {
     e.preventDefault();
+    loginError.classList.add('hidden');
     loginForm.classList.add('hidden');
-    registerForm.classList.remove('hidden'); // Or flex depending on css
+    registerForm.classList.remove('hidden');
   });
 
   btnShowLogin.addEventListener('click', (e) => {
     e.preventDefault();
+    registerError.classList.add('hidden');
     registerForm.classList.add('hidden');
     loginForm.classList.remove('hidden');
   });
@@ -44,13 +49,14 @@ export function initAuth() {
     const originalBtnText = submitBtn.innerHTML;
 
     submitBtn.disabled = true;
-    submitBtn.innerHTML = '<span class="spinner-container"><span class="spinner"></span><span>Accediendo...</span></span>';
+    submitBtn.innerHTML =
+      '<span class="spinner-container"><span class="spinner"></span><span>Verificando credenciales...</span></span>';
 
     try {
       const response = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password })
+        body: JSON.stringify({ username, password }),
       });
 
       const data = await response.json();
@@ -60,14 +66,14 @@ export function initAuth() {
         localStorage.setItem('urbanplan_user', JSON.stringify(data.user));
         showApp(data.user);
         // Cargar proyecto desde el servidor tras login
-        import('./io.js').then(m => m.loadSavedState());
+        import('./io.js').then((m) => m.loadSavedState());
       } else {
-        loginError.textContent = data.error || 'Error al iniciar sesión';
+        loginError.textContent = data.error || 'Credenciales incorrectas';
         loginError.classList.remove('hidden');
       }
     } catch (err) {
-      console.error(err);
-      loginError.textContent = 'Error de conexión con el servidor';
+      logger.error(err);
+      loginError.textContent = 'No se pudo contactar al servidor';
       loginError.classList.remove('hidden');
     } finally {
       submitBtn.disabled = false;
@@ -82,12 +88,19 @@ export function initAuth() {
     const full_name = document.getElementById('regName').value;
     const email = document.getElementById('regEmail').value;
     const password = document.getElementById('regPass').value;
+    const submitBtn = registerForm.querySelector('button[type="submit"]');
+    const originalBtnText = submitBtn.innerHTML;
+
+    submitBtn.disabled = true;
+    submitBtn.classList.add('loading');
+    submitBtn.innerHTML =
+      '<span class="spinner-container"><span class="spinner"></span><span>Creando cuenta...</span></span>';
 
     try {
       const response = await fetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, full_name, email, password })
+        body: JSON.stringify({ username, full_name, email, password }),
       });
 
       const data = await response.json();
@@ -96,15 +109,19 @@ export function initAuth() {
         localStorage.setItem('urbanplan_token', data.token);
         localStorage.setItem('urbanplan_user', JSON.stringify(data.user));
         showApp(data.user);
-        import('./io.js').then(m => m.loadSavedState());
+        import('./io.js').then((m) => m.loadSavedState());
       } else {
-        registerError.textContent = data.error || 'Error al registrarse';
+        registerError.textContent = data.error || 'No se pudo crear la cuenta';
         registerError.classList.remove('hidden');
       }
     } catch (err) {
-      console.error(err);
-      registerError.textContent = 'Error de conexión con el servidor';
+      logger.error('[Auth] Error en registro:', err.message);
+      registerError.textContent = 'No se pudo contactar al servidor';
       registerError.classList.remove('hidden');
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.classList.remove('loading');
+      submitBtn.innerHTML = originalBtnText;
     }
   });
 
@@ -118,33 +135,35 @@ export function initAuth() {
   async function checkSession(token) {
     try {
       const response = await fetch('/api/auth/me', {
-        headers: { 'Authorization': token }
+        headers: { Authorization: token },
       });
       if (response.ok) {
         const data = await response.json();
         showApp(data.user);
         // Cargar proyecto desde el servidor tras verificar sesión
-        import('./io.js').then(m => m.loadSavedState());
+        import('./io.js').then((m) => m.loadSavedState());
       } else {
         localStorage.removeItem('urbanplan_token');
         loginOverlay.classList.remove('hidden');
       }
     } catch (err) {
-      console.error('Error verificando sesión:', err);
+      logger.error('Error verificando sesión:', err);
       loginOverlay.classList.remove('hidden');
     }
   }
 
   function showApp(user) {
     loginOverlay.classList.add('hidden');
+    releaseFocus();
     appContainer.classList.remove('hidden');
     const rawName = user.full_name || user.username;
-    
+
     const maxLen = 12;
-    userNameLabel.textContent = rawName.length > maxLen ? rawName.substring(0, maxLen) + '...' : rawName;
-    
+    userNameLabel.textContent =
+      rawName.length > maxLen ? rawName.substring(0, maxLen) + '...' : rawName;
+
     const parts = rawName.trim().split(/\s+/);
-    let initials = '';
+    let initials;
     if (parts.length >= 2) {
       initials = parts[0].charAt(0) + parts[1].charAt(0);
     } else {
@@ -153,7 +172,7 @@ export function initAuth() {
     userInitial.textContent = initials.toUpperCase();
     // Si el mapa ya estaba inicializado o necesita recarga, este es el punto
     if (state.map) {
-        state.map.resize();
+      state.map.resize();
     }
   }
 }

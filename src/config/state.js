@@ -1,4 +1,7 @@
-export const SATELLITE_URL = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}';
+import { logger } from '../utils/logger.js';
+
+export const SATELLITE_URL =
+  'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}';
 export let OSM_URL = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
 
 export const publicConfig = {
@@ -7,8 +10,8 @@ export const publicConfig = {
   OSM_OVERPASS_ENDPOINTS: [
     'https://overpass-api.de/api/interpreter',
     'https://overpass.kumi.systems/api/interpreter',
-    'https://lz4.overpass-api.de/api/interpreter'
-  ]
+    'https://lz4.overpass-api.de/api/interpreter',
+  ],
 };
 
 export async function loadPublicConfig() {
@@ -23,12 +26,16 @@ export async function loadPublicConfig() {
     if (data.OSM_OVERPASS_ENDPOINTS && data.OSM_OVERPASS_ENDPOINTS.length) {
       publicConfig.OSM_OVERPASS_ENDPOINTS = data.OSM_OVERPASS_ENDPOINTS;
     }
-    console.log('[CONFIG] Configuración remota de OSM cargada con éxito');
+    logger.log('[CONFIG] Configuración remota de OSM cargada con éxito');
   } catch (e) {
-    console.warn('[CONFIG] Error cargando configuración remota, usando valores por defecto');
+    logger.warn(
+      '[CONFIG] Error cargando configuración remota, usando valores por defecto:',
+      e.message
+    );
   }
 }
-export const TERRAIN_URL = 'https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png';
+export const TERRAIN_URL =
+  'https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png';
 export const GLYPHS_URL = 'https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf';
 
 export const TYPE_CONFIG = {
@@ -45,7 +52,7 @@ export const TYPE_CONFIG = {
   path: { label: 'Camino', color: '#a8a29e', fillColor: '#78716c' },
   sidewalk: { label: 'Banqueta', color: '#cbd5e1', fillColor: '#94a3b8' },
   radius: { label: 'Isócrona', color: '#f0abfc', fillColor: '#c026d3' },
-  furniture: { label: 'Mobiliario', color: '#9ca3af', fillColor: '#d1d5db' }
+  furniture: { label: 'Mobiliario', color: '#9ca3af', fillColor: '#d1d5db' },
 };
 
 // El estado ahora vive en store.js — re-exportar para compatibilidad.

@@ -1,5 +1,6 @@
 const bcrypt = require('bcryptjs');
 const db = require('./db');
+const logger = require('./logger');
 require('dotenv').config();
 
 async function seed() {
@@ -17,13 +18,10 @@ async function seed() {
       [username, email, hash, full_name]
     );
 
-    console.log('✅ Usuario de prueba creado con éxito:');
-    console.log(`   User: ${username}`);
-    console.log(`   Email: ${email}`);
-    console.log(`   Pass: ${password}`);
+    logger.info({ user: username, email }, 'Usuario de prueba creado');
     process.exit(0);
   } catch (err) {
-    console.error('❌ Error al crear el usuario de prueba:', err);
+    logger.error({ err }, 'Error al crear usuario de prueba');
     process.exit(1);
   }
 }

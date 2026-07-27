@@ -1,12 +1,12 @@
 const { Pool } = require('pg');
 require('dotenv').config();
 
-const isProduction = process.env.NODE_ENV === 'production';
+const sslEnabled = process.env.DB_SSL !== 'false';
 
-const poolConfig = process.env.DATABASE_URL 
-  ? { 
+const poolConfig = process.env.DATABASE_URL
+  ? {
       connectionString: process.env.DATABASE_URL,
-      ssl: isProduction ? { rejectUnauthorized: false } : false
+      ssl: sslEnabled ? { rejectUnauthorized: true } : false,
     }
   : {
       user: process.env.DB_USER,
@@ -14,15 +14,13 @@ const poolConfig = process.env.DATABASE_URL
       database: process.env.DB_DATABASE,
       password: process.env.DB_PASSWORD,
       port: process.env.DB_PORT,
-      ssl: isProduction ? { rejectUnauthorized: false } : false
     };
 
 const pool = new Pool(poolConfig);
 
-pool.on('connect', (client) => {
-  client.query('SET search_path TO public');
-});
-
-module.exports = {
+const db = {
+  pool,
   query: (text, params) => pool.query(text, params),
 };
+
+module.exports = db;

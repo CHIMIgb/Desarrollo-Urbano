@@ -3,24 +3,26 @@
    Elimina dependencias circulares entre map/ y ui/.
    ============================================================= */
 
+import { logger } from '../utils/logger.js';
+
 /**
  * Catálogo de eventos estándar del sistema.
  * Usar estas constantes en lugar de strings sueltos para evitar typos.
  */
 export const Events = {
   // ── Mapa ────────────────────────────────────────────────
-  MAP_READY:            'map:ready',
-  MAP_REFRESHED:        'map:refreshed',
+  MAP_READY: 'map:ready',
+  MAP_REFRESHED: 'map:refreshed',
 
   // ── Estado ──────────────────────────────────────────────
-  STATE_CHANGED:        'state:changed',
-  FEATURES_UPDATED:     'state:features_updated',
+  STATE_CHANGED: 'state:changed',
+  FEATURES_UPDATED: 'state:features_updated',
 
   // ── Notificaciones ──────────────────────────────────────
-  TOAST:                'ui:toast',
+  TOAST: 'ui:toast',
 
   // ── Estadísticas ────────────────────────────────────────
-  STATS_UPDATE:         'ui:stats_update',
+  STATS_UPDATE: 'ui:stats_update',
 };
 
 /**
@@ -71,7 +73,7 @@ class EventBusImpl {
       try {
         handler(payload);
       } catch (err) {
-        console.error(`[EventBus] Error en handler de "${event}":`, err);
+        logger.error(`[EventBus] Error en handler de "${event}":`, err);
       }
     }
   }

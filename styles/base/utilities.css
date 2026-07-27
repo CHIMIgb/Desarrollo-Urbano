@@ -2,17 +2,20 @@
    UTILITIES — Shared helper classes
    ============================================================ */
 
-.hidden { display: none !important; }
+.hidden {
+  display: none !important;
+}
 
+/* ── Auth footer ── */
 .auth-footer-text {
   text-align: center;
-  font-size: 13px;
+  font-size: 12px;
   color: var(--text-secondary);
-  margin-top: 16px;
+  margin-top: 14px;
 }
 
 .auth-footer-text a {
-  color: var(--purple);
+  color: var(--accent);
   text-decoration: none;
   transition: color var(--transition-fast);
 }
@@ -23,52 +26,30 @@
 
 .register-columns {
   display: flex;
-  gap: 16px;
+  gap: 14px;
 }
 
 .flex-1 {
   flex: 1;
 }
 
-.projects-modal-card {
-  max-width: 500px;
-  width: 90%;
-}
-
-.projects-list-container {
-  max-height: 300px;
-  overflow-y: auto;
-  margin: 16px 0;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.projects-loading-text {
-  text-align: center;
-  color: var(--text-secondary);
-  padding: 20px;
-}
-
-.header-actions {
-  display: flex;
-  gap: 12px;
-}
-
-/* Project items */
+/* ── Project items ── */
 .project-item {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 12px;
+  padding: 10px 12px;
   background: var(--surface-hover);
   border-radius: var(--radius);
-  margin-bottom: 8px;
-  transition: background var(--transition-fast);
+  border: 1px solid transparent;
+  transition:
+    background var(--transition-fast),
+    border-color var(--transition-fast);
 }
 
 .project-item:hover {
   background: var(--surface-active);
+  border-color: var(--border);
 }
 
 .project-info {
@@ -79,23 +60,105 @@
 
 .project-name-item {
   font-weight: 600;
-  font-size: 14px;
+  font-size: 13px;
   color: var(--text-primary);
 }
 
 .project-date-item {
-  font-size: 11px;
+  font-size: 10px;
   color: var(--text-secondary);
 }
 
 .btn-sm {
   padding: 4px 8px;
-  font-size: 12px;
+  font-size: 11px;
 }
 
 /* ── Radius utilities ── */
-.rounded-sm { border-radius: var(--radius-sm); }
-.rounded { border-radius: var(--radius); }
-.rounded-lg { border-radius: var(--radius-lg); }
-.rounded-xl { border-radius: var(--radius-xl); }
-.rounded-full { border-radius: var(--radius-full); }
+.rounded-sm {
+  border-radius: var(--radius-sm);
+}
+.rounded {
+  border-radius: var(--radius);
+}
+.rounded-lg {
+  border-radius: var(--radius-lg);
+}
+.rounded-xl {
+  border-radius: var(--radius-xl);
+}
+.rounded-full {
+  border-radius: var(--radius-full);
+}
+
+/* ── Loading & Empty states ── */
+.loading-text {
+  text-align: center;
+  padding: 20px;
+  color: var(--text-secondary);
+  font-size: 12px;
+  animation: loadingPulse 1.5s ease infinite;
+}
+
+@keyframes loadingPulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.empty-text {
+  text-align: center;
+  padding: 16px;
+  color: var(--text-muted);
+  font-size: 12px;
+  font-style: italic;
+  animation: fadeSlideIn 0.3s ease;
+}
+
+/* ── Skeleton loader ── */
+.skeleton {
+  background: linear-gradient(90deg, var(--bg-700) 25%, var(--bg-600) 50%, var(--bg-700) 75%);
+  background-size: 200% 100%;
+  animation: skeletonShimmer 1.5s ease infinite;
+  border-radius: var(--radius-sm);
+}
+
+@keyframes skeletonShimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* ── Fade transitions ── */
+.fade-in {
+  animation: fadeSlideIn 0.25s ease;
+}
+
+@keyframes fadeSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.fade-out {
+  animation: fadeSlideOut 0.2s ease forwards;
+}
+
+@keyframes fadeSlideOut {
+  to {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+}

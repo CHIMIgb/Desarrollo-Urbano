@@ -9,7 +9,7 @@ async function login(req, res, next) {
     }
 
     const { token, user } = await authService.loginUser(username, password);
-    
+
     res.json({
       success: true,
       token,
@@ -17,8 +17,8 @@ async function login(req, res, next) {
         id: user.id,
         username: user.username,
         full_name: user.full_name,
-        email: user.email
-      }
+        email: user.email,
+      },
     });
   } catch (err) {
     next(err);
@@ -55,5 +55,5 @@ async function register(req, res, next) {
 module.exports = {
   login,
   me,
-  register
+  register,
 };

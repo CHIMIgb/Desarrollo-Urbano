@@ -52,7 +52,7 @@ async function audit(req, res, next) {
   try {
     const userId = req.user.id;
     const { action_type, details, projectId } = req.body;
-    
+
     if (!action_type) throw new HttpError(400, 'El action_type es requerido');
 
     await projectService.addAuditLog(userId, projectId, action_type, details);
@@ -67,5 +67,5 @@ module.exports = {
   listAll,
   loadLatest,
   loadById,
-  audit
+  audit,
 };

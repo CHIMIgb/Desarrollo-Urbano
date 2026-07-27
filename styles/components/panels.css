@@ -1,48 +1,160 @@
-/* ============================================================ PROPS PANEL */
+/* ============================================================
+   PROPS PANEL — Right sidebar with micro-interactions
+   ============================================================ */
 .props-panel {
   width: var(--panel-w);
   background: var(--bg-800);
+  background-image:
+    linear-gradient(var(--grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+  background-size: 20px 20px;
   border-left: 1px solid var(--border);
   display: flex;
   flex-direction: column;
   overflow-y: auto;
+  overflow-x: hidden;
   flex-shrink: 0;
+  scroll-behavior: smooth;
+  scrollbar-width: thin;
+  scrollbar-color: var(--accent) var(--bg-800);
 }
 
+/* ── Panel scrollbar ── */
+.props-panel::-webkit-scrollbar {
+  width: 3px;
+}
+
+.props-panel::-webkit-scrollbar-track {
+  background: var(--bg-800);
+}
+
+.props-panel::-webkit-scrollbar-thumb {
+  background: var(--accent);
+  border-radius: var(--radius-xs);
+}
+
+/* ── Panel collapse toggle ── */
+.panel-toggle-btn {
+  position: absolute;
+  top: 50%;
+  left: -14px;
+  transform: translateY(-50%);
+  width: 14px;
+  height: 36px;
+  background: var(--bg-700);
+  border: 1px solid var(--border);
+  border-right: none;
+  border-radius: var(--radius-sm) 0 0 var(--radius-sm);
+  color: var(--text-muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 20;
+  transition: all var(--transition-fast);
+  padding: 0;
+}
+
+.panel-toggle-btn:hover {
+  background: var(--surface-hover);
+  color: var(--text-primary);
+  left: -16px;
+  width: 16px;
+}
+
+.panel-toggle-btn i {
+  width: 8px;
+  height: 8px;
+  transition: transform var(--transition-fast);
+}
+
+.props-panel.collapsed .panel-toggle-btn i {
+  transform: rotate(180deg);
+}
+
+/* ── Collapsed state ── */
+.props-panel.collapsed {
+  width: 0;
+  min-width: 0;
+  border-left: none;
+  overflow: hidden;
+}
+
+.props-panel.collapsed > *:not(.panel-toggle-btn) {
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.props-panel:not(.collapsed) > *:not(.panel-toggle-btn) {
+  opacity: 1;
+  transition: opacity 0.2s ease 0.1s;
+}
+
+/* ── Panel Sections ── */
 .panel-section {
   padding: 14px 12px;
   border-bottom: 1px solid var(--border);
+  animation: panelSectionIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: background var(--transition-fast);
+}
+
+.panel-section:hover {
+  background: rgba(255, 255, 255, 0.012);
+}
+
+@keyframes panelSectionIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.panel-section:last-child {
+  border-bottom: none;
 }
 
 .panel-title {
   display: flex;
   align-items: center;
-  gap: 7px;
+  gap: 6px;
+  font-family: var(--font-display);
   font-size: 10px;
   font-weight: 600;
   color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.8px;
-  margin-bottom: 10px;
+  margin-bottom: 12px;
+  user-select: none;
 }
 
-/* LAYERS */
+.panel-title svg {
+  opacity: 0.6;
+}
+
+/* ============================================================
+   LAYERS LIST — Toggle switches with bounce
+   ============================================================ */
 .layers-list {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 2px;
 }
 
 .layer-item {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 6px 8px;
+  padding: 5px 6px;
   border-radius: var(--radius);
   cursor: pointer;
   transition: background var(--transition-fast);
-  font-size: 12px;
+  font-size: 11px;
   color: var(--text-secondary);
+  user-select: none;
 }
 
 .layer-item:hover {
@@ -50,7 +162,8 @@
   color: var(--text-primary);
 }
 
-.layer-item input[type=checkbox] {
+/* ── Toggle switch ── */
+.layer-item input[type='checkbox'] {
   appearance: none;
   -webkit-appearance: none;
   width: 28px;
@@ -61,12 +174,15 @@
   cursor: pointer;
   outline: none;
   border: 1px solid var(--border);
-  transition: all var(--transition-base);
+  transition:
+    background var(--transition-base),
+    border-color var(--transition-base),
+    box-shadow var(--transition-base);
   flex-shrink: 0;
   margin: 0;
 }
 
-.layer-item input[type=checkbox]::after {
+.layer-item input[type='checkbox']::after {
   content: '';
   position: absolute;
   top: 1px;
@@ -75,17 +191,38 @@
   height: 12px;
   background: var(--text-secondary);
   border-radius: 50%;
-  transition: all var(--transition-base);
+  transition:
+    transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1),
+    background var(--transition-base);
 }
 
-.layer-item input[type=checkbox]:checked {
+.layer-item input[type='checkbox']:checked {
   background: var(--accent);
   border-color: var(--accent);
+  box-shadow: 0 0 6px var(--accent-glow);
 }
 
-.layer-item input[type=checkbox]:checked::after {
+.layer-item input[type='checkbox']:checked::after {
   background: var(--text-primary);
-  transform: translateX(12px);
+  transform: translateX(12px) scale(1.1);
+  animation: toggleBounce 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes toggleBounce {
+  0% {
+    transform: translateX(0) scale(1);
+  }
+  50% {
+    transform: translateX(13px) scale(1.15);
+  }
+  100% {
+    transform: translateX(12px) scale(1.1);
+  }
+}
+
+.layer-item input[type='checkbox']:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 
 .layer-dot {
@@ -93,13 +230,20 @@
   height: 8px;
   border-radius: 50%;
   flex-shrink: 0;
+  transition: transform var(--transition-fast);
 }
 
-/* PROPERTIES FORM */
+.layer-item:hover .layer-dot {
+  transform: scale(1.3);
+}
+
+/* ============================================================
+   PROPERTIES FORM — Refined inputs with focus glow
+   ============================================================ */
 .props-form {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
 }
 
 .form-field {
@@ -112,6 +256,13 @@
   font-size: 10px;
   color: var(--text-muted);
   font-weight: 500;
+  font-family: var(--font-display);
+  letter-spacing: 0.2px;
+  transition: color var(--transition-fast);
+}
+
+.form-field:focus-within label {
+  color: var(--accent);
 }
 
 .form-field input,
@@ -120,25 +271,53 @@
   background: var(--bg-700);
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
-  padding: 6px 8px;
+  padding: 7px 10px;
   color: var(--text-primary);
   font-size: 12px;
   font-family: inherit;
   outline: none;
-  transition: border-color var(--transition-fast);
+  transition:
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast),
+    background var(--transition-fast);
   width: 100%;
+}
+
+.form-field input:hover,
+.form-field select:hover {
+  border-color: var(--border-hover);
+  background: var(--bg-600);
 }
 
 .form-field input:focus,
 .form-field select:focus {
   border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-glow);
+  background: var(--bg-600);
+}
+
+.form-field input[type='color'] {
+  padding: 3px 4px;
+  height: 32px;
+  cursor: pointer;
+  transition:
+    transform var(--transition-fast),
+    box-shadow var(--transition-fast);
+}
+
+.form-field input[type='color']:hover {
+  transform: scale(1.02);
   box-shadow: 0 0 0 2px var(--accent-glow);
 }
 
-.form-field input[type=color] {
-  padding: 2px 4px;
-  height: 30px;
-  cursor: pointer;
+.form-field input[type='color']:active {
+  transform: scale(0.98);
+}
+
+.form-field input[type='range'] {
+  accent-color: var(--accent);
+  height: 4px;
+  margin-top: 2px;
 }
 
 .form-field select option {
@@ -154,10 +333,12 @@
 .form-actions .btn {
   flex: 1;
   justify-content: center;
-  padding: 6px 8px;
+  padding: 7px 10px;
 }
 
-/* STATS */
+/* ============================================================
+   STATS GRID — Cards with hover lift
+   ============================================================ */
 .stats-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -170,13 +351,31 @@
   border-radius: var(--radius);
   padding: 8px;
   text-align: center;
+  transition:
+    background var(--transition-fast),
+    border-color var(--transition-fast),
+    transform var(--transition-fast),
+    box-shadow var(--transition-fast);
 }
 
-.stat-val {
-  font-size: 20px;
+.stat-card:hover {
+  background: var(--surface-hover);
+  border-color: var(--border-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.stat-card .stat-val {
+  font-size: 18px;
   font-weight: 700;
   color: var(--text-primary);
   line-height: 1;
+  font-family: var(--font-mono);
+  transition: color var(--transition-fast);
+}
+
+.stat-card:hover .stat-val {
+  color: var(--accent);
 }
 
 .stat-lbl {
@@ -185,9 +384,12 @@
   margin-top: 3px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
+  font-family: var(--font-display);
 }
 
-/* TERRAIN CONTROLS */
+/* ============================================================
+   TERRAIN CONTROLS
+   ============================================================ */
 .terrain-controls {
   display: flex;
   flex-direction: column;
@@ -202,9 +404,10 @@
   color: var(--text-secondary);
 }
 
-.control-row input[type=range] {
+.control-row input[type='range'] {
   flex: 1;
   cursor: pointer;
+  accent-color: var(--accent);
 }
 
 .control-row span:last-child {
@@ -213,4 +416,131 @@
   color: var(--accent-hover);
   font-weight: 600;
   font-size: 11px;
+  font-family: var(--font-mono);
+  transition: color var(--transition-fast);
+}
+
+.control-row:hover span:last-child {
+  color: var(--accent);
+}
+
+/* ============================================================
+   DRAG-AND-DROP overlay
+   ============================================================ */
+.drag-over {
+  outline: 2px dashed var(--accent);
+  outline-offset: -4px;
+}
+
+.drag-over::after {
+  content: 'Suelta el archivo .json aqui';
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(74, 158, 158, 0.08);
+  color: var(--accent);
+  font-size: 14px;
+  font-weight: 600;
+  pointer-events: none;
+  z-index: 50;
+}
+
+/* ============================================================
+   LAYER BADGES — Feature count per layer
+   ============================================================ */
+.layer-badge {
+  margin-left: auto;
+  background: var(--bg-500);
+  color: var(--text-muted);
+  font-size: 9px;
+  font-weight: 600;
+  font-family: var(--font-mono);
+  min-width: 18px;
+  height: 16px;
+  line-height: 16px;
+  text-align: center;
+  padding: 0 4px;
+  border-radius: var(--radius-full);
+  transition:
+    background var(--transition-fast),
+    color var(--transition-fast);
+}
+
+.layer-item:hover .layer-badge {
+  background: var(--accent-dim-20);
+  color: var(--accent);
+}
+
+/* ============================================================
+   SKELETON LOADERS
+   ============================================================ */
+.skeleton-line {
+  height: 12px;
+  border-radius: var(--radius-sm);
+  background: linear-gradient(90deg, var(--bg-600) 25%, var(--bg-500) 50%, var(--bg-600) 75%);
+  background-size: 200% 100%;
+  animation: skeletonShimmer 1.5s ease-in-out infinite;
+}
+
+.skeleton-block {
+  height: 40px;
+  border-radius: var(--radius);
+  background: linear-gradient(90deg, var(--bg-600) 25%, var(--bg-500) 50%, var(--bg-600) 75%);
+  background-size: 200% 100%;
+  animation: skeletonShimmer 1.5s ease-in-out infinite;
+}
+
+.skeleton-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px;
+  background: var(--bg-700);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+@keyframes skeletonShimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* ============================================================
+   PANEL RESIZE HANDLE
+   ============================================================ */
+.panel-resize-handle {
+  position: absolute;
+  top: 0;
+  left: -3px;
+  width: 6px;
+  height: 100%;
+  cursor: col-resize;
+  z-index: 30;
+  transition: background var(--transition-fast);
+}
+
+.panel-resize-handle::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 2px;
+  height: 32px;
+  background: var(--border);
+  border-radius: var(--radius-full);
+  transition:
+    background var(--transition-fast),
+    height var(--transition-fast);
+}
+
+.panel-resize-handle:hover::after {
+  background: var(--accent);
+  height: 48px;
 }

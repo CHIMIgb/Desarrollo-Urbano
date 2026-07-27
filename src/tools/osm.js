@@ -3,8 +3,11 @@ import { getNextId, addFeatures } from '../config/store.js';
 import { refreshMap } from '../map/core.js';
 import { toast } from '../ui/toolbar.js';
 import { pushHistory } from './interaction.js';
+import osmtogeojson from 'osmtogeojson';
 import { generateTreeParts } from '../models/trees.js';
 import { generateFurnitureParts } from '../models/furniture.js';
+import { APIError } from '../utils/errors.js';
+import { logger } from '../utils/logger.js';
 
 /**
  * Espejos públicos de Overpass para evitar bloqueos por IP y Timeouts.
@@ -12,7 +15,7 @@ import { generateFurnitureParts } from '../models/furniture.js';
 const getOsmEndpoints = () => publicConfig.OSM_OVERPASS_ENDPOINTS;
 
 /**
- * Realiza la descarga, parseo y conversión matemática de los datos espaciales 
+ * Realiza la descarga, parseo y conversión matemática de los datos espaciales
  * reales desde la API de OpenStreetMap al lienzo vectorial 3D de la app.
  */
 export async function importOSMContext(retryCount = 0) {
@@ -23,7 +26,10 @@ export async function importOSMContext(retryCount = 0) {
   const zoom = state.map.getZoom();
   // Validar nivel de zoom para no saturar al servidor OSM gratuito
   if (zoom < 15) {
-    toast('Debes acercar más la cámara (Zoom > 15) para importar contexto (prevención de Timeout).', 'error');
+    toast(
+      'Debes acercar más la cámara (Zoom > 15) para importar contexto (prevención de Timeout).',
+      'error'
+    );
     return;
   }
 
@@ -33,7 +39,7 @@ export async function importOSMContext(retryCount = 0) {
   const n = bounds.getNorth();
   const w = bounds.getWest();
   const e = bounds.getEast();
-  
+
   // Overpass QL Query: Extraemos edificios y carreteras dentro de la cámara actual
   const query = `
     [out:json][timeout:60];
@@ -65,34 +71,44 @@ export async function importOSMContext(retryCount = 0) {
     const response = await fetch(endpoint, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/x-www-form-urlencoded'
+        'Content-Type': 'application/x-www-form-urlencoded',
       },
-      body: `data=${encodeURIComponent(query)}`
+      body: `data=${encodeURIComponent(query)}`,
     });
 
-    if (!response.ok) {
-      throw new Error(`Server returned ${response.status}`);
+    if (response.status === 429 || response.status === 504) {
+      if (retryCount < 2) {
+        toast('Servidor saturado, reintentando con otro espejo...', 'warning');
+        await new Promise((r) => setTimeout(r, 2000));
+        return importOSMContext(retryCount + 1);
+      }
+      throw new APIError(`Servidor saturado (${response.status})`, {
+        statusCode: response.status,
+        code: 'OVERPASS_RATE_LIMIT',
+      });
     }
-    
+
+    if (!response.ok)
+      throw new APIError('Respuesta no válida del servidor OSM', {
+        statusCode: response.status,
+      });
+
     const data = await response.json();
-    
-    // El milagro del parseador OSM a GeoJSON de la librería que incluimos
-    if (!window.osmtogeojson) {
-      throw new Error('OSM/GeoJSON parser not loaded');
-    }
-    const geojsonData = window.osmtogeojson(data);
-    
+
+    // El milagro del parseador OSM a GeoJSON
+    const geojsonData = osmtogeojson(data);
+
     let addedCount = 0;
     let treeCount = 0;
-    
+
     // Iniciar transacción en el historial
     pushHistory();
 
     const currentOsmIds = new Set(
-      state.features.map(f => f.properties?.osm_id).filter(id => id)
+      state.features.map((f) => f.properties?.osm_id).filter((id) => id)
     );
 
-    geojsonData.features.forEach(feature => {
+    geojsonData.features.forEach((feature) => {
       // Ignorar si ya lo habíamos importado en un encuadre anterior
       const osmId = feature.id; // 'way/123456'
       if (currentOsmIds.has(osmId)) return;
@@ -101,32 +117,40 @@ export async function importOSMContext(retryCount = 0) {
       const geomType = feature.geometry.type;
 
       // 1. EDIFICIOS (Polígonos 3D y Partes Complejas)
-      if ((props.building || props['building:part']) && (geomType === 'Polygon' || geomType === 'MultiPolygon')) {
+      if (
+        (props.building || props['building:part']) &&
+        (geomType === 'Polygon' || geomType === 'MultiPolygon')
+      ) {
         const id = getNextId();
         // Estimar altura basados en pisos ('building:levels') si existen
         const levels = parseInt(props['building:levels'], 10) || Math.floor(Math.random() * 3) + 1;
         const h = levels * 3.5;
-        
+
         let buildingType = 'building';
         if (props.building === 'house' || props.building === 'detached') buildingType = 'house';
-        
+
         const cfg = TYPE_CONFIG[buildingType];
-        
+
         addFeatures({
           type: 'Feature',
           id: id,
           properties: {
-            id, type: buildingType, name: props.name || `${cfg.label} OSM`, 
-            color: cfg.color, fillColor: cfg.fillColor, 
-            height: h, base_height: 0, floors: levels,
+            id,
+            type: buildingType,
+            name: props.name || `${cfg.label} OSM`,
+            color: cfg.color,
+            fillColor: cfg.fillColor,
+            height: h,
+            base_height: 0,
+            floors: levels,
             osm_id: osmId,
-            raw_pts: [] // Not editable vertex by vertex to avoid slowing down arrays yet
+            raw_pts: [], // Not editable vertex by vertex to avoid slowing down arrays yet
           },
-          geometry: feature.geometry
+          geometry: feature.geometry,
         });
         addedCount++;
       }
-      
+
       // 2. VIALIDADES (Líneas)
       else if (props.highway && (geomType === 'LineString' || geomType === 'MultiLineString')) {
         const id = getNextId();
@@ -136,80 +160,122 @@ export async function importOSMContext(retryCount = 0) {
           pathType = 'path';
           if (props.footway === 'sidewalk') pathType = 'sidewalk';
         }
-        
+
         const cfg = TYPE_CONFIG[pathType];
-        
+
         addFeatures({
           type: 'Feature',
           id: id,
           properties: {
-            id, type: pathType, name: props.name || `${cfg.label} OSM`,
-            color: cfg.color, fillColor: cfg.fillColor,
+            id,
+            type: pathType,
+            name: props.name || `${cfg.label} OSM`,
+            color: cfg.color,
+            fillColor: cfg.fillColor,
             osm_id: osmId,
             lanes: parseInt(props.lanes, 10) || 2,
             widthM: parseFloat(props.width) || (pathType === 'path' ? 2 : 7),
-            raw_pts: []
+            raw_pts: [],
           },
-          geometry: feature.geometry
+          geometry: feature.geometry,
         });
         addedCount++;
       }
-      
+
       // 3. PARQUES (Polígonos)
-      else if (props.leisure === 'park' && (geomType === 'Polygon' || geomType === 'MultiPolygon')) {
+      else if (
+        props.leisure === 'park' &&
+        (geomType === 'Polygon' || geomType === 'MultiPolygon')
+      ) {
         const id = getNextId();
         const cfg = TYPE_CONFIG['park'];
-        
+
         addFeatures({
           type: 'Feature',
           id: id,
           properties: {
-            id, type: 'park', name: props.name || `${cfg.label} OSM`,
-            color: cfg.color, fillColor: cfg.fillColor,
+            id,
+            type: 'park',
+            name: props.name || `${cfg.label} OSM`,
+            color: cfg.color,
+            fillColor: cfg.fillColor,
             osm_id: osmId,
-            raw_pts: []
+            raw_pts: [],
           },
-          geometry: feature.geometry
+          geometry: feature.geometry,
         });
         addedCount++;
       }
-      
+
       // 4. AGUA
-      else if ((props.natural === 'water' || props.waterway) && (geomType === 'Polygon' || geomType === 'MultiPolygon' || geomType === 'LineString' || geomType === 'MultiLineString')) {
+      else if (
+        (props.natural === 'water' || props.waterway) &&
+        (geomType === 'Polygon' ||
+          geomType === 'MultiPolygon' ||
+          geomType === 'LineString' ||
+          geomType === 'MultiLineString')
+      ) {
         const id = getNextId();
         const cfg = TYPE_CONFIG['water'];
         addFeatures({
-          type: 'Feature', id,
-          properties: { id, type: 'water', name: props.name || `${cfg.label} OSM`, color: cfg.color, fillColor: cfg.fillColor, osm_id: osmId, raw_pts: [] },
-          geometry: feature.geometry
+          type: 'Feature',
+          id,
+          properties: {
+            id,
+            type: 'water',
+            name: props.name || `${cfg.label} OSM`,
+            color: cfg.color,
+            fillColor: cfg.fillColor,
+            osm_id: osmId,
+            raw_pts: [],
+          },
+          geometry: feature.geometry,
         });
         addedCount++;
       }
-      
+
       // 5. ZONAS (Uso de Suelo)
       else if (props.landuse && (geomType === 'Polygon' || geomType === 'MultiPolygon')) {
         const id = getNextId();
         const cfg = TYPE_CONFIG['zone'];
         addFeatures({
-          type: 'Feature', id,
-          properties: { id, type: 'zone', name: props.name || `${props.landuse} OSM`, color: cfg.color, fillColor: cfg.fillColor, osm_id: osmId, raw_pts: [] },
-          geometry: feature.geometry
+          type: 'Feature',
+          id,
+          properties: {
+            id,
+            type: 'zone',
+            name: props.name || `${props.landuse} OSM`,
+            color: cfg.color,
+            fillColor: cfg.fillColor,
+            osm_id: osmId,
+            raw_pts: [],
+          },
+          geometry: feature.geometry,
         });
         addedCount++;
       }
-      
+
       // 6. VIAS FERREAS
       else if (props.railway && (geomType === 'LineString' || geomType === 'MultiLineString')) {
         const id = getNextId();
         const cfg = TYPE_CONFIG['railway'];
         addFeatures({
-          type: 'Feature', id,
-          properties: { id, type: 'railway', name: props.name || `${cfg.label} OSM`, color: cfg.color, fillColor: cfg.fillColor, osm_id: osmId, raw_pts: [] },
-          geometry: feature.geometry
+          type: 'Feature',
+          id,
+          properties: {
+            id,
+            type: 'railway',
+            name: props.name || `${cfg.label} OSM`,
+            color: cfg.color,
+            fillColor: cfg.fillColor,
+            osm_id: osmId,
+            raw_pts: [],
+          },
+          geometry: feature.geometry,
         });
         addedCount++;
       }
-      
+
       // 7. ARBOLES (con límite)
       else if (props.natural === 'tree' && geomType === 'Point') {
         if (treeCount < 300) {
@@ -219,25 +285,25 @@ export async function importOSMContext(retryCount = 0) {
           const tTypes = ['pino', 'abeto', 'roble', 'ovalado'];
           const randomType = tTypes[Math.floor(Math.random() * tTypes.length)];
           const parts = generateTreeParts(id, lng, lat, randomType);
-          
+
           parts[0].properties.osm_id = osmId;
           addFeatures(...parts);
           addedCount++;
           treeCount++;
         }
       }
-      
+
       // 8. MOBILIARIO
       else if ((props.amenity || props.highway === 'street_lamp') && geomType === 'Point') {
         let fType = 'banca';
         if (props.amenity === 'waste_basket') fType = 'papelera';
         if (props.amenity === 'street_lamp' || props.highway === 'street_lamp') fType = 'farol';
-        
+
         const lng = feature.geometry.coordinates[0];
         const lat = feature.geometry.coordinates[1];
         const id = getNextId();
         const parts = generateFurnitureParts(id, lng, lat, 0, fType);
-        
+
         parts[0].properties.osm_id = osmId;
         addFeatures(...parts);
         addedCount++;
@@ -250,14 +316,18 @@ export async function importOSMContext(retryCount = 0) {
     } else {
       toast('No se encontró contexto nuevo en esta vista.', 'info');
     }
-
   } catch (err) {
-    console.error('Error importando OSM:', err);
-    if (retryCount < endpoints.length - 1) {
-      toast(`Servidor ocupado. Probando espejo alternativo (${retryCount + 2})...`, 'warning');
-      return importOSMContext(retryCount + 1);
+    logger.error(`[OSM] Error importando (${err.code ?? 'UNKNOWN'}):`, err);
+    if (retryCount >= 2) {
+      toast(
+        'Los servidores de OSM están muy ocupados. Intenta en una zona más pequeña o más tarde.',
+        'error'
+      );
     }
-    toast('Los servidores de OSM están muy ocupados. Intenta en una zona más pequeña o más tarde.', 'error');
+    toast(
+      'Los servidores de OSM están muy ocupados. Intenta en una zona más pequeña o más tarde.',
+      'error'
+    );
   } finally {
     if (btn) btn.style.opacity = '1';
   }

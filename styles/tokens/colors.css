@@ -18,27 +18,51 @@
   --text-primary: #e8ecf1;
   --text-secondary: #8b95a5;
   --text-muted: #5a6577;
+  --text-on-accent: #ffffff;
 
-  /* ── Accent (brand) ── */
-  --accent: #5b6abf;
-  --accent-hover: #7c8ad4;
-  --accent-glow: rgba(91, 106, 191, 0.15);
+  /* ── Accent (brand — teal, evokes maps/GPS/precision) ── */
+  --accent: #4a9e9e;
+  --accent-hover: #6bbaba;
+  --accent-glow: rgba(74, 158, 158, 0.15);
+  --accent-dim: rgba(74, 158, 158, 0.12);
+  --accent-dim-20: rgba(74, 158, 158, 0.2);
+  --accent-dim-25: rgba(74, 158, 158, 0.25);
 
   /* ── Semantic colors ── */
   --green: #5cb87a;
+  --green-dim-25: rgba(92, 184, 122, 0.25);
   --amber: #d4943a;
   --red: #d46a6a;
+  --red-dark: #c05555;
+  --red-dim-8: rgba(212, 106, 106, 0.08);
+  --red-dim-10: rgba(212, 106, 106, 0.1);
+  --red-dim-20: rgba(212, 106, 106, 0.2);
+  --red-dim-25: rgba(212, 106, 106, 0.25);
+  --red-dim-30: rgba(212, 106, 106, 0.3);
   --purple: #9b8ad4;
+
+  /* ── Layer dots (unique identifiers for map layers) ── */
+  --blue: #5b9bd5;
+  --stone: #a8a29e;
+  --slate: #b0b8c4;
+  --green-light: #6abf8a;
+  --pink: #c97a9b;
+  --violet: #a855c0;
 
   /* ── Glassmorphism ── */
   --glass-bg: rgba(18, 21, 28, 0.75);
+  --glass-bg-opaque: rgba(18, 21, 28, 0.92);
   --glass-border: rgba(255, 255, 255, 0.06);
 
   /* ── Surface interaction states ── */
   --surface-hover: rgba(255, 255, 255, 0.04);
   --surface-active: rgba(255, 255, 255, 0.06);
 
+  /* ── Decorative ── */
+  --grid-line: rgba(255, 255, 255, 0.015);
+
   /* ── Border radius ── */
+  --radius-xs: 2px;
   --radius-sm: 6px;
   --radius: 10px;
   --radius-lg: 14px;
@@ -49,12 +73,14 @@
   --transition-fast: 0.15s ease;
   --transition-base: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   --transition-smooth: 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  --transition-slow: 0.8s ease;
 
   /* ── Elevation ── */
   --shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
+  --shadow-lg: 0 10px 40px rgba(0, 0, 0, 0.4);
 
   /* ── Layout dimensions ── */
   --header-h: 52px;
   --toolbar-w: 90px;
-  --panel-w: 300px;
+  --panel-w: clamp(260px, 22vw, 340px);
 }

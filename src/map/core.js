@@ -1,13 +1,14 @@
 import { state, TERRAIN_URL, GLYPHS_URL, SATELLITE_URL, OSM_URL } from '../config/state.js';
 import { EventBus, Events } from '../config/events.js';
 import { addDataLayers, setupLayerInteractivity } from './layers.js';
+import { logger } from '../utils/logger.js';
 
 export function initMap() {
   let initialView = {
     center: [-99.1332, 19.4326],
     zoom: 13,
     pitch: 0,
-    bearing: 0
+    bearing: 0,
   };
 
   const savedView = localStorage.getItem('urbanPlan_view');
@@ -16,7 +17,9 @@ export function initMap() {
     try {
       initialView = JSON.parse(savedView);
       hasSavedView = true;
-    } catch (e) { console.error('Error loading saved view', e); }
+    } catch (e) {
+      logger.error('Error loading saved view', e);
+    }
   }
 
   state.map = new maplibregl.Map({
@@ -33,17 +36,17 @@ export function initMap() {
 
   if (!hasSavedView && navigator.geolocation) {
     navigator.geolocation.getCurrentPosition(
-      pos => {
+      (pos) => {
         const center = [pos.coords.longitude, pos.coords.latitude];
         state.map.flyTo({ center, zoom: 16, duration: 2000 });
         saveMapView();
       },
-      err => { console.warn('Geolocation denied or failed', err); },
+      (err) => {
+        logger.warn('Geolocation denied or failed', err);
+      },
       { enableHighAccuracy: true }
     );
   }
-
-
 
   state.map.addControl(new maplibregl.NavigationControl({ showCompass: true }), 'bottom-right');
   state.map.addControl(new maplibregl.ScaleControl({ unit: 'metric' }), 'bottom-left');
@@ -55,7 +58,7 @@ export function initMap() {
       center: state.map.getCenter().toArray(),
       zoom: state.map.getZoom(),
       pitch: state.map.getPitch(),
-      bearing: state.map.getBearing()
+      bearing: state.map.getBearing(),
     };
     localStorage.setItem('urbanPlan_view', JSON.stringify(view));
   };
@@ -66,7 +69,10 @@ export function initMap() {
   state.map.on('rotateend', saveMapView);
 
   // Precarga proactiva al mover el mapa
-  state.map.on('moveend', () => { saveMapView(); preloadNearbyTiles(); });
+  state.map.on('moveend', () => {
+    saveMapView();
+    preloadNearbyTiles();
+  });
 
   state.map.on('style.load', () => {
     // Restaurar capas de datos siempre
@@ -94,9 +100,11 @@ export function buildStyle() {
   const attr = state.isSatellite ? '© Esri, Maxar' : '© OpenStreetMap contributors';
   return {
     version: 8,
-    sources: { [srcId]: { type: 'raster', tiles: [tiles], tileSize: 512, attribution: attr, maxzoom: 19 } },
+    sources: {
+      [srcId]: { type: 'raster', tiles: [tiles], tileSize: 512, attribution: attr, maxzoom: 19 },
+    },
     layers: [{ id: 'base', type: 'raster', source: srcId }],
-    glyphs: GLYPHS_URL
+    glyphs: GLYPHS_URL,
   };
 }
 
@@ -110,11 +118,16 @@ export function preloadNearbyTiles() {
   const lng = center.lng;
 
   // Convertir grados a coordenadas de tile OSM
-  const x = Math.floor((lng + 180) / 360 * Math.pow(2, zoom));
-  const y = Math.floor((1 - Math.log(Math.tan(lat * Math.PI / 180) + 1 / Math.cos(lat * Math.PI / 180)) / Math.PI) / 2 * Math.pow(2, zoom));
+  const x = Math.floor(((lng + 180) / 360) * Math.pow(2, zoom));
+  const y = Math.floor(
+    ((1 -
+      Math.log(Math.tan((lat * Math.PI) / 180) + 1 / Math.cos((lat * Math.PI) / 180)) / Math.PI) /
+      2) *
+      Math.pow(2, zoom)
+  );
 
   // Calcular resolución para determinar cuántos tiles cubren 2km
-  const groundRes = 156543.03 * Math.cos(lat * Math.PI / 180) / Math.pow(2, zoom);
+  const groundRes = (156543.03 * Math.cos((lat * Math.PI) / 180)) / Math.pow(2, zoom);
   const tileSizeMeters = groundRes * 512;
   const radiusInTiles = Math.max(1, Math.ceil(1000 / tileSizeMeters));
 
@@ -145,18 +158,26 @@ export function preloadNearbyTiles() {
 
 export function addTerrainSource() {
   if (!state.map.getSource('terrain'))
-    state.map.addSource('terrain', { type: 'raster-dem', tiles: [TERRAIN_URL], tileSize: 256, encoding: 'terrarium', maxzoom: 15 });
+    state.map.addSource('terrain', {
+      type: 'raster-dem',
+      tiles: [TERRAIN_URL],
+      tileSize: 256,
+      encoding: 'terrarium',
+      maxzoom: 15,
+    });
   const exag = parseFloat(document.getElementById('terrainExaggeration').value);
   state.map.setTerrain({ source: 'terrain', exaggeration: exag });
   try {
     state.map.setFog({
-      'color': 'rgb(15,18,30)',
+      color: 'rgb(15,18,30)',
       'high-color': 'rgb(40,50,80)',
       'horizon-blend': 0.08,
       'space-color': 'rgb(5,8,20)',
-      'star-intensity': 0.5
+      'star-intensity': 0.5,
     });
-  } catch (e) { }
+  } catch (e) {
+    logger.warn('[Map] Error configurando niebla', e);
+  }
 }
 
 export function buildGeoJSON() {
