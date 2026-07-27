@@ -345,7 +345,7 @@ function bindActionButtons() {
 
     const ok = moveFeatureByPolar(state.selectedIds[0], dist, angle);
     if (ok) {
-      toast(`Elemento desplazado ${dist}m @ ${angle}°`, 'success');
+      toast(`Elemento desplazado ${dist}m a ${angle}°`, 'success');
       updatePanelContent();
     } else {
       toast('No se pudo desplazar el elemento', 'error');

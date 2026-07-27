@@ -20,7 +20,7 @@ export default {
         deep: [
           /^toast/, /^modal/, /^search/, /^tool-/,
           /^layer/, /^stat/, /^draw/, /^maplibre/,
-          /^ls-/, /^lot-/, /^project/,
+          /^ls-/, /^lot-/, /^project/, /^prec/,
         ],
       },
       defaultExtractor: content => content.match(/[\w-/:]+(?<!:)/g) || [],

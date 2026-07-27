@@ -93,8 +93,13 @@
 /* ── Panel Sections ── */
 .panel-section {
   padding: 14px 12px;
-  border-bottom: 1px dashed var(--border);
+  border-bottom: 1px solid var(--border);
   animation: panelSectionIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: background var(--transition-fast);
+}
+
+.panel-section:hover {
+  background: rgba(255, 255, 255, 0.012);
 }
 
 @keyframes panelSectionIn {
@@ -122,8 +127,12 @@
   color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.8px;
-  margin-bottom: 10px;
+  margin-bottom: 12px;
   user-select: none;
+}
+
+.panel-title svg {
+  opacity: 0.6;
 }
 
 /* ============================================================
@@ -218,12 +227,12 @@
 }
 
 /* ============================================================
-   PROPERTIES FORM — Inputs with focus expansion
+   PROPERTIES FORM — Refined inputs with focus glow
    ============================================================ */
 .props-form {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
 }
 
 .form-field {
@@ -236,6 +245,8 @@
   font-size: 10px;
   color: var(--text-muted);
   font-weight: 500;
+  font-family: var(--font-display);
+  letter-spacing: 0.2px;
   transition: color var(--transition-fast);
 }
 
@@ -249,7 +260,7 @@
   background: var(--bg-700);
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
-  padding: 6px 8px;
+  padding: 7px 10px;
   color: var(--text-primary);
   font-size: 12px;
   font-family: inherit;
@@ -261,6 +272,7 @@
 .form-field input:hover,
 .form-field select:hover {
   border-color: var(--border-hover);
+  background: var(--bg-600);
 }
 
 .form-field input:focus,
@@ -271,18 +283,25 @@
 }
 
 .form-field input[type=color] {
-  padding: 2px 4px;
-  height: 30px;
+  padding: 3px 4px;
+  height: 32px;
   cursor: pointer;
-  transition: transform var(--transition-fast);
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast);
 }
 
 .form-field input[type=color]:hover {
   transform: scale(1.02);
+  box-shadow: 0 0 0 2px var(--accent-glow);
 }
 
 .form-field input[type=color]:active {
   transform: scale(0.98);
+}
+
+.form-field input[type=range] {
+  accent-color: var(--accent);
+  height: 4px;
+  margin-top: 2px;
 }
 
 .form-field select option {
@@ -298,7 +317,7 @@
 .form-actions .btn {
   flex: 1;
   justify-content: center;
-  padding: 6px 8px;
+  padding: 7px 10px;
 }
 
 /* ============================================================
