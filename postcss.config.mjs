@@ -22,7 +22,7 @@ export default {
           /^layer/, /^stat/, /^draw/, /^maplibre/,
           /^ls-/, /^lot-/, /^project/, /^prec/,
           /^measure/, /^popup/, /^form/, /^btn/,
-          /^toggle/, /^opt-/,
+          /^toggle/, /^opt-/, /^edge-/,
         ],
       },
       defaultExtractor: content => content.match(/[\w-/:]+(?<!:)/g) || [],

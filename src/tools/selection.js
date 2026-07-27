@@ -42,6 +42,7 @@ export function updateSelectionUI(lngLat) {
   } else {
     const ps = document.getElementById('propsSection');
     if (ps) ps.classList.add('hidden');
+    clearEdgeHighlight();
     state.popup?.remove(); state.popup = null;
   }
   updateEditHandles();
@@ -107,4 +108,38 @@ export function ungroupSelectedFeatures() {
 
   toast('Objetos desagrupados', 'info');
   updateSelectionUI();
+}
+
+/**
+ * Highlights a single edge of a feature on the map.
+ * @param {object} feat — GeoJSON feature with properties.raw_pts
+ * @param {number} edgeIdx — 0-based index of the edge (pair of consecutive vertices)
+ * @param {boolean} closed — whether the polygon is closed (last edge = closing edge)
+ */
+export function highlightEdge(feat, edgeIdx, closed = true) {
+  if (!state.map || !feat?.properties?.raw_pts) return;
+  const pts = feat.properties.raw_pts;
+  if (edgeIdx < 0 || edgeIdx >= pts.length) return;
+
+  let from, to;
+  if (closed && edgeIdx === pts.length - 1) {
+    from = pts[pts.length - 1];
+    to = pts[0];
+  } else {
+    from = pts[edgeIdx];
+    to = pts[edgeIdx + 1];
+  }
+  if (!from || !to) return;
+
+  const feature = {
+    type: 'Feature',
+    properties: {},
+    geometry: { type: 'LineString', coordinates: [from, to] }
+  };
+  state.map.getSource('edge-highlight')?.setData({ type: 'FeatureCollection', features: [feature] });
+}
+
+/** Clears the edge highlight from the map. */
+export function clearEdgeHighlight() {
+  state.map?.getSource('edge-highlight')?.setData({ type: 'FeatureCollection', features: [] });
 }

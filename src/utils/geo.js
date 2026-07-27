@@ -27,6 +27,22 @@ export function polygonArea(coords) {
 
 export function polygonPerimeter(coords) { return lineLength(coords); }
 
+/**
+ * Returns array of individual edge lengths (meters) from raw_pts.
+ * For polygons (closed=true), appends the closing edge last→first.
+ */
+export function edgeLengths(pts, closed = false) {
+  if (!pts || pts.length < 2) return [];
+  const edges = [];
+  for (let i = 0; i < pts.length - 1; i++) {
+    edges.push(haversine(pts[i][0], pts[i][1], pts[i + 1][0], pts[i + 1][1]));
+  }
+  if (closed && pts.length > 2) {
+    edges.push(haversine(pts[pts.length - 1][0], pts[pts.length - 1][1], pts[0][0], pts[0][1]));
+  }
+  return edges;
+}
+
 // Bounding box dims of a polygon (lat/lon → meters)
 export function polygonBBox(coords) {
   const lngs = coords.map(c => c[0]), lats = coords.map(c => c[1]);

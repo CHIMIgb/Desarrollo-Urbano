@@ -8,14 +8,14 @@ export function addDataLayers() {
 
   // Limpiar capas y fuentes existentes antes de recrear (necesario para cambios de estilo)
   const layerIds = [
-    'layer-edit-handles', 'highlight-polygons', 'layer-draw-pts', 'layer-draw-fill',
+    'layer-edge-highlight', 'layer-edit-handles', 'highlight-polygons', 'layer-draw-pts', 'layer-draw-fill',
     'layer-draw-line', 'layer-buildings-outline', 'layer-buildings', 'layer-furniture',
     'layer-trees-3d', 'layer-zones-line', 'layer-zones-fill', 'layer-paths',
     'layer-roads', 'layer-railways', 'layer-railways-dash'
   ];
   for (let k = 1; k <= 9; k++) layerIds.push(`layer-roads-div-${k}`);
   layerIds.forEach(id => { if (state.map.getLayer(id)) state.map.removeLayer(id); });
-  ['urban-data', 'draw-preview', 'edit-handles'].forEach(id => {
+  ['urban-data', 'draw-preview', 'edit-handles', 'edge-highlight'].forEach(id => {
     if (state.map.getSource(id)) state.map.removeSource(id);
   });
 
@@ -169,6 +169,14 @@ export function addDataLayers() {
       'circle-stroke-width': ['case', ['==', ['get', 'isSelected'], true], 3, 2],
       'circle-stroke-color': ['case', ['==', ['get', 'isSelected'], true], '#fff', '#ef4444']
     }
+  });
+
+  // Edge highlight layer — shows a single edge when clicked in Lados list
+  state.map.addSource('edge-highlight', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
+  state.map.addLayer({
+    id: 'layer-edge-highlight', type: 'line', source: 'edge-highlight',
+    layout: { 'line-cap': 'round', 'line-join': 'round' },
+    paint: { 'line-color': '#4a9e9e', 'line-width': 4, 'line-opacity': 0.9 }
   });
 }
 

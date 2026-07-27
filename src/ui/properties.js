@@ -1,17 +1,18 @@
 import { state, TYPE_CONFIG } from '../config/state.js';
 import { addFeatures } from '../config/store.js';
-import { fmtLen, fmtArea, fmtVol } from '../utils/geo.js';
+import { fmtLen, fmtArea, fmtVol, edgeLengths } from '../utils/geo.js';
 import { escapeHTML } from '../utils/sanitize.js';
 import { pushHistory, getFeatureCenter } from '../tools/interaction.js';
 import { refreshMap } from '../map/core.js';
 import { toast } from './toolbar.js';
-import { deleteSelection, groupSelectedFeatures, ungroupSelectedFeatures } from '../tools/selection.js';
+import { deleteSelection, groupSelectedFeatures, ungroupSelectedFeatures, highlightEdge, clearEdgeHighlight } from '../tools/selection.js';
 import { generateBuildingParts } from '../models/buildings.js';
 import { generateFurnitureParts } from '../models/furniture.js';
 import { rebuildLineGeometry } from '../models/roads.js';
 import { rebuildPolygonGeometry, rebuildRadiusGeometry } from '../models/zones.js';
 
 export function showPropsPanel(feat, lngLat) {
+  clearEdgeHighlight();
   const p = feat.properties, cfg = TYPE_CONFIG[p.type] || {};
   const ps = document.getElementById('propsSection');
   if (ps) ps.classList.remove('hidden');
@@ -128,6 +129,7 @@ export function showPropsPanel(feat, lngLat) {
     </div>`;
 
   form.innerHTML = fields;
+  attachEdgeHandlers(feat);
 
   if (['house', 'building'].includes(p.type)) {
     const rotRange = document.getElementById('prop-rotation');
@@ -159,7 +161,7 @@ export function showPropsPanel(feat, lngLat) {
 
       refreshMap();
       const mc = document.getElementById('liveMeasures');
-      if (mc) mc.innerHTML = buildMeasureHTML(f);
+      if (mc) { mc.innerHTML = buildMeasureHTML(f); attachEdgeHandlers(f); }
     };
 
     rotRange?.addEventListener('input', () => { if (rotLabel) rotLabel.textContent = rotRange.value + '°'; rebuildGeom(); });
@@ -194,7 +196,7 @@ export function showPropsPanel(feat, lngLat) {
       f.properties.floors = Math.round(f.properties.height / 3.5);
       refreshMap();
       const mc = document.getElementById('liveMeasures');
-      if (mc) mc.innerHTML = buildMeasureHTML(f);
+      if (mc) { mc.innerHTML = buildMeasureHTML(f); attachEdgeHandlers(f); }
     };
     hIn?.addEventListener('input', rebuildCB);
     fIn?.addEventListener('input', () => { if (hIn) hIn.value = Math.round(parseFloat(fIn.value) * 3.5); rebuildCB(); });
@@ -212,7 +214,7 @@ export function showPropsPanel(feat, lngLat) {
       });
       refreshMap();
       const mc = document.getElementById('liveMeasures');
-      if (mc) mc.innerHTML = buildMeasureHTML(f);
+      if (mc) { mc.innerHTML = buildMeasureHTML(f); attachEdgeHandlers(f); }
     };
     curvedCb?.addEventListener('change', rebuildPoly);
     depthIn?.addEventListener('input', rebuildPoly);
@@ -233,7 +235,7 @@ export function showPropsPanel(feat, lngLat) {
       });
       refreshMap();
       const mc = document.getElementById('liveMeasures');
-      if (mc) mc.innerHTML = buildMeasureHTML(f);
+      if (mc) { mc.innerHTML = buildMeasureHTML(f); attachEdgeHandlers(f); }
     };
 
     if (wIn) {
@@ -258,7 +260,7 @@ export function showPropsPanel(feat, lngLat) {
       rebuildRadiusGeometry(f, center, parseFloat(radRange.value) || 400);
       refreshMap();
       const mc = document.getElementById('liveMeasures');
-      if (mc) mc.innerHTML = buildMeasureHTML(f);
+      if (mc) { mc.innerHTML = buildMeasureHTML(f); attachEdgeHandlers(f); }
     };
     radRange?.addEventListener('input', () => { if (radLabel) radLabel.textContent = radRange.value; rebuildRad(); });
   }
@@ -347,11 +349,24 @@ export function showMultiPropsPanel() {
   state.popup?.remove(); state.popup = null;
 }
 
+function attachEdgeHandlers(feat) {
+  const isLine = ['road', 'path', 'sidewalk', 'railway'].includes(feat.properties.type);
+  const closed = !isLine;
+  document.querySelectorAll('.edge-row').forEach((row, i) => {
+    row.addEventListener('click', () => {
+      document.querySelectorAll('.edge-row.active').forEach(r => r.classList.remove('active'));
+      row.classList.add('active');
+      highlightEdge(feat, i, closed);
+    });
+  });
+}
+
 export function buildMeasureHTML(feat) {
   const p = feat.properties;
   const isBuilding = ['house', 'building', 'custom_building'].includes(p.type);
   const isRoad = p.type === 'road';
   const isPoly = ['park', 'zone', 'terrain', 'custom_building', 'water'].includes(p.type);
+  const isLine = ['road', 'path', 'sidewalk', 'railway'].includes(p.type);
   const items = [];
   if (p.width_m != null && !isRoad) items.push({ val: fmtLen(p.width_m), lbl: 'Ancho' });
   if (p.length_m != null && !isRoad) items.push({ val: fmtLen(p.length_m), lbl: 'Largo' });
@@ -369,11 +384,30 @@ export function buildMeasureHTML(feat) {
   }
   if (isPoly && p.perimeter_m) items.push({ val: fmtLen(p.perimeter_m), lbl: 'Perímetro' });
   if (isRoad && p.length_m) items.push({ val: fmtLen(p.length_m), lbl: 'Longitud' }, { val: (p.widthM || 8) + 'm', lbl: 'Ancho' });
-  if (!items.length) return '';
+
+  let edgesHTML = '';
+  if (p.raw_pts && p.raw_pts.length >= 2) {
+    const closed = !isLine;
+    const lengths = edgeLengths(p.raw_pts, closed);
+    if (lengths.length > 0) {
+      const edgeItems = lengths.map((m, i) => {
+        const label = closed && i === lengths.length - 1 ? 'Cierre' : `Lado ${i + 1}`;
+        return `<div class="edge-row"><span class="edge-label">${label}</span><span class="edge-val">${fmtLen(m)}</span></div>`;
+      }).join('');
+      edgesHTML = `<div class="edge-card">
+        <div class="measure-title">Lados (${lengths.length})</div>
+        <div class="edge-list">${edgeItems}</div>
+      </div>`;
+    }
+  }
+
+  if (!items.length && !edgesHTML) return '';
+  const gridHTML = items.length
+    ? `<div class="measure-grid">${items.map(i => `<div class="measure-item"><div class="measure-val">${i.val}</div><div class="measure-unit">${i.lbl}</div></div>`).join('')}</div>`
+    : '';
   return `<div class="measure-card" id="liveMeasures">
     <div class="measure-title">Medidas</div>
-    <div class="measure-grid">
-      ${items.map(i => `<div class="measure-item"><div class="measure-val">${i.val}</div><div class="measure-unit">${i.lbl}</div></div>`).join('')}
-    </div>
+    ${gridHTML}
+    ${edgesHTML}
   </div>`;
 }

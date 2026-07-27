@@ -87,6 +87,73 @@
 }
 
 /* ============================================================
+   EDGE LIST — Individual side lengths
+   ============================================================ */
+.edge-card {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border);
+}
+
+.edge-list {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.edge-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 5px 8px;
+  background: var(--bg-600);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  transition: border-color var(--transition-fast), background var(--transition-fast);
+}
+
+.edge-row:hover {
+  border-color: var(--border-hover);
+  background: var(--bg-500);
+}
+
+.edge-row.active {
+  border-color: var(--accent);
+  background: var(--accent-dim);
+}
+
+.edge-row.active .edge-label {
+  color: var(--accent-hover);
+}
+
+.edge-row.active .edge-val {
+  color: var(--accent);
+}
+
+.edge-row:last-child {
+  border-style: dashed;
+}
+
+.edge-label {
+  font-size: 10px;
+  font-family: var(--font-display);
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.edge-val {
+  font-size: 12px;
+  font-weight: 600;
+  font-family: var(--font-mono);
+  color: var(--accent-hover);
+  letter-spacing: -0.3px;
+}
+
+.edge-row:hover .edge-val {
+  color: var(--accent);
+}
+
+/* ============================================================
    DRAW MEASURE — Floating indicator on canvas
    ============================================================ */
 .draw-measure {
