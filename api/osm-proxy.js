@@ -1,8 +1,16 @@
-const OVERPASS_MIRRORS = [
-  'https://overpass-api.de/api/interpreter',
-  'https://overpass.kumi.systems/api/interpreter',
-  'https://lz4.overpass-api.de/api/interpreter',
-];
+/**
+ * Vercel Serverless Function — Proxy OSM Overpass API
+ * Todas las URLs y configuración se leen desde variables de entorno.
+ */
+
+const OVERPASS_MIRRORS = (process.env.OSM_OVERPASS_MIRRORS || '')
+  .split(',')
+  .map((s) => s.trim())
+  .filter(Boolean);
+
+const OSM_USER_AGENT = process.env.OSM_USER_AGENT || 'UrbanPlan3D/1.0';
+const OSM_REFERER = process.env.APP_URL || '';
+const OSM_TIMEOUT = parseInt(process.env.OSM_PROXY_TIMEOUT_MS) || 55000;
 
 module.exports = async function handler(req, res) {
   if (req.method === 'OPTIONS') {
@@ -16,6 +24,10 @@ module.exports = async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
+  if (!OVERPASS_MIRRORS.length) {
+    return res.status(500).json({ error: 'OSM_OVERPASS_MIRRORS no configurado' });
+  }
+
   const query = req.body?.data;
   if (!query) {
     return res.status(400).json({ error: 'Missing "data" field' });
@@ -25,25 +37,32 @@ module.exports = async function handler(req, res) {
   for (const mirror of OVERPASS_MIRRORS) {
     try {
       const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 55000);
+      const timeout = setTimeout(() => controller.abort(), OSM_TIMEOUT);
 
       const overpassRes = await fetch(mirror, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'User-Agent': OSM_USER_AGENT,
+          'Referer': OSM_REFERER,
+          'Accept': 'application/json, */*',
+        },
         body: `data=${encodeURIComponent(query)}`,
         signal: controller.signal,
       });
 
       clearTimeout(timeout);
 
-      if (overpassRes.status === 429 || overpassRes.status === 504) {
+      if ([429, 502, 503, 504].includes(overpassRes.status)) {
         lastError = `Overpass ${overpassRes.status} from ${mirror}`;
         continue;
       }
 
       if (!overpassRes.ok) {
+        const errBody = await overpassRes.text().catch(() => '');
         return res.status(overpassRes.status).json({
           error: `Overpass responded ${overpassRes.status}`,
+          detail: errBody.slice(0, 200),
         });
       }
 
