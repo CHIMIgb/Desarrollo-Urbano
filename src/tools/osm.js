@@ -76,9 +76,9 @@ export async function importOSMContext(retryCount = 0) {
       body: `data=${encodeURIComponent(query)}`,
     });
 
-    if (response.status === 429 || response.status === 504) {
+    if (response.status === 429 || response.status === 504 || response.status === 502) {
       if (retryCount < 2) {
-        toast('Servidor saturado, reintentando con otro espejo...', 'warning');
+        toast('Servidor saturado, reintentando...', 'warning');
         await new Promise((r) => setTimeout(r, 2000));
         return importOSMContext(retryCount + 1);
       }
@@ -318,11 +318,10 @@ export async function importOSMContext(retryCount = 0) {
     }
   } catch (err) {
     logger.error(`[OSM] Error importando (${err.code ?? 'UNKNOWN'}):`, err);
-    if (retryCount >= 2) {
-      toast(
-        'Los servidores de OSM están muy ocupados. Intenta en una zona más pequeña o más tarde.',
-        'error'
-      );
+    if (retryCount < 2) {
+      toast('Error de conexión, reintentando...', 'warning');
+      await new Promise((r) => setTimeout(r, 2000));
+      return importOSMContext(retryCount + 1);
     }
     toast(
       'Los servidores de OSM están muy ocupados. Intenta en una zona más pequeña o más tarde.',

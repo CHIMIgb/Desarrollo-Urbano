@@ -3,7 +3,7 @@
   "rewrites": [
     {
       "source": "/osm-proxy",
-      "destination": "/api/index.js"
+      "destination": "/api/osm-proxy.js"
     },
     {
       "source": "/api/(.*)",

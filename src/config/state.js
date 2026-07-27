@@ -7,12 +7,7 @@ export let OSM_URL = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
 export const publicConfig = {
   OSM_TILE_URL: OSM_URL,
   OSM_NOMINATIM_URL: 'https://nominatim.openstreetmap.org/search',
-  OSM_OVERPASS_ENDPOINTS: [
-    '/osm-proxy',
-    'https://overpass-api.de/api/interpreter',
-    'https://overpass.kumi.systems/api/interpreter',
-    'https://lz4.overpass-api.de/api/interpreter',
-  ],
+  OSM_OVERPASS_ENDPOINTS: ['/osm-proxy'],
 };
 
 export async function loadPublicConfig() {

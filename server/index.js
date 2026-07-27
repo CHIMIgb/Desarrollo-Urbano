@@ -78,13 +78,7 @@ app.get('/api/config', (req, res) => {
     OSM_TILE_URL: process.env.OSM_TILE_URL || 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
     OSM_NOMINATIM_URL:
       process.env.OSM_NOMINATIM_URL || 'https://nominatim.openstreetmap.org/search',
-    OSM_OVERPASS_ENDPOINTS: envEndpoints.length
-      ? envEndpoints
-      : [
-          '/osm-proxy',
-          'https://overpass-api.de/api/interpreter',
-          'https://overpass.kumi.systems/api/interpreter',
-        ],
+    OSM_OVERPASS_ENDPOINTS: envEndpoints.length ? envEndpoints : ['/osm-proxy'],
   });
 });
 
