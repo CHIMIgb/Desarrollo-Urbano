@@ -21,7 +21,7 @@ const getOsmEndpoints = () => publicConfig.OSM_OVERPASS_ENDPOINTS;
 export async function importOSMContext(retryCount = 0) {
   if (!state.map) return;
   const endpoints = getOsmEndpoints();
-  const endpoint = endpoints[retryCount % endpoints.length];
+  let endpoint = endpoints[retryCount % endpoints.length];
 
   const zoom = state.map.getZoom();
   // Validar nivel de zoom para no saturar al servidor OSM gratuito
@@ -48,9 +48,6 @@ export async function importOSMContext(retryCount = 0) {
       way["highway"](${s},${w},${n},${e});
       way["leisure"="park"](${s},${w},${n},${e});
       relation["leisure"="park"](${s},${w},${n},${e});
-      // way["natural"="water"](${s},${w},${n},${e});
-      // relation["natural"="water"](${s},${w},${n},${e});
-      // way["waterway"](${s},${w},${n},${e});
       way["railway"](${s},${w},${n},${e});
       way["landuse"](${s},${w},${n},${e});
       relation["landuse"](${s},${w},${n},${e});
@@ -70,7 +67,10 @@ export async function importOSMContext(retryCount = 0) {
   try {
     const response = await fetch(endpoint, {
       method: 'POST',
-      body: query
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded'
+      },
+      body: `data=${encodeURIComponent(query)}`
     });
 
     if (response.status === 429 || response.status === 504) {
@@ -268,6 +268,7 @@ export async function importOSMContext(retryCount = 0) {
     if (retryCount >= 2) {
       toast('Los servidores de OSM están muy ocupados. Intenta en una zona más pequeña o más tarde.', 'error');
     }
+    toast('Los servidores de OSM están muy ocupados. Intenta en una zona más pequeña o más tarde.', 'error');
   } finally {
     if (btn) btn.style.opacity = '1';
   }
