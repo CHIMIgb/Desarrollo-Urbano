@@ -13,6 +13,22 @@ let _lastSavedAt = null;
 let _autosaveTimer = null;
 const AUTOSAVE_DELAY = 30000; // 30 segundos después del último cambio
 
+/**
+ * Limpia propiedades innecesarias de las features para reducir el tamaño del payload.
+ * Elimina raw_pts (arrays vacíos que inflan el JSON) y otros campos prescindibles.
+ */
+function prepareFeaturesForSave(features) {
+  return features.map((f) => {
+    const cleaned = { ...f };
+    if (cleaned.properties) {
+      const p = { ...cleaned.properties };
+      delete p.raw_pts;
+      cleaned.properties = p;
+    }
+    return cleaned;
+  });
+}
+
 function updateSaveIndicator() {
   const el = document.getElementById('saveStatus');
   if (!el || !_lastSavedAt) {
@@ -46,7 +62,7 @@ async function doAutosave() {
   }
   const saveData = {
     name: document.getElementById('projectName')?.textContent || 'Proyecto',
-    features: state.features,
+    features: prepareFeaturesForSave(state.features),
     nextId: state.nextId,
     projectId: state.currentProjectId,
     mapView,
@@ -212,7 +228,7 @@ export function initIOEvents() {
 
     const saveData = {
       name: document.getElementById('projectName')?.textContent || 'Mi Proyecto Urbano',
-      features: state.features,
+      features: prepareFeaturesForSave(state.features),
       nextId: state.nextId,
       projectId: state.currentProjectId,
       mapView,

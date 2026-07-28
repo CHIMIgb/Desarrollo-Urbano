@@ -55,7 +55,7 @@ export async function importOSMContext(retryCount = 0) {
     out geom;
   `;
 
-  toast(`Consultando satélites (Servidor ${retryCount + 1})...`, 'info');
+  const dismissToast = toast(`Consultando satélites (Servidor ${retryCount + 1})...`, 'loading', 0);
   const btn = document.getElementById('btnImportOSM');
   if (btn) btn.style.opacity = '0.5';
 
@@ -70,6 +70,7 @@ export async function importOSMContext(retryCount = 0) {
 
     if (response.status === 429 || response.status === 504 || response.status === 502) {
       if (retryCount < 1) {
+        dismissToast();
         toast('Servidor saturado, reintentando...', 'warning');
         await new Promise((r) => setTimeout(r, 1000));
         return importOSMContext(retryCount + 1);
@@ -303,18 +304,22 @@ export async function importOSMContext(retryCount = 0) {
     });
 
     if (addedCount > 0) {
+      dismissToast();
       toast(`🏙 Importados ${addedCount} elementos urbanos con éxito.`, 'success');
       refreshMap();
     } else {
+      dismissToast();
       toast('No se encontró contexto nuevo en esta vista.', 'info');
     }
   } catch (err) {
     logger.error(`[OSM] Error importando (${err.code ?? 'UNKNOWN'}):`, err);
     if (retryCount < 1) {
+      dismissToast();
       toast('Error de conexión, reintentando...', 'warning');
       await new Promise((r) => setTimeout(r, 1000));
       return importOSMContext(retryCount + 1);
     }
+    dismissToast();
     toast(
       'Los servidores de OSM están muy ocupados. Intenta en una zona más pequeña o más tarde.',
       'error'
