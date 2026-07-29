@@ -8,6 +8,35 @@ import { calculateCurrentMetrics } from './stats.js';
 import { getFeatureCenter } from '../utils/geo.js';
 import { logger } from '../utils/logger.js';
 
+// ── Helpers ────────────────────────────────────────────────────
+
+/**
+ * Envía una petición de guardado al servidor.
+ * Comprime automáticamente el payload con gzip si supera ~3MB
+ * para evitar el límite de 4.5MB de Vercel Hobby.
+ */
+async function sendSaveRequest(saveData) {
+  const jsonStr = JSON.stringify(saveData);
+  const threshold = 3_000_000;
+  const payloadSize = new Blob([jsonStr]).size;
+  const headers = {
+    Authorization: localStorage.getItem('urbanplan_token'),
+  };
+  let body;
+
+  if (payloadSize > threshold && typeof CompressionStream !== 'undefined') {
+    headers['Content-Type'] = 'application/octet-stream';
+    headers['X-Compressed'] = 'gzip';
+    const stream = new Blob([jsonStr]).stream().pipeThrough(new CompressionStream('gzip'));
+    body = await new Response(stream).blob();
+  } else {
+    headers['Content-Type'] = 'application/json';
+    body = jsonStr;
+  }
+
+  return fetch('/api/projects/save', { method: 'POST', headers, body });
+}
+
 // ── Autosave ──────────────────────────────────────────────────
 let _lastSavedAt = null;
 let _autosaveTimer = null;
@@ -69,14 +98,7 @@ async function doAutosave() {
     metrics: calculateCurrentMetrics(),
   };
   try {
-    const res = await fetch('/api/projects/save', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: localStorage.getItem('urbanplan_token'),
-      },
-      body: JSON.stringify(saveData),
-    });
+    const res = await sendSaveRequest(saveData);
     if (res.ok) {
       markClean();
       _lastSavedAt = Date.now();
@@ -236,14 +258,7 @@ export function initIOEvents() {
     };
 
     try {
-      const response = await fetch('/api/projects/save', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: localStorage.getItem('urbanplan_token'),
-        },
-        body: JSON.stringify(saveData),
-      });
+      const response = await sendSaveRequest(saveData);
       const data = await response.json();
       if (response.ok) {
         state.currentProjectId = data.projectId;

@@ -16,9 +16,9 @@ async function saveProject(userId, projectData) {
 
     if (!currentProjectId) {
       const result = await db.query(
-        `INSERT INTO projects (user_id, name, next_id, map_center_lng, map_center_lat, map_zoom, map_pitch, map_bearing)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id`,
-        [userId, name || 'Mi Proyecto Urbano', nextId, centerLng, centerLat, zoom, pitch, bearing]
+        `INSERT INTO projects (user_id, name, next_id, features, map_center_lng, map_center_lat, map_zoom, map_pitch, map_bearing)
+         VALUES ($1, $2, $3, $4::jsonb, $5, $6, $7, $8, $9) RETURNING id`,
+        [userId, name || 'Mi Proyecto Urbano', nextId, JSON.stringify(features), centerLng, centerLat, zoom, pitch, bearing]
       );
       currentProjectId = result.rows[0].id;
     } else {
@@ -31,29 +31,20 @@ async function saveProject(userId, projectData) {
 
       await db.query(
         `UPDATE projects
-            SET name = $1, next_id = $2,
-                map_center_lng = $3, map_center_lat = $4,
-                map_zoom = $5, map_pitch = $6, map_bearing = $7,
+            SET name = $1, next_id = $2, features = $3::jsonb,
+                map_center_lng = $4, map_center_lat = $5,
+                map_zoom = $6, map_pitch = $7, map_bearing = $8,
                 updated_at = NOW()
-          WHERE id = $8`,
-        [name, nextId, centerLng, centerLat, zoom, pitch, bearing, currentProjectId]
+          WHERE id = $9`,
+        [name, nextId, JSON.stringify(features), centerLng, centerLat, zoom, pitch, bearing, currentProjectId]
       );
-    }
-
-    // Limpiar features anteriores y añadir nuevas
-    await db.query('DELETE FROM project_features WHERE project_id = $1', [currentProjectId]);
-    for (const feat of features) {
-      await db.query('INSERT INTO project_features (project_id, feature_data) VALUES ($1, $2)', [
-        currentProjectId,
-        feat,
-      ]);
     }
 
     // Guardar métricas si existen
     if (metrics && metrics.global) {
       const g = metrics.global;
       const snapshotResult = await db.query(
-        `INSERT INTO project_metrics_snapshots 
+        `INSERT INTO project_metrics_snapshots
           (project_id, total_base_area, total_occupied_area, total_built_area, total_green_area, cos, cus, estimated_population)
          VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id`,
         [
@@ -117,16 +108,22 @@ async function loadLatestProject(userId) {
   if (projectResult.rows.length === 0) return null;
 
   const project = projectResult.rows[0];
-  const featuresResult = await db.query(
-    'SELECT feature_data FROM project_features WHERE project_id = $1',
-    [project.id]
-  );
+  let features = project.features || [];
+
+  // Fallback: si features está vacío, buscar en project_features (datos legacy)
+  if (!features.length) {
+    const legacyResult = await db.query(
+      'SELECT feature_data FROM project_features WHERE project_id = $1',
+      [project.id]
+    );
+    features = legacyResult.rows.map((r) => r.feature_data);
+  }
 
   return {
     id: project.id,
     name: project.name,
     nextId: project.next_id,
-    features: featuresResult.rows.map((r) => r.feature_data),
+    features,
     mapView: {
       center: [parseFloat(project.map_center_lng), parseFloat(project.map_center_lat)],
       zoom: parseFloat(project.map_zoom),
@@ -145,16 +142,22 @@ async function loadProjectById(userId, projectId) {
     throw new HttpError(404, 'Proyecto no encontrado o sin acceso');
 
   const project = projectResult.rows[0];
-  const featuresResult = await db.query(
-    'SELECT feature_data FROM project_features WHERE project_id = $1',
-    [project.id]
-  );
+  let features = project.features || [];
+
+  // Fallback: si features está vacío, buscar en project_features (datos legacy)
+  if (!features.length) {
+    const legacyResult = await db.query(
+      'SELECT feature_data FROM project_features WHERE project_id = $1',
+      [project.id]
+    );
+    features = legacyResult.rows.map((r) => r.feature_data);
+  }
 
   return {
     id: project.id,
     name: project.name,
     nextId: project.next_id,
-    features: featuresResult.rows.map((r) => r.feature_data),
+    features,
     mapView: {
       center: [parseFloat(project.map_center_lng), parseFloat(project.map_center_lat)],
       zoom: parseFloat(project.map_zoom),

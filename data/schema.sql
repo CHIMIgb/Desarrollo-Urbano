@@ -57,3 +57,11 @@ ALTER TABLE projects
   ADD COLUMN IF NOT EXISTS map_zoom       DOUBLE PRECISION DEFAULT 13,
   ADD COLUMN IF NOT EXISTS map_pitch      DOUBLE PRECISION DEFAULT 65,
   ADD COLUMN IF NOT EXISTS map_bearing    DOUBLE PRECISION DEFAULT -20;
+
+-- Migración: almacenar features directamente en projects como JSONB
+-- Elimina la necesidad de 50,000 INSERTs individuales en project_features
+ALTER TABLE projects
+  ADD COLUMN IF NOT EXISTS features JSONB DEFAULT '[]'::jsonb;
+
+-- Índice para consultas rápidas por usuario (recomendación Supabase best practices)
+CREATE INDEX IF NOT EXISTS projects_user_id_idx ON projects (user_id);

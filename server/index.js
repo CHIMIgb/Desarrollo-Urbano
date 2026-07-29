@@ -1,4 +1,5 @@
 const express = require('express');
+const compression = require('compression');
 const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
@@ -31,7 +32,7 @@ app.use(
   cors({
     origin: allowedOrigins,
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Compressed'],
     credentials: true,
   })
 );
@@ -56,6 +57,9 @@ const authLimiter = rateLimit({
 });
 app.use('/api/auth/login', authLimiter);
 app.use('/api/auth/register', authLimiter);
+
+// ── Response compression ─────────────────────────────────────────
+app.use(compression());
 
 // ── Body parsing ────────────────────────────────────────────────
 const maxLimit = process.env.MAX_PAYLOAD_SIZE || '100mb';
