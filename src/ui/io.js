@@ -7,8 +7,16 @@ import { markClean, markDirty, isDirty } from './toolbar.js';
 import { calculateCurrentMetrics } from './stats.js';
 import { getFeatureCenter } from '../utils/geo.js';
 import { logger } from '../utils/logger.js';
+import { requireAuth } from './auth.js';
 
 // ── Helpers ────────────────────────────────────────────────────
+
+async function ensureAuthenticated() {
+  const token = localStorage.getItem('urbanplan_token');
+  if (token) return token;
+  await requireAuth();
+  return localStorage.getItem('urbanplan_token');
+}
 
 /**
  * Envía una petición de guardado al servidor.
@@ -16,6 +24,7 @@ import { logger } from '../utils/logger.js';
  * para evitar el límite de 4.5MB de Vercel Hobby.
  */
 async function sendSaveRequest(saveData) {
+  await ensureAuthenticated();
   const jsonStr = JSON.stringify(saveData);
   const threshold = 3_000_000;
   const payloadSize = new Blob([jsonStr]).size;
@@ -271,7 +280,9 @@ export function initIOEvents() {
       }
     } catch (err) {
       logger.warn('[IO] Error guardando proyecto:', err.message);
-      toast('Sin conexión al servidor', 'error');
+      if (err.message !== 'Login cancelado') {
+        toast('Sin conexión al servidor', 'error');
+      }
     } finally {
       btnSave.disabled = false;
       btnSave.classList.remove('loading');

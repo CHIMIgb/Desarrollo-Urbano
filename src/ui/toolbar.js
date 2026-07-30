@@ -7,6 +7,7 @@ import { importOSMContext } from '../tools/osm.js';
 import { notify, confirmDialog } from './notifications.js';
 import { escapeHTML } from '../utils/sanitize.js';
 import { trapFocus, releaseFocus } from '../utils/focusTrap.js';
+import { requireAuth } from './auth.js';
 
 // Re-exportar para compatibilidad con módulos que importan { toast } de aquí
 export const toast = notify;
@@ -212,6 +213,11 @@ export function initToolbarEvents() {
   });
 
   document.getElementById('btnOpenProjects')?.addEventListener('click', async () => {
+    try {
+      await requireAuth();
+    } catch {
+      return;
+    }
     const modal = document.getElementById('projectsModal');
     if (modal) {
       modal.classList.remove('hidden');

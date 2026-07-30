@@ -25,8 +25,9 @@
   </div>
 
   <!-- LOGIN MODAL / OVERLAY -->
-  <div id="loginOverlay" class="login-overlay" role="dialog" aria-modal="true" aria-labelledby="loginTitle">
+  <div id="loginOverlay" class="login-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="loginTitle">
     <div class="login-card">
+      <button class="login-close" id="btnLoginClose" title="Cerrar" aria-label="Cerrar">&times;</button>
       <div class="login-header">
         <i data-icon="logoLarge" aria-hidden="true"></i>
         <h2 id="loginTitle">UrbanPlan 3D</h2>
@@ -82,7 +83,7 @@
     </div>
   </div>
 
-  <div id="appContainer" class="hidden">
+  <div id="appContainer">
     <!-- HEADER -->
     <header class="app-header">
       <div class="header-left">
@@ -132,10 +133,16 @@
         <span class="save-status" id="saveStatus"></span>
         <div class="divider-v"></div>
         <div class="user-profile" id="userProfile">
-          <div class="user-avatar" id="userInitial">U</div>
-          <div class="user-info">
-            <span class="user-name" id="userNameLabel">Cargando...</span>
-            <button class="btn-logout" id="btnLogout">Cerrar sesión</button>
+          <button class="btn-login" id="btnLoginHeader">
+            <i data-icon="user"></i>
+            <span>Iniciar sesión</span>
+          </button>
+          <div class="user-info-area" id="userInfoArea" style="display:none">
+            <div class="user-avatar" id="userInitial">U</div>
+            <div class="user-info">
+              <span class="user-name" id="userNameLabel"></span>
+              <button class="btn-logout" id="btnLogout">Cerrar sesión</button>
+            </div>
           </div>
         </div>
       </div>

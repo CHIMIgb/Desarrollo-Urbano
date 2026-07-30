@@ -33,6 +33,7 @@
 
 /* ── Login / Modal Card ── */
 .login-card {
+  position: relative;
   background: var(--glass-bg);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
@@ -55,6 +56,30 @@
     opacity: 1;
     transform: none;
   }
+}
+
+.login-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 32px;
+  height: 32px;
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+  border-radius: var(--radius);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background var(--transition-fast), color var(--transition-fast);
+}
+
+.login-close:hover {
+  background: var(--bg-300);
+  color: var(--text-primary);
 }
 
 .login-header {

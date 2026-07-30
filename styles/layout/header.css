@@ -264,6 +264,27 @@
   text-decoration: underline;
 }
 
+.btn-login {
+  background: none;
+  border: 1px solid var(--accent);
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: var(--radius);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  transition: background var(--transition-fast), color var(--transition-fast);
+  white-space: nowrap;
+}
+
+.btn-login:hover {
+  background: var(--accent);
+  color: var(--text-on-accent);
+}
+
 /* ── Header Import/Export (moved to header-right area) ── */
 .header-actions {
   display: flex;

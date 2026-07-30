@@ -1,39 +1,59 @@
 import { state } from '../config/state.js';
 import { trapFocus, releaseFocus } from '../utils/focusTrap.js';
 import { logger } from '../utils/logger.js';
+import { confirmDialog } from './notifications.js';
+
+let _pendingAuth = null;
 
 export function initAuth() {
-  const loginOverlay = document.getElementById('loginOverlay');
-  const appContainer = document.getElementById('appContainer');
-  const loginForm = document.getElementById('loginForm');
-  const loginError = document.getElementById('loginError');
-  const registerForm = document.getElementById('registerForm');
-  const registerError = document.getElementById('registerError');
-  const btnShowRegister = document.getElementById('btnShowRegister');
-  const btnShowLogin = document.getElementById('btnShowLogin');
-  const userNameLabel = document.getElementById('userNameLabel');
-  const userInitial = document.getElementById('userInitial');
-  const btnLogout = document.getElementById('btnLogout');
-
-  // Verificar si hay una sesión activa al cargar
   const token = localStorage.getItem('urbanplan_token');
   if (token) {
     checkSession(token);
   } else {
-    // Si no hay token, mostramos el login inmediatamente
-    loginOverlay.classList.remove('hidden');
-    trapFocus(loginOverlay);
+    updateUserMenu(false);
   }
 
+  // Header login button
+  document.getElementById('btnLoginHeader')?.addEventListener('click', () => {
+    showLoginOverlay();
+  });
+
+  // Close button on login overlay
+  document.getElementById('btnLoginClose')?.addEventListener('click', () => {
+    hideLoginOverlay();
+  });
+
+  // Click outside the card to close
+  document.getElementById('loginOverlay')?.addEventListener('click', (e) => {
+    if (e.target === e.currentTarget) {
+      hideLoginOverlay();
+    }
+  });
+
+  // Escape key to close
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      const overlay = document.getElementById('loginOverlay');
+      if (overlay && !overlay.classList.contains('hidden')) {
+        hideLoginOverlay();
+      }
+    }
+  });
+
   // Intercambiar formularios
-  btnShowRegister.addEventListener('click', (e) => {
+  const loginForm = document.getElementById('loginForm');
+  const registerForm = document.getElementById('registerForm');
+  const loginError = document.getElementById('loginError');
+  const registerError = document.getElementById('registerError');
+
+  document.getElementById('btnShowRegister')?.addEventListener('click', (e) => {
     e.preventDefault();
     loginError.classList.add('hidden');
     loginForm.classList.add('hidden');
     registerForm.classList.remove('hidden');
   });
 
-  btnShowLogin.addEventListener('click', (e) => {
+  document.getElementById('btnShowLogin')?.addEventListener('click', (e) => {
     e.preventDefault();
     registerError.classList.add('hidden');
     registerForm.classList.add('hidden');
@@ -41,7 +61,7 @@ export function initAuth() {
   });
 
   // Evento Login
-  loginForm.addEventListener('submit', async (e) => {
+  loginForm?.addEventListener('submit', async (e) => {
     e.preventDefault();
     const username = document.getElementById('loginUser').value;
     const password = document.getElementById('loginPass').value;
@@ -64,9 +84,7 @@ export function initAuth() {
       if (response.ok) {
         localStorage.setItem('urbanplan_token', data.token);
         localStorage.setItem('urbanplan_user', JSON.stringify(data.user));
-        showApp(data.user);
-        // Cargar proyecto desde el servidor tras login
-        import('./io.js').then((m) => m.loadSavedState());
+        finishAuth(data.user);
       } else {
         loginError.textContent = data.error || 'Credenciales incorrectas';
         loginError.classList.remove('hidden');
@@ -82,7 +100,7 @@ export function initAuth() {
   });
 
   // Evento Registro
-  registerForm.addEventListener('submit', async (e) => {
+  registerForm?.addEventListener('submit', async (e) => {
     e.preventDefault();
     const username = document.getElementById('regUser').value;
     const full_name = document.getElementById('regName').value;
@@ -108,8 +126,7 @@ export function initAuth() {
       if (response.ok) {
         localStorage.setItem('urbanplan_token', data.token);
         localStorage.setItem('urbanplan_user', JSON.stringify(data.user));
-        showApp(data.user);
-        import('./io.js').then((m) => m.loadSavedState());
+        finishAuth(data.user);
       } else {
         registerError.textContent = data.error || 'No se pudo crear la cuenta';
         registerError.classList.remove('hidden');
@@ -126,53 +143,146 @@ export function initAuth() {
   });
 
   // Evento Logout
-  btnLogout.addEventListener('click', () => {
+  document.getElementById('btnLogout')?.addEventListener('click', async () => {
+    if (state.features.length > 0) {
+      const confirmed = await confirmDialog(
+        'Cerrar sesión',
+        'Tienes un proyecto abierto. Si no lo has guardado, los cambios se perderán. ¿Cerrar sesión de todas formas?'
+      );
+      if (!confirmed) return;
+    }
     localStorage.removeItem('urbanplan_token');
     localStorage.removeItem('urbanplan_user');
-    window.location.reload();
+
+    state.features = [];
+    state.nextId = 1;
+    state.currentProjectId = null;
+    state.history = [];
+    state.future = [];
+
+    const nameDisplay = document.getElementById('projectName');
+    if (nameDisplay) nameDisplay.textContent = 'Nuevo proyecto urbano';
+
+    document.title = 'UrbanPlan 3D';
+    document.getElementById('projectName')?.classList.remove('dirty');
+
+    updateUserMenu(false);
+    const { refreshMap } = await import('../map/core.js');
+    refreshMap();
   });
+}
 
-  async function checkSession(token) {
-    try {
-      const response = await fetch('/api/auth/me', {
-        headers: { Authorization: token },
-      });
-      if (response.ok) {
-        const data = await response.json();
-        showApp(data.user);
-        // Cargar proyecto desde el servidor tras verificar sesión
-        import('./io.js').then((m) => m.loadSavedState());
-      } else {
-        localStorage.removeItem('urbanplan_token');
-        loginOverlay.classList.remove('hidden');
-      }
-    } catch (err) {
-      logger.error('Error verificando sesión:', err);
-      loginOverlay.classList.remove('hidden');
-    }
+function finishAuth(user) {
+  hideLoginOverlay();
+  showApp(user);
+
+  if (_pendingAuth) {
+    _pendingAuth.resolve(user);
+    _pendingAuth = null;
+  } else {
+    import('./io.js').then((m) => m.loadSavedState());
   }
+}
 
-  function showApp(user) {
-    loginOverlay.classList.add('hidden');
-    releaseFocus();
-    appContainer.classList.remove('hidden');
-    const rawName = user.full_name || user.username;
-
-    const maxLen = 12;
-    userNameLabel.textContent =
-      rawName.length > maxLen ? rawName.substring(0, maxLen) + '...' : rawName;
-
-    const parts = rawName.trim().split(/\s+/);
-    let initials;
-    if (parts.length >= 2) {
-      initials = parts[0].charAt(0) + parts[1].charAt(0);
+export function requireAuth() {
+  return new Promise((resolve, reject) => {
+    const token = localStorage.getItem('urbanplan_token');
+    if (token) {
+      fetch('/api/auth/me', { headers: { Authorization: token } })
+        .then((res) => {
+          if (res.ok) return res.json();
+          throw new Error('Token invalido');
+        })
+        .then((data) => {
+          resolve(data.user);
+        })
+        .catch(() => {
+          localStorage.removeItem('urbanplan_token');
+          localStorage.removeItem('urbanplan_user');
+          _pendingAuth = { resolve, reject };
+          showLoginOverlay();
+        });
     } else {
-      initials = rawName.substring(0, 2);
+      _pendingAuth = { resolve, reject };
+      showLoginOverlay();
     }
-    userInitial.textContent = initials.toUpperCase();
-    // Si el mapa ya estaba inicializado o necesita recarga, este es el punto
-    if (state.map) {
-      state.map.resize();
+  });
+}
+
+function showLoginOverlay() {
+  const overlay = document.getElementById('loginOverlay');
+  overlay.classList.remove('hidden');
+  trapFocus(overlay);
+
+  // Resetear formularios
+  document.getElementById('loginForm').classList.remove('hidden');
+  document.getElementById('registerForm').classList.add('hidden');
+  document.getElementById('loginError').classList.add('hidden');
+  document.getElementById('registerError').classList.add('hidden');
+}
+
+function hideLoginOverlay() {
+  const overlay = document.getElementById('loginOverlay');
+  overlay.classList.add('hidden');
+  releaseFocus();
+  if (_pendingAuth) {
+    _pendingAuth.reject(new Error('Login cancelado'));
+    _pendingAuth = null;
+  }
+}
+
+function showApp(user) {
+  document.getElementById('loginOverlay').classList.add('hidden');
+  releaseFocus();
+  updateUserMenu(true);
+  const rawName = user.full_name || user.username;
+
+  const maxLen = 12;
+  document.getElementById('userNameLabel').textContent =
+    rawName.length > maxLen ? rawName.substring(0, maxLen) + '...' : rawName;
+
+  const parts = rawName.trim().split(/\s+/);
+  let initials;
+  if (parts.length >= 2) {
+    initials = parts[0].charAt(0) + parts[1].charAt(0);
+  } else {
+    initials = rawName.substring(0, 2);
+  }
+  document.getElementById('userInitial').textContent = initials.toUpperCase();
+
+  if (state.map) {
+    state.map.resize();
+  }
+}
+
+function updateUserMenu(loggedIn) {
+  const btnLogin = document.getElementById('btnLoginHeader');
+  const userArea = document.getElementById('userInfoArea');
+  if (loggedIn) {
+    btnLogin.style.display = 'none';
+    userArea.style.display = 'flex';
+  } else {
+    btnLogin.style.display = 'flex';
+    userArea.style.display = 'none';
+  }
+}
+
+async function checkSession(token) {
+  try {
+    const response = await fetch('/api/auth/me', {
+      headers: { Authorization: token },
+    });
+    if (response.ok) {
+      const data = await response.json();
+      showApp(data.user);
+      import('./io.js').then((m) => m.loadSavedState());
+    } else {
+      localStorage.removeItem('urbanplan_token');
+      localStorage.removeItem('urbanplan_user');
+      updateUserMenu(false);
     }
+  } catch (err) {
+    logger.error('Error verificando sesión:', err);
+    updateUserMenu(false);
   }
 }
